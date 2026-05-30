@@ -655,13 +655,13 @@ function ActionButton({
 }) {
   const classes = {
     primary:
-      "border border-sky-300/30 bg-[linear-gradient(135deg,var(--brand),#38bdf8)] text-white shadow-[0_12px_30px_rgba(14,165,233,0.28)] hover:brightness-110",
+      "border border-emerald-300/70 bg-emerald-500/24 text-emerald-50 hover:border-emerald-200 hover:bg-emerald-500/32",
     secondary:
-      "border border-white/10 bg-white/[0.035] text-zinc-100 hover:border-white/20 hover:bg-white/[0.07]",
+      "border border-[var(--brand)]/75 bg-[var(--brand)]/24 text-[var(--brand-strong)] hover:border-[var(--brand)] hover:bg-[var(--brand)]/32",
     warning:
-      "border border-amber-300/30 bg-amber-400/10 text-amber-100 hover:border-amber-200/45 hover:bg-amber-400/15",
+      "border border-amber-300/75 bg-amber-400/24 text-amber-50 hover:border-amber-200 hover:bg-amber-400/32",
     danger:
-      "border border-red-400/35 bg-red-500/10 text-red-100 hover:border-red-300/50 hover:bg-red-500/15",
+      "border border-rose-300/75 bg-rose-500/24 text-rose-50 hover:border-rose-200 hover:bg-rose-500/32",
   };
 
   return (

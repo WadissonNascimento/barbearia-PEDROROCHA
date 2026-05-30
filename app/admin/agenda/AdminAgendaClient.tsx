@@ -1173,7 +1173,7 @@ export function AdminAppointmentActions({
             <AdminActionButton
               icon={<RotateCcw className="h-4 w-4" />}
               label="Reabrir"
-              tone="sky"
+              tone="emerald"
               type="button"
               disabled={actionPending}
               onClick={() => runStatus("CONFIRMED")}
@@ -1327,19 +1327,17 @@ function AdminActionButton({
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
   icon: ReactNode;
   label: string;
-  tone: "neutral" | "sky" | "emerald" | "amber" | "rose";
+  tone: "neutral" | "emerald" | "amber" | "rose";
 }) {
   const styles = {
     neutral:
-      "border-white/10 bg-white/[0.035] text-zinc-100 hover:border-white/20 hover:bg-white/[0.07]",
-    sky:
-      "border-sky-300/30 bg-sky-400/10 text-sky-100 hover:border-sky-300/50 hover:bg-sky-400/15",
+      "border-[var(--brand)]/75 bg-[var(--brand)]/24 text-[var(--brand-strong)] hover:border-[var(--brand)] hover:bg-[var(--brand)]/32",
     emerald:
-      "border-emerald-300/30 bg-emerald-400/10 text-emerald-100 hover:border-emerald-300/50 hover:bg-emerald-400/15",
+      "border-emerald-300/70 bg-emerald-500/24 text-emerald-50 hover:border-emerald-200 hover:bg-emerald-500/32",
     amber:
-      "border-amber-300/30 bg-amber-400/10 text-amber-100 hover:border-amber-300/50 hover:bg-amber-400/15",
+      "border-amber-300/75 bg-amber-400/24 text-amber-50 hover:border-amber-200 hover:bg-amber-400/32",
     rose:
-      "border-rose-300/30 bg-rose-500/10 text-rose-100 hover:border-rose-300/50 hover:bg-rose-500/15",
+      "border-rose-300/75 bg-rose-500/24 text-rose-50 hover:border-rose-200 hover:bg-rose-500/32",
   }[tone];
 
   return (
