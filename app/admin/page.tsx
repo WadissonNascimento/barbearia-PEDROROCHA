@@ -1,5 +1,6 @@
 import {
   CalendarRange,
+  Crown,
   DollarSign,
   Landmark,
   MessageSquareText,
@@ -7,7 +8,6 @@ import {
   PiggyBank,
   Scissors,
   Settings,
-  Store,
   UserRound,
   UsersRound,
 } from "lucide-react";
@@ -74,7 +74,6 @@ export default async function AdminPage() {
   const { start: todayStart, end: todayEnd } = getTodayRange();
   const [
     activeBarbers,
-    activeProducts,
     openPayouts,
     pendingInvites,
     visibleReviews,
@@ -87,12 +86,6 @@ export default async function AdminPage() {
       where: {
         shopId,
         role: "BARBER",
-        isActive: true,
-      },
-    }),
-    prisma.product.count({
-      where: {
-        shopId,
         isActive: true,
       },
     }),
@@ -230,17 +223,16 @@ export default async function AdminPage() {
       badge: openPayouts ? `${openPayouts}` : undefined,
     },
     {
+      href: "/admin/vip",
+      icon: Crown,
+      title: "Clientes VIP",
+      description: "Assinaturas, tokens e pagamentos mensais.",
+    },
+    {
       href: "/admin/servicos",
       icon: Scissors,
       title: "Serviços",
       description: "Preços, duração e repasse dos serviços.",
-    },
-    {
-      href: "/admin/maquinas",
-      icon: Store,
-      title: "Maquinas",
-      description: "Catálogo visual e maquinas ativas.",
-      badge: activeProducts ? `${activeProducts}` : undefined,
     },
     {
       href: "/admin/extras",
@@ -279,9 +271,9 @@ export default async function AdminPage() {
     "/admin/agenda",
     "/admin/barbeiros",
     "/admin/financeiro",
+    "/admin/vip",
     "/admin/servicos",
     "/admin/extras",
-    "/admin/maquinas",
     "/admin/caixinhas",
     "/admin/configuracoes",
     "/admin/avaliacoes",

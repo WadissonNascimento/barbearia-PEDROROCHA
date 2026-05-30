@@ -120,6 +120,7 @@ export async function POST(request: Request) {
       time?: string;
       notes?: string;
       rescheduleAppointmentId?: string;
+      useVipPlan?: boolean;
     };
 
     const barberId = String(body.barberId || "").trim();
@@ -143,6 +144,7 @@ export async function POST(request: Request) {
     const time = String(body.time || "").trim();
     const notes = String(body.notes || "").trim().slice(0, 50);
     const rescheduleAppointmentId = String(body.rescheduleAppointmentId || "").trim();
+    const useVipPlan = body.useVipPlan === true;
 
     const result = rescheduleAppointmentId
       ? await rescheduleCustomerAppointment({
@@ -154,6 +156,7 @@ export async function POST(request: Request) {
           date,
           time,
           notes,
+          useVipPlan,
         })
       : {
           appointment: await createCustomerAppointment({
@@ -164,6 +167,7 @@ export async function POST(request: Request) {
             date,
             time,
             notes,
+            useVipPlan,
           }),
           previousDate: null,
         };

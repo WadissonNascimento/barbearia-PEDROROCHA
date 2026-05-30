@@ -10,7 +10,6 @@ import {
   MapPin,
   MessageCircle,
   Scissors,
-  ShoppingBag,
   Sparkles,
   Star,
   Users,
@@ -643,10 +642,10 @@ function DefaultHomeClient({
               </Link>
 
               <Link
-                href="/maquinas"
+                href="/planos"
                 className="rounded-lg border border-white/10 bg-white/[0.04] px-6 py-3 text-center text-white transition hover:bg-white/[0.08] active:scale-[0.98]"
               >
-                Maquinas
+                Planos
               </Link>
             </div>
 
@@ -1016,46 +1015,6 @@ function RodrigoStyleHome({
           </div>
         </div>
       </section>
-
-      {products.length > 0 ? (
-        <section id="maquinas" className="px-4 py-8 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-6xl">
-            <SectionTitle
-              eyebrow="Catalogo"
-              title="Maquinas para manter o acabamento."
-              description="Itens disponiveis no catalogo desta unidade."
-            />
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {products.map((product) => (
-                <article
-                  key={product.id}
-                  className="rounded-2xl border border-[#e6dfd2] bg-white p-4 shadow-[0_14px_32px_rgba(26,18,8,0.07)]"
-                >
-                  <div className="relative mb-4 flex aspect-[4/3] items-center justify-center overflow-hidden rounded-xl bg-[#f8f5ef]">
-                    {product.imageUrl ? (
-                      <Image
-                        src={product.imageUrl}
-                        alt={product.name}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 240px"
-                        quality={90}
-                        className="object-cover"
-                      />
-                    ) : (
-                      <ShoppingBag className="h-8 w-8 text-[#8a6416]" aria-hidden="true" />
-                    )}
-                  </div>
-                  <h3 className="text-base font-black text-[#111111]">{product.name}</h3>
-                  <p className="mt-2 text-lg font-black text-[#8a6416]">
-                    {formatCurrency(product.price)}
-                  </p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-      ) : null}
 
       <section id="sobre" className="px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-2">

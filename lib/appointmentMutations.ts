@@ -26,6 +26,12 @@ import { roundMoney, toMoneyNumber } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 import { mergeManualFitInNotes } from "@/lib/manualFitIn";
 import {
+  assertCanScheduleVipAppointment,
+  consumeVipTokenForCompletedAppointment,
+  getActiveVipSubscriptionForCustomer,
+  hasPaidCurrentVipCycle,
+} from "@/lib/vip";
+import {
   createScheduleDate,
   formatScheduleTime,
   getScheduleDayOfWeek,
@@ -51,6 +57,10 @@ type AppointmentPrismaClient = Pick<
   | "recurringBarberBlock"
   | "service"
   | "user"
+  | "vipPayment"
+  | "vipPlan"
+  | "vipSubscription"
+  | "vipUsage"
 >;
 type AppointmentTransactionClient = Omit<AppointmentPrismaClient, "$transaction">;
 
@@ -75,6 +85,7 @@ export type CreateCustomerAppointmentInput = {
   now?: Date;
   conflictMode?: "OVERLAP" | "SAME_START_ONLY";
   manualDurationMinutes?: number | null;
+  useVipPlan?: boolean;
 };
 
 export type RescheduleCustomerAppointmentInput = CreateCustomerAppointmentInput & {
@@ -181,6 +192,37 @@ function getAppointmentDurationFromServices(
       bufferAfter: service.bufferAfter,
     }))
   );
+}
+
+function normalizeVipServiceText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function isVipServiceSelectionAllowed(
+  planCode: string,
+  services: Array<{ name: string }>
+) {
+  const text = normalizeVipServiceText(services.map((service) => service.name).join(" "));
+  const hasCorte = text.includes("corte");
+  const hasBarba = text.includes("barba");
+  const hasSobrancelha = text.includes("sobrancelha");
+
+  if (planCode === "CORTE") {
+    return hasCorte && !hasBarba && !hasSobrancelha;
+  }
+
+  if (planCode === "CORTE_SOBRANCELHA") {
+    return hasCorte && hasSobrancelha && !hasBarba;
+  }
+
+  if (planCode === "CORTE_BARBA_SOBRANCELHA") {
+    return hasCorte && hasBarba && hasSobrancelha;
+  }
+
+  return false;
 }
 
 async function getNextAppointmentPublicId(
@@ -599,6 +641,48 @@ async function createCustomerAppointmentInTransaction(
     throw new AppointmentMutationError("Nao e possivel agendar em um horario que ja passou.");
   }
 
+  let vipSubscription: Awaited<
+    ReturnType<typeof getActiveVipSubscriptionForCustomer>
+  > | null = null;
+
+  if (input.useVipPlan) {
+    if (manualFitIn) {
+      throw new AppointmentMutationError("Atendimento VIP deve ser agendado pelo cliente.");
+    }
+
+    vipSubscription = await getActiveVipSubscriptionForCustomer(db, {
+      shopId,
+      customerId,
+    });
+
+    if (!vipSubscription) {
+      throw new AppointmentMutationError("Nenhuma assinatura VIP ativa foi encontrada.");
+    }
+
+    if (vipSubscription.tokensRemaining < 1) {
+      throw new AppointmentMutationError("Seu plano VIP nao possui tokens disponiveis.");
+    }
+
+    const isPaid = await hasPaidCurrentVipCycle(db, vipSubscription.id, appointmentDate);
+
+    if (!isPaid) {
+      throw new AppointmentMutationError("Seu plano VIP ainda esta com pagamento pendente.");
+    }
+
+    if (!isVipServiceSelectionAllowed(vipSubscription.plan.code, orderedServices)) {
+      throw new AppointmentMutationError(
+        "O servico escolhido nao pertence ao combo do seu plano VIP."
+      );
+    }
+
+    await assertCanScheduleVipAppointment(db, {
+      shopId,
+      customerId,
+      appointmentDate,
+      subscriptionId: vipSubscription.id,
+    });
+  }
+
   const dayOfWeek = getScheduleDayOfWeek(date);
   const dayRange = getScheduleDayRange(date);
 
@@ -726,12 +810,15 @@ async function createCustomerAppointmentInTransaction(
       notes,
       isManualFitIn: manualFitIn,
       manualDurationMinutes: normalizedManualDurationMinutes,
+      isVipPlanUse: Boolean(vipSubscription),
+      vipSubscriptionId: vipSubscription?.id || null,
       status: "CONFIRMED",
       services: {
         create: orderedServices.map((service, index) => {
           const barberCommission = commissionByServiceId.get(service.id);
+          const servicePrice = vipSubscription ? new Prisma.Decimal(0) : service.price;
           const financials = calculateServiceFinancials({
-            price: service.price,
+            price: servicePrice,
             commissionType: barberCommission?.commissionType || service.commissionType,
             commissionValue: barberCommission?.commissionValue ?? service.commissionValue,
           });
@@ -741,7 +828,7 @@ async function createCustomerAppointmentInTransaction(
             serviceId: service.id,
             orderIndex: index,
             nameSnapshot: service.name,
-            priceSnapshot: service.price,
+            priceSnapshot: servicePrice,
             durationSnapshot: service.duration,
             bufferAfter: service.bufferAfter || 0,
             commissionTypeSnapshot: financials.commissionType,
@@ -1050,6 +1137,49 @@ async function rescheduleCustomerAppointmentInTransaction(
     throw new AppointmentMutationError("Data ou horario invalido.");
   }
 
+  const shouldUseVipPlan = currentAppointment.isVipPlanUse;
+
+  if (input.useVipPlan && !shouldUseVipPlan) {
+    throw new AppointmentMutationError(
+      "Nao e possivel transformar um agendamento comum em VIP pela remarcacao."
+    );
+  }
+
+  if (shouldUseVipPlan) {
+    if (!currentAppointment.vipSubscriptionId) {
+      throw new AppointmentMutationError("Assinatura VIP do agendamento nao encontrada.");
+    }
+
+    const vipSubscription = await getActiveVipSubscriptionForCustomer(db, {
+      shopId,
+      customerId,
+    });
+
+    if (!vipSubscription || vipSubscription.id !== currentAppointment.vipSubscriptionId) {
+      throw new AppointmentMutationError("Nenhuma assinatura VIP ativa foi encontrada.");
+    }
+
+    const isPaid = await hasPaidCurrentVipCycle(db, vipSubscription.id, appointmentDate);
+
+    if (!isPaid) {
+      throw new AppointmentMutationError("Seu plano VIP ainda esta com pagamento pendente.");
+    }
+
+    if (!isVipServiceSelectionAllowed(vipSubscription.plan.code, orderedServices)) {
+      throw new AppointmentMutationError(
+        "O servico escolhido nao pertence ao combo do seu plano VIP."
+      );
+    }
+
+    await assertCanScheduleVipAppointment(db, {
+      shopId,
+      customerId,
+      appointmentDate,
+      subscriptionId: vipSubscription.id,
+      excludeAppointmentId: appointmentId,
+    });
+  }
+
   const isChangingSchedule =
     currentAppointment.barberId !== barberId ||
     currentAppointment.date.getTime() !== appointmentDate.getTime();
@@ -1235,8 +1365,9 @@ async function rescheduleCustomerAppointmentInTransaction(
   await db.appointmentService.createMany({
     data: orderedServices.map((service, index) => {
       const barberCommission = commissionByServiceId.get(service.id);
+      const servicePrice = shouldUseVipPlan ? new Prisma.Decimal(0) : service.price;
       const financials = calculateServiceFinancials({
-        price: service.price,
+        price: servicePrice,
         commissionType: barberCommission?.commissionType || service.commissionType,
         commissionValue: barberCommission?.commissionValue ?? service.commissionValue,
       });
@@ -1247,7 +1378,7 @@ async function rescheduleCustomerAppointmentInTransaction(
         serviceId: service.id,
         orderIndex: index,
         nameSnapshot: service.name,
-        priceSnapshot: service.price,
+        priceSnapshot: servicePrice,
         durationSnapshot: service.duration,
         bufferAfter: service.bufferAfter || 0,
         commissionTypeSnapshot: financials.commissionType,
@@ -1760,6 +1891,7 @@ export async function updateAppointmentStatusForBarber(
             normalizedStatus === "COMPLETED"
               ? itemDeliveryDecisions
               : undefined,
+          completedByUserId: barberId,
         },
         tx
       ),
@@ -1825,6 +1957,7 @@ export async function updateAppointmentStatusForAdmin(
             normalizedStatus === "COMPLETED"
               ? itemDeliveryDecisions
               : undefined,
+          completedByUserId: null,
         },
         tx
       ),
@@ -1969,6 +2102,7 @@ async function updateAppointmentStatusWithSideEffects(
     cancellationReason,
     itemDeliveryDecisions,
     allowCompletedStatusChange = false,
+    completedByUserId,
   }: {
     appointmentId: string;
     nextStatus: AppointmentStatus;
@@ -1976,6 +2110,7 @@ async function updateAppointmentStatusWithSideEffects(
     cancellationReason?: string;
     itemDeliveryDecisions?: AppointmentItemDeliveryDecision[];
     allowCompletedStatusChange?: boolean;
+    completedByUserId?: string | null;
   },
   db: AppointmentTransactionClient
 ) {
@@ -1983,6 +2118,11 @@ async function updateAppointmentStatusWithSideEffects(
     where: { id: appointmentId },
     include: {
       items: true,
+      services: {
+        orderBy: {
+          orderIndex: "asc",
+        },
+      },
     },
   });
 
@@ -2194,6 +2334,24 @@ async function updateAppointmentStatusWithSideEffects(
         deliveredAt: null,
       },
     });
+  }
+
+  if (nextStatus === "COMPLETED") {
+    try {
+      await consumeVipTokenForCompletedAppointment(db, {
+        appointment,
+        createdById: completedByUserId || null,
+        serviceLabel:
+          appointment.services.map((service) => service.nameSnapshot).join(", ") ||
+          "Combo VIP",
+      });
+    } catch (error) {
+      throw new AppointmentMutationError(
+        error instanceof Error
+          ? error.message
+          : "Nao foi possivel consumir o token VIP deste atendimento."
+      );
+    }
   }
 
   return db.appointment.update({

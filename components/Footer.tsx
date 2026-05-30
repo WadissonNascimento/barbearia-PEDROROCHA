@@ -144,10 +144,10 @@ export default function Footer({
             </Link>
             <span className="hidden h-1 w-1 rounded-full bg-zinc-700 sm:block" />
             <Link
-              href="/maquinas"
+              href="/planos"
               className="text-zinc-400 transition hover:text-[var(--brand-strong)]"
             >
-              Maquinas
+              Planos
             </Link>
             <span className="hidden h-1 w-1 rounded-full bg-zinc-700 sm:block" />
             <p className="text-zinc-500">Cuidado em cada detalhe</p>

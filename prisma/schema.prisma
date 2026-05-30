@@ -88,6 +88,10 @@ model Shop {
   pushSubscriptions        PushSubscription[]
   emailSettings            ShopEmailSettings?
   accounts                 Account[]
+  vipPlans                 VipPlan[]
+  vipSubscriptions         VipSubscription[]
+  vipPayments              VipPayment[]
+  vipUsages                VipUsage[]
 
   @@index([isActive, isDefault])
 }
@@ -189,6 +193,8 @@ model User {
   appNotifications         AppNotification[]         @relation("AppNotificationRecipient")
   pushSubscriptions        PushSubscription[]        @relation("PushSubscriptionUser")
   emailChangeRequests      EmailChangeRequest[]
+  vipSubscriptions         VipSubscription[]         @relation("VipSubscriptionCustomer")
+  vipUsagesCreated         VipUsage[]                @relation("VipUsageCreatedBy")
 
   @@unique([id, shopId])
   @@unique([shopId, email])
@@ -415,6 +421,8 @@ model Appointment {
   notes          String?
   isManualFitIn  Boolean   @default(false)
   manualDurationMinutes Int?
+  isVipPlanUse   Boolean   @default(false)
+  vipSubscriptionId String?
   reminderSentAt DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -426,6 +434,8 @@ model Appointment {
   services AppointmentService[]
   items    AppointmentItem[]
   review   Review?
+  vipSubscription VipSubscription? @relation(fields: [vipSubscriptionId], references: [id], onDelete: SetNull)
+  vipUsage VipUsage?
 
   @@unique([id, shopId])
   @@unique([shopId, publicId])
@@ -435,6 +445,95 @@ model Appointment {
   @@index([shopId, barberId, date])
   @@index([shopId, date])
   @@index([shopId, status, reminderSentAt, date])
+  @@index([shopId, isVipPlanUse, date])
+  @@index([shopId, vipSubscriptionId])
+}
+
+model VipPlan {
+  id             String   @id @default(cuid())
+  shopId         String   @default("shop_pedro_rocha_barbearia")
+  code           String
+  name           String
+  price          Decimal  @db.Decimal(12, 2)
+  tokensPerCycle Int      @default(4)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  shop          Shop              @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  subscriptions VipSubscription[]
+
+  @@unique([shopId, code])
+  @@index([shopId, isActive])
+}
+
+model VipSubscription {
+  id              String    @id @default(cuid())
+  shopId          String    @default("shop_pedro_rocha_barbearia")
+  customerId      String
+  planId          String
+  status          String    @default("ACTIVE")
+  tokensRemaining Int       @default(4)
+  cycleStart      DateTime
+  cycleEnd        DateTime
+  startedAt       DateTime  @default(now())
+  cancelledAt     DateTime?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  shop         Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer     User         @relation("VipSubscriptionCustomer", fields: [customerId], references: [id], onDelete: Cascade)
+  plan         VipPlan      @relation(fields: [planId], references: [id], onDelete: Restrict)
+  payments     VipPayment[]
+  usages       VipUsage[]
+  appointments Appointment[]
+
+  @@unique([id, shopId])
+  @@index([shopId, customerId, status])
+  @@index([shopId, planId])
+  @@index([shopId, cycleStart, cycleEnd])
+}
+
+model VipPayment {
+  id             String    @id @default(cuid())
+  shopId         String    @default("shop_pedro_rocha_barbearia")
+  subscriptionId String
+  cycleMonth     String
+  amount         Decimal   @db.Decimal(12, 2)
+  status         String    @default("PENDING")
+  paidAt         DateTime?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  shop         Shop            @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  subscription VipSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, subscriptionId, cycleMonth])
+  @@index([shopId, status, cycleMonth])
+}
+
+model VipUsage {
+  id             String   @id @default(cuid())
+  shopId         String   @default("shop_pedro_rocha_barbearia")
+  subscriptionId String
+  appointmentId  String   @unique
+  customerId     String
+  createdById    String?
+  tokenAmount    Int      @default(1)
+  serviceLabel   String
+  usedAt         DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  shop         Shop            @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  subscription VipSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  appointment  Appointment     @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  createdBy    User?           @relation("VipUsageCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([id, shopId])
+  @@index([shopId, subscriptionId, usedAt])
+  @@index([shopId, customerId, usedAt])
 }
 
 model AppointmentService {

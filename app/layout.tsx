@@ -49,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const appName = isJakBarber ? JAKBARBER_APP_NAME : brandName;
   const description =
     shop.metadataDescription ||
-    "Agende seu horario, acompanhe seus atendimentos e encontre maquinas para manter o cuidado em dia.";
+    "Agende seu horario e acompanhe seus atendimentos com praticidade.";
   const faviconPath = isJakBarber
     ? JAKBARBER_FAVICON_32_PATH
     : shop.faviconPath || "";

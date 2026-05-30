@@ -37,6 +37,14 @@ type BookingClientProps = {
   nextDays: string[];
   whatsappNumber: string;
   rescheduleAppointment?: RescheduleAppointmentOption | null;
+  vipPlan?: VipPlanOption | null;
+};
+
+type VipPlanOption = {
+  code: string;
+  name: string;
+  tokensRemaining: number;
+  paymentPaid: boolean;
 };
 
 type RescheduleAppointmentOption = {
@@ -136,6 +144,7 @@ export default function BookingClient({
   nextDays,
   whatsappNumber,
   rescheduleAppointment = null,
+  vipPlan = null,
 }: BookingClientProps) {
   const isRescheduling = Boolean(rescheduleAppointment);
   const rescheduleAppointmentId = rescheduleAppointment?.id;
@@ -163,6 +172,7 @@ export default function BookingClient({
   const [confirmationSlot, setConfirmationSlot] = useState<string | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [bookingDetails, setBookingDetails] = useState<BookingDetails | null>(null);
+  const [useVipPlan, setUseVipPlan] = useState(false);
   const availabilityCacheRef = useRef<Map<string, AvailabilityCacheEntry>>(new Map());
   const [extraQuantities, setExtraQuantities] = useState<Record<string, number>>(() =>
     Object.fromEntries(
@@ -198,6 +208,7 @@ export default function BookingClient({
     0
   );
   const selectedPrice = selectedServices.reduce((sum, service) => sum + service.price, 0);
+  const effectiveSelectedPrice = useVipPlan ? 0 : selectedPrice;
   const selectedExtras = useMemo(
     () =>
       extras
@@ -213,7 +224,7 @@ export default function BookingClient({
     (sum, product) => sum + product.price * product.quantity,
     0
   );
-  const selectedTotalPrice = selectedPrice + selectedExtrasPrice;
+  const selectedTotalPrice = effectiveSelectedPrice + selectedExtrasPrice;
   const selectedItemsLabel =
     selectedServiceIds.length === 1
       ? "1 item selecionado"
@@ -368,11 +379,61 @@ export default function BookingClient({
   }, [loadAvailability, selectedBarberId, selectedDate, selectedServiceIds]);
 
   function toggleService(serviceId: string) {
+    setUseVipPlan(false);
     setSelectedServiceIds((current) =>
       current.includes(serviceId)
         ? current.filter((id) => id !== serviceId)
         : [...current, serviceId]
     );
+    setBookingError(null);
+    setBookingSuccess(null);
+    setBookingDetails(null);
+  }
+
+  function normalizeServiceText(value: string) {
+    return value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase();
+  }
+
+  function serviceMatchesVipPlan(service: ServiceOption, planCode: string) {
+    const text = normalizeServiceText(service.name);
+    const hasCorte = text.includes("corte");
+    const hasBarba = text.includes("barba");
+    const hasSobrancelha = text.includes("sobrancelha");
+
+    if (planCode === "CORTE") {
+      return hasCorte && !hasBarba && !hasSobrancelha;
+    }
+
+    if (planCode === "CORTE_SOBRANCELHA") {
+      return hasCorte && hasSobrancelha && !hasBarba;
+    }
+
+    if (planCode === "CORTE_BARBA_SOBRANCELHA") {
+      return hasCorte && hasBarba && hasSobrancelha;
+    }
+
+    return false;
+  }
+
+  function selectVipPlanServices() {
+    if (!vipPlan || !vipPlan.paymentPaid || vipPlan.tokensRemaining < 1) {
+      return;
+    }
+
+    const matchingServices = visibleServices.filter((service) =>
+      serviceMatchesVipPlan(service, vipPlan.code)
+    );
+
+    if (matchingServices.length === 0) {
+      setBookingError("O combo do seu plano ainda nao esta cadastrado nos servicos.");
+      return;
+    }
+
+    setUseVipPlan(true);
+    setSelectedServiceIds(matchingServices.map((service) => service.id));
     setBookingError(null);
     setBookingSuccess(null);
     setBookingDetails(null);
@@ -443,6 +504,7 @@ export default function BookingClient({
           time,
           notes: sanitizeTextareaInput(notes, 50),
           rescheduleAppointmentId,
+          useVipPlan,
         }),
       });
 
@@ -475,7 +537,7 @@ export default function BookingClient({
           subtotal: product.price * product.quantity,
         })),
         duration: selectedOccupiedDuration,
-        servicePrice: selectedPrice,
+        servicePrice: effectiveSelectedPrice,
         extrasPrice: selectedExtrasPrice,
         totalPrice: selectedTotalPrice,
       });
@@ -552,9 +614,10 @@ export default function BookingClient({
                     <button
                       key={barber.id}
                       type="button"
-                      onClick={() => {
-                        setSelectedBarberId(barber.id);
-                        setBookingError(null);
+                        onClick={() => {
+                          setSelectedBarberId(barber.id);
+                          setUseVipPlan(false);
+                          setBookingError(null);
                         setBookingSuccess(null);
                         setBookingDetails(null);
                       }}
@@ -609,6 +672,30 @@ export default function BookingClient({
               <label className="mb-2 block text-sm font-semibold text-zinc-200">
                 Serviços
               </label>
+              {vipPlan ? (
+                <div className="mb-3 rounded-2xl border border-[#d9ae55]/45 bg-[#d9ae55]/10 p-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#e8c57d]">
+                        Combo do meu plano VIP
+                      </p>
+                      <p className="mt-1 text-sm font-bold text-white">{vipPlan.name}</p>
+                      <p className="mt-1 text-xs text-zinc-300">
+                        {vipPlan.tokensRemaining} token(s) disponiveis
+                        {vipPlan.paymentPaid ? "" : " - pagamento pendente"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={selectVipPlanServices}
+                      disabled={!vipPlan.paymentPaid || vipPlan.tokensRemaining < 1}
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#f1e8d8] px-4 text-sm font-black text-[#080807] transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Usar combo do plano
+                    </button>
+                  </div>
+                </div>
+              ) : null}
               <div className="grid min-w-0 gap-2 sm:grid-cols-2">
                 {visibleServices.length === 0 ? (
                   <p className="rounded-2xl border border-dashed border-white/10 px-4 py-4 text-sm text-zinc-500 sm:col-span-2">
@@ -804,7 +891,7 @@ export default function BookingClient({
             subtotal: product.price * product.quantity,
           }))}
           duration={selectedOccupiedDuration}
-          servicePrice={selectedPrice}
+          servicePrice={effectiveSelectedPrice}
           extrasPrice={selectedExtrasPrice}
           totalPrice={selectedTotalPrice}
           isRescheduling={isRescheduling}

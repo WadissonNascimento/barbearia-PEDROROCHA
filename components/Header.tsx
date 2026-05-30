@@ -7,6 +7,7 @@ import {
   CalendarDays,
   Clock,
   CreditCard,
+  Crown,
   Home,
   Landmark,
   LogIn,
@@ -15,7 +16,6 @@ import {
   Scissors,
   Settings,
   ShoppingBag,
-  Store,
   UserPlus,
   Users,
   UserRound,
@@ -50,9 +50,9 @@ function getHeaderLinks(role: HeaderRole): {
         { href: "/admin/financeiro", label: "Financeiro" },
       ],
       secondary: [
+        { href: "/admin/vip", label: "Clientes VIP" },
         { href: "/admin/servicos", label: "Servicos" },
         { href: "/admin/extras", label: "Extras" },
-        { href: "/admin/maquinas", label: "Maquinas" },
       ],
     };
   }
@@ -77,8 +77,8 @@ function getHeaderLinks(role: HeaderRole): {
       eyebrow: "Cliente",
       primary: [
         { href: "/agendar", label: "Agendar" },
+        { href: "/planos", label: "Planos" },
         { href: "/customer/agendamentos", label: "Meus horários" },
-        { href: "/maquinas", label: "Maquinas" },
       ],
       secondary: [
         { href: "/customer/notificacoes", label: "Notificacoes" },
@@ -92,8 +92,8 @@ function getHeaderLinks(role: HeaderRole): {
     eyebrow: "Barbearia",
     primary: [
       { href: "/agendar", label: "Agendar" },
+      { href: "/planos", label: "Planos" },
       { href: "/servicos", label: "Serviços" },
-      { href: "/maquinas", label: "Maquinas" },
       { href: "/login", label: "Entrar" },
     ],
     secondary: [{ href: "/register", label: "Criar conta" }],
@@ -117,10 +117,10 @@ const navIcons: Record<string, LucideIcon> = {
   "/admin/configuracoes": Settings,
   "/admin/extras": ShoppingBag,
   "/admin/financeiro": Landmark,
-  "/admin/maquinas": Store,
   "/admin?notifications=1": Bell,
   "/admin/perfil": UserRound,
   "/admin/servicos": Scissors,
+  "/admin/vip": Crown,
   "/agendar": CalendarDays,
   "/barber": Clock,
   "/barber/agenda": CalendarDays,
@@ -132,7 +132,7 @@ const navIcons: Record<string, LucideIcon> = {
   "/customer/notificacoes": Bell,
   "/login": LogIn,
   "/meu-perfil": UserRound,
-  "/maquinas": ShoppingBag,
+  "/planos": CreditCard,
   "/register": UserPlus,
   "/servicos": Scissors,
 };

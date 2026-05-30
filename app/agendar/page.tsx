@@ -7,6 +7,10 @@ import { logSecurityEvent } from "@/lib/security";
 import { getCurrentShop } from "@/lib/shop";
 import { CUSTOMER_ROLES, requireTenantSession } from "@/lib/tenantSession";
 import {
+  getActiveVipSubscriptionForCustomer,
+  hasPaidCurrentVipCycle,
+} from "@/lib/vip";
+import {
   formatScheduleTime,
   getScheduleDateValue,
   isScheduleDateTimePast,
@@ -68,7 +72,7 @@ export default async function AgendarPage({
     roles: CUSTOMER_ROLES,
   });
 
-  const [barbers, services, initialExtras] = await Promise.all([
+  const [barbers, services, initialExtras, activeVipSubscription] = await Promise.all([
     prisma.user.findMany({
       where: {
         role: "BARBER",
@@ -118,7 +122,14 @@ export default async function AgendarPage({
         imageUrl: true,
       },
     }),
+    getActiveVipSubscriptionForCustomer(prisma, {
+      shopId: shop.id,
+      customerId: session.user.id,
+    }),
   ]);
+  const vipPaymentPaid = activeVipSubscription
+    ? await hasPaidCurrentVipCycle(prisma, activeVipSubscription.id)
+    : false;
   let extras = initialExtras;
   const rescheduleAppointmentId = getSearchParam(resolvedSearchParams.remarcar).trim();
   let rescheduleAppointment: {
@@ -248,6 +259,16 @@ export default async function AgendarPage({
       nextDays={getNextDays(12)}
       whatsappNumber={shop.whatsappNumber || ""}
       rescheduleAppointment={rescheduleAppointment}
+      vipPlan={
+        activeVipSubscription
+          ? {
+              code: activeVipSubscription.plan.code,
+              name: activeVipSubscription.plan.name,
+              tokensRemaining: activeVipSubscription.tokensRemaining,
+              paymentPaid: vipPaymentPaid,
+            }
+          : null
+      }
     />
   );
 }
