@@ -200,6 +200,27 @@ BEGIN
   ) THEN
     ALTER TABLE "BarberPayout" ADD COLUMN IF NOT EXISTS "shopId" TEXT NOT NULL DEFAULT 'shop_jak_barber';
   END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'Coupon'
+  ) THEN
+    ALTER TABLE "Coupon" ADD COLUMN IF NOT EXISTS "shopId" TEXT NOT NULL DEFAULT 'shop_jak_barber';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'Order'
+  ) THEN
+    ALTER TABLE "Order" ADD COLUMN IF NOT EXISTS "shopId" TEXT NOT NULL DEFAULT 'shop_jak_barber';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'OrderItem'
+  ) THEN
+    ALTER TABLE "OrderItem" ADD COLUMN IF NOT EXISTS "shopId" TEXT NOT NULL DEFAULT 'shop_jak_barber';
+  END IF;
 END $$;
 
 CREATE TABLE IF NOT EXISTS "Coupon" (

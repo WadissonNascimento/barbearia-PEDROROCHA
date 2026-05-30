@@ -108,7 +108,7 @@ function buildWhatsAppHref(phone: string | undefined, brandName: string) {
 
 export default function HomeClient(props: HomeClientProps) {
   if (props.shopId === "shop_pedro_rocha_barbearia") {
-    return <PedroRochaHome {...props} />;
+    return <DefaultHomeClient {...props} />;
   }
 
   if (props.shopId === "shop_rodrigo_style") {
@@ -130,8 +130,13 @@ function PedroRochaHome({
   addressLine,
   businessHours,
   logoPath,
+  whatsappNumber,
+  instagramUrl,
+  services = [],
+  barbers = [],
 }: HomeClientProps) {
   const heroImage = homeImages[0] || logoPath || corteImages[0];
+  const whatsappHref = buildWhatsAppHref(whatsappNumber, brandName);
 
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-[#080807] text-[#f5efe3]">
@@ -148,6 +153,10 @@ function PedroRochaHome({
             <h1 className="mt-5 max-w-2xl text-[2.35rem] font-black leading-[0.96] tracking-normal text-[#f8f3e7] sm:text-6xl lg:text-7xl">
               Corte classico, acabamento preciso.
             </h1>
+            <p className="mt-5 max-w-xl text-base leading-7 text-[#c9c0b2] sm:text-lg">
+              Um atendimento feito com calma, tecnica e cuidado em cada detalhe
+              para valorizar o seu estilo.
+            </p>
           </div>
 
           <div className="relative min-h-[330px] overflow-hidden rounded-lg border border-[#f1e8d8]/10 bg-[#11100f] shadow-[0_28px_80px_rgba(0,0,0,0.48)] sm:min-h-[480px] lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:min-h-[640px]">
@@ -197,6 +206,92 @@ function PedroRochaHome({
         </div>
       </section>
 
+      <section className="border-y border-[#f1e8d8]/10 bg-white/[0.025] px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-6xl gap-5 sm:grid-cols-3">
+          {[
+            ["01", "Tecnica", "Cortes executados com precisao e acabamento atento."],
+            ["02", "Experiencia", "Um ambiente classico para desacelerar e cuidar de voce."],
+            ["03", "Praticidade", "Agendamento simples para encaixar o cuidado na sua rotina."],
+          ].map(([number, title, description]) => (
+            <article key={number} className="border-l border-[#b8945f]/45 pl-4">
+              <p className="text-xs font-black tracking-[0.24em] text-[#b8945f]">{number}</p>
+              <h2 className="mt-3 text-xl font-black text-[#f8f3e7]">{title}</h2>
+              <p className="mt-2 text-sm leading-6 text-[#bfb6a8]">{description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#b8945f]">
+            Servicos
+          </p>
+          <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <h2 className="max-w-xl text-2xl font-black text-[#f8f3e7] sm:text-4xl">
+              Escolha seu proximo cuidado.
+            </h2>
+            <Link href="/servicos" className="text-sm font-bold text-[#ded4c4] hover:text-white">
+              Ver todos os servicos
+            </Link>
+          </div>
+
+          {services.length === 0 ? (
+            <div className="mt-6 rounded-lg border border-dashed border-[#f1e8d8]/15 bg-white/[0.035] p-5 text-sm text-[#c9c0b2]">
+              Os servicos da Pedro Rocha Barbearia serao publicados aqui em breve.
+            </div>
+          ) : (
+            <div className="mt-6 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {services.slice(0, 6).map((service) => (
+                <article key={service.id} className="rounded-lg border border-[#f1e8d8]/15 bg-white/[0.04] p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <h3 className="text-lg font-black text-[#f8f3e7]">{service.name}</h3>
+                    <span className="shrink-0 text-sm font-black text-[#ded4c4]">
+                      {formatCurrency(service.price)}
+                    </span>
+                  </div>
+                  {service.description ? (
+                    <p className="mt-3 text-sm leading-6 text-[#bfb6a8]">{service.description}</p>
+                  ) : null}
+                  <p className="mt-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[#b8945f]">
+                    <Clock3 className="h-4 w-4" aria-hidden="true" />
+                    {service.duration} min
+                  </p>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {barbers.length > 0 ? (
+        <section className="px-4 pb-14 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-6xl">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#b8945f]">Equipe</p>
+            <h2 className="mt-2 text-2xl font-black text-[#f8f3e7] sm:text-4xl">
+              Profissionais que entendem seu estilo.
+            </h2>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {barbers.slice(0, 6).map((barber) => (
+                <article key={barber.id} className="flex items-center gap-4 rounded-lg border border-[#f1e8d8]/15 bg-white/[0.04] p-4">
+                  <div className="relative h-14 w-14 overflow-hidden rounded-full border border-[#f1e8d8]/15 bg-white/[0.05]">
+                    {barber.image ? (
+                      <Image src={barber.image} alt={barber.name} fill sizes="56px" className="object-cover" />
+                    ) : (
+                      <Users className="m-4 h-6 w-6 text-[#ded4c4]" aria-hidden="true" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.18em] text-[#b8945f]">Barbeiro</p>
+                    <h3 className="mt-1 font-black text-[#f8f3e7]">{barber.name}</h3>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       <section className="px-4 pb-10 pt-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <p className="text-xs font-black uppercase tracking-[0.22em] text-[#ded4c4]">
@@ -244,6 +339,33 @@ function PedroRochaHome({
               </Link>
             </div>
           ) : null}
+        </div>
+      </section>
+
+      <section className="px-4 pb-14 pt-6 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl rounded-lg border border-[#b8945f]/35 bg-[linear-gradient(135deg,_rgba(184,148,95,0.16),_rgba(255,255,255,0.025))] p-6 sm:p-9">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#ded4c4]">Contato</p>
+          <h2 className="mt-3 max-w-2xl text-3xl font-black text-[#f8f3e7] sm:text-5xl">
+            Reserve seu horario.
+          </h2>
+          <p className="mt-4 max-w-xl text-sm leading-6 text-[#c9c0b2] sm:text-base">
+            Escolha o melhor momento para o seu atendimento e venha viver a experiencia Pedro Rocha Barbearia.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="/agendar" className="inline-flex min-h-12 items-center justify-center rounded-lg bg-[#f1e8d8] px-5 text-sm font-black text-[#080807] transition hover:bg-white">
+              Agendar agora
+            </Link>
+            {whatsappNumber ? (
+              <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-lg border border-[#f1e8d8]/15 px-5 text-sm font-bold text-[#f5efe3] transition hover:bg-white/[0.07]">
+                Falar pelo WhatsApp
+              </a>
+            ) : null}
+            {instagramUrl ? (
+              <a href={instagramUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-lg border border-[#f1e8d8]/15 px-5 text-sm font-bold text-[#f5efe3] transition hover:bg-white/[0.07]">
+                Ver Instagram
+              </a>
+            ) : null}
+          </div>
         </div>
       </section>
     </main>

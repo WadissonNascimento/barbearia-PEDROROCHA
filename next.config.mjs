@@ -42,11 +42,7 @@ const extraProductionOrigins = (process.env.ALLOWED_SERVER_ACTION_ORIGINS || "")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
-const productionOrigins = [
-  "jakbarbercompany.com",
-  "www.jakbarbercompany.com",
-  ...extraProductionOrigins,
-];
+const productionOrigins = [...extraProductionOrigins];
 const developmentOrigins = [
   "*.trycloudflare.com",
   "*.ngrok-free.dev",
@@ -63,6 +59,7 @@ const nextConfig = {
   allowedDevOrigins: isProduction ? [] : developmentOrigins,
   images: {
     formats: ["image/avif", "image/webp"],
+    qualities: [75, 94],
     minimumCacheTTL: 60 * 60 * 24 * 30,
     remotePatterns: [
       {

@@ -13,8 +13,8 @@ self.addEventListener("push", (event) => {
   const title = payload.title || "Nova notificacao";
   const options = {
     body: payload.body || "",
-    icon: payload.icon || "/pwa/jakbarber/icon-192.png",
-    badge: payload.badge || "/pwa/jakbarber/favicon-48.png",
+    icon: payload.icon || "/brands/pedro-rocha/icon-192.png",
+    badge: payload.badge || "/brands/pedro-rocha/favicon.png",
     tag: payload.tag || payload.notificationId || undefined,
     renotify: true,
     data: {

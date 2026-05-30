@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-const GLOBAL_RELOAD_FLAG = "jakbarber-global-error-reload-v2";
+const GLOBAL_RELOAD_FLAG = "pedro-rocha-global-error-reload-v1";
 
 function getCacheBustedUrl() {
   const url = new URL(window.location.href);

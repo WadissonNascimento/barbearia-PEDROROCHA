@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Bell, X } from "lucide-react";
 
-const DISMISSED_KEY = "jakbarber-push-prompt-dismissed";
+const DISMISSED_KEY = "pedro-rocha-push-prompt-dismissed";
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);

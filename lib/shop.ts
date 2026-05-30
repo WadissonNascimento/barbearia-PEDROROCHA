@@ -8,8 +8,8 @@ const cache: typeof reactCache =
     ? reactCache
     : ((<T extends (...args: unknown[]) => unknown>(callback: T) => callback) as typeof reactCache);
 
-export const DEFAULT_SHOP_ID = "shop_jak_barber";
-export const DEFAULT_SHOP_SLUG = "jak-barber";
+export const DEFAULT_SHOP_ID = "shop_pedro_rocha_barbearia";
+export const DEFAULT_SHOP_SLUG = "pedro-rocha-barbearia";
 export const UNCONFIGURED_SHOP_ID = "__unconfigured_shop__";
 
 const UNCONFIGURED_SHOP_CONFIG: ShopRuntimeConfig = {

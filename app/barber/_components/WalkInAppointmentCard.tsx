@@ -109,10 +109,10 @@ const emptyWalkInPeriodSlots = (): WalkInPeriodSlots => ({
 
 function getWalkInDraftKey() {
   if (typeof window === "undefined") {
-    return "jakbarber:walk-in-draft";
+    return "pedro-rocha:walk-in-draft";
   }
 
-  return `jakbarber:walk-in-draft:${window.location.host}`;
+  return `pedro-rocha:walk-in-draft:${window.location.host}`;
 }
 
 

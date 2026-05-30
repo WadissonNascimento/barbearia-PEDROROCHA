@@ -102,8 +102,8 @@ export async function sendPushNotificationToUser({
     body,
     url: url || "/",
     type,
-    icon: "/pwa/jakbarber/icon-192.png",
-    badge: "/pwa/jakbarber/favicon-48.png",
+    icon: "/brands/pedro-rocha/icon-192.png",
+    badge: "/brands/pedro-rocha/favicon.png",
     tag: notificationId,
   });
 

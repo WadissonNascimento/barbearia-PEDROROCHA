@@ -45,7 +45,7 @@ type TenantBrandStyle = CSSProperties & Record<`--${string}`, string>;
 export async function generateMetadata(): Promise<Metadata> {
   const shop = await getCurrentShop();
   const brandName = shop.name || "Barbearia";
-  const isJakBarber = shop.id === DEFAULT_SHOP_ID;
+  const isJakBarber = shop.id === "shop_jak_barber";
   const appName = isJakBarber ? JAKBARBER_APP_NAME : brandName;
   const description =
     shop.metadataDescription ||
@@ -154,7 +154,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export async function generateViewport(): Promise<Viewport> {
   const shop = await getCurrentShop();
-  const isJakBarber = shop.id === DEFAULT_SHOP_ID;
+  const isJakBarber = shop.id === "shop_jak_barber";
 
   return {
     width: "device-width",
@@ -253,8 +253,8 @@ export default async function RootLayout({
           "--brand": shop.brandColor || "#24211d",
           "--brand-strong": shop.brandColorStrong || "#f1e8d8",
           "--brand-muted": shop.brandColorMuted || "rgba(241, 232, 216, 0.08)",
-          "--tenant-font-family": tenantFont.cssFamily,
-          "--tenant-heading-font-family": tenantFont.cssFamily,
+          "--tenant-font-family": "var(--font-body), sans-serif",
+          "--tenant-heading-font-family": "var(--font-heading), sans-serif",
           "--site-header-bg": "rgba(8, 8, 7, 0.96)",
           "--site-header-border": "rgba(241, 232, 216, 0.12)",
           "--site-header-text": "#f5efe3",
@@ -309,11 +309,7 @@ export default async function RootLayout({
           whatsappNumber={shop.whatsappNumber || ""}
           instagramUrl={shop.instagramUrl || ""}
           addressLine={shop.addressLine || ""}
-          locationUrl={
-            shop.id === DEFAULT_SHOP_ID
-              ? "https://www.google.com/maps?ftid=0x94cefd02794bf5e3:0xd23868a9ee010185"
-              : ""
-          }
+          locationUrl=""
           businessHours={shop.businessHours || "Horario sob consulta"}
         >
           {children}

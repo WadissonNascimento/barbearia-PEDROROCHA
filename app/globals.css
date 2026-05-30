@@ -284,6 +284,57 @@ body[data-shop-id="shop_pedro_rocha_barbearia"] input:-webkit-autofill:focus {
   border-color: rgba(241, 232, 216, 0.18) !important;
 }
 
+body[data-shop-id="shop_pedro_rocha_barbearia"] ::selection {
+  background: rgba(184, 148, 95, 0.42);
+  color: #fffaf0;
+}
+
+body[data-shop-id="shop_pedro_rocha_barbearia"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] * {
+  scrollbar-color: rgba(184, 148, 95, 0.72) rgba(241, 232, 216, 0.045);
+}
+
+body[data-shop-id="shop_pedro_rocha_barbearia"] *::-webkit-scrollbar-track {
+  background: rgba(241, 232, 216, 0.045);
+}
+
+body[data-shop-id="shop_pedro_rocha_barbearia"] *::-webkit-scrollbar-thumb {
+  background: rgba(184, 148, 95, 0.72);
+}
+
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-[#050b16]"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-[#020817]"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-[#020b1a]"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-[#0f1724]"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-[#243754]"] {
+  background: #0d0c0b !important;
+}
+
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="border-white/10"] {
+  border-color: rgba(241, 232, 216, 0.18) !important;
+}
+
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="border-white/15"] {
+  border-color: rgba(241, 232, 216, 0.24) !important;
+}
+
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="from-sky-500"] {
+  --tw-gradient-from: rgba(184, 148, 95, 0.28) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(184, 148, 95, 0) var(--tw-gradient-to-position) !important;
+}
+
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="shadow-[0_12px_30px_rgba(14,165,233"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="shadow-[0_14px_30px_rgba(14,165,233"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="shadow-[0_18px_36px_rgba(14,165,233"] {
+  box-shadow: 0 16px 34px rgba(184, 148, 95, 0.2) !important;
+}
+
+body[data-shop-id="shop_pedro_rocha_barbearia"] .form-control:focus,
+body[data-shop-id="shop_pedro_rocha_barbearia"] .compact-filter-control:focus {
+  border-color: rgba(184, 148, 95, 0.72);
+  box-shadow: 0 0 0 3px rgba(184, 148, 95, 0.16);
+}
+
 body[data-shop-id="shop_rodrigo_style"] [class*="bg-[var(--brand-muted)]"] {
   border-color: rgba(201, 151, 43, 0.42) !important;
   background: rgba(212, 175, 55, 0.16) !important;

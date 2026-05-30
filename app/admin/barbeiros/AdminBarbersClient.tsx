@@ -240,7 +240,7 @@ export default function AdminBarbersClient({
               required
               maxLength={254}
               className="form-control"
-              placeholder="barbeiro@jakbarber.com"
+              placeholder="barbeiro@pedrorocha.com"
             />
           </label>
 

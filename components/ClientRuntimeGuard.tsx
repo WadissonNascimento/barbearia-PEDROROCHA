@@ -14,8 +14,8 @@ import {
   sanitizeTextareaInput,
 } from "@/lib/inputSanitization";
 
-const RELOAD_FLAG = "jakbarber-runtime-reload";
-const GLOBAL_ERROR_RELOAD_FLAG = "jakbarber-global-error-reload-v2";
+const RELOAD_FLAG = "pedro-rocha-runtime-reload";
+const GLOBAL_ERROR_RELOAD_FLAG = "pedro-rocha-global-error-reload-v1";
 
 function getErrorMessage(event: ErrorEvent | PromiseRejectionEvent) {
   if ("reason" in event) {

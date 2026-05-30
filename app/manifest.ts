@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { DEFAULT_SHOP_ID, getCurrentShop } from "@/lib/shop";
+import { getCurrentShop } from "@/lib/shop";
 import {
   JAKBARBER_APP_NAME,
   JAKBARBER_BACKGROUND_COLOR,
@@ -11,7 +11,8 @@ import {
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const shop = await getCurrentShop();
-  const isJakBarber = shop.id === DEFAULT_SHOP_ID;
+  const isJakBarber = shop.id === "shop_jak_barber";
+  const isPedroRocha = shop.id === "shop_pedro_rocha_barbearia";
   const appName = isJakBarber ? JAKBARBER_APP_NAME : shop.name || "Barbearia";
   const iconPath = shop.faviconPath || shop.logoPath || "/favicon.png";
 
@@ -48,6 +49,19 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
             sizes: "512x512",
             type: "image/png",
             purpose: "maskable",
+          },
+        ]
+      : isPedroRocha
+      ? [
+          {
+            src: "/brands/pedro-rocha/icon-192.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+          {
+            src: "/brands/pedro-rocha/icon-512.png",
+            sizes: "512x512",
+            type: "image/png",
           },
         ]
       : [
