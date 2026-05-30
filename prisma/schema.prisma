@@ -1,0 +1,787 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum ProductCategory {
+  BEVERAGE
+  SHELF
+  OTHER
+}
+
+enum ExtraCategory {
+  BEVERAGE
+  SHELF
+  OTHER
+}
+
+model Shop {
+  id                  String   @id @default(cuid())
+  name                String
+  slug                String   @unique
+  primaryDomain       String?  @unique
+  isDefault           Boolean  @default(false)
+  isActive            Boolean  @default(true)
+  archivedAt          DateTime?
+  planCode            String?
+  barberLimit         Int?
+  metadataTitle       String?
+  metadataDescription String?
+  whatsappNumber      String?
+  instagramUrl        String?
+  addressLine         String?
+  businessHours       String?
+  logoPath            String?
+  faviconPath         String?
+  brandColor          String?
+  brandColorStrong    String?
+  brandColorMuted     String?
+  backgroundColor     String?
+  textColor           String?
+  fontFamily          String?
+  fontStyle           String?
+  designTemplate      String?
+  heroImageUrl        String?
+  heroEyebrow         String?
+  heroTitle           String?
+  heroSubtitle        String?
+  primaryCtaLabel     String?
+  secondaryCtaLabel   String?
+  secondaryCtaHref    String?
+  attendanceText      String?
+  reviewsTitle        String?
+  reviewsEmptyText    String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  users                    User[]
+  pendingRegistrations     PendingRegistration[]
+  passwordResetRequests    PasswordResetRequest[]
+  emailChangeRequests      EmailChangeRequest[]
+  services                 Service[]
+  appointments             Appointment[]
+  appointmentServices      AppointmentService[]
+  reviews                  Review[]
+  barberAvailabilities     BarberAvailability[]
+  barberBlocks             BarberBlock[]
+  recurringBarberBlocks    RecurringBarberBlock[]
+  clientNotes              ClientNote[]
+  customerProfiles         CustomerProfile[]
+  products                 Product[]
+  productImages            ProductImage[]
+  barberServiceCommissions BarberServiceCommission[]
+  extraProducts            ExtraProduct[]
+  appointmentItems         AppointmentItem[]
+  stockMovements           StockMovement[]
+  extraStockMovements      ExtraStockMovement[]
+  barberPayouts            BarberPayout[]
+  barberTips               BarberTip[]
+  homeImages               HomeImage[]
+  homeContent              ShopHomeContent?
+  emailDeliveryLogs        EmailDeliveryLog[]
+  appNotifications         AppNotification[]
+  pushSubscriptions        PushSubscription[]
+  emailSettings            ShopEmailSettings?
+  accounts                 Account[]
+
+  @@index([isActive, isDefault])
+}
+
+model ShopHomeContent {
+  id                   String   @id @default(cuid())
+  shopId               String   @unique
+  heroEyebrow          String?
+  heroTitle            String?
+  heroSubtitle         String?
+  primaryButtonLabel   String?
+  primaryButtonHref    String?
+  secondaryButtonLabel String?
+  secondaryButtonHref  String?
+  infoOneLabel         String?
+  infoOneValue         String?
+  infoTwoLabel         String?
+  infoTwoValue         String?
+  infoThreeLabel       String?
+  infoThreeValue       String?
+  showServices         Boolean  @default(true)
+  servicesEyebrow      String?
+  servicesTitle        String?
+  servicesDescription  String?
+  showBarbers          Boolean  @default(true)
+  barbersEyebrow       String?
+  barbersTitle         String?
+  barbersDescription   String?
+  showProducts         Boolean  @default(false)
+  productsEyebrow      String?
+  productsTitle        String?
+  productsDescription  String?
+  showReviews          Boolean  @default(true)
+  reviewsEyebrow       String?
+  reviewsTitle         String?
+  reviewsEmptyText     String?
+  showAbout            Boolean  @default(true)
+  aboutEyebrow         String?
+  aboutTitle           String?
+  aboutBody            String?
+  showContact          Boolean  @default(true)
+  contactEyebrow       String?
+  contactTitle         String?
+  contactBody          String?
+  footerText           String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+}
+
+model ShopEmailSettings {
+  id                String   @id @default(cuid())
+  shopId            String   @unique
+  fromName          String?
+  replyToEmail      String?
+  notificationEmail String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  shopId        String    @default("shop_jak_barber")
+  name          String?
+  email         String?
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  role          String    @default("CUSTOMER")
+  phone         String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  accounts Account[]
+  sessions Session[]
+
+  customerAppointments     Appointment[]             @relation("CustomerAppointments")
+  barberAppointments       Appointment[]             @relation("BarberAppointments")
+  customerReviews          Review[]                  @relation("CustomerReviews")
+  barberReviews            Review[]                  @relation("BarberReviews")
+  barberServices           Service[]                 @relation("BarberServices")
+  barberServiceCommissions BarberServiceCommission[]
+  barberAvailabilities     BarberAvailability[]
+  barberBlocks             BarberBlock[]
+  recurringBarberBlocks    RecurringBarberBlock[]
+  barberPayouts            BarberPayout[]
+  barberTips               BarberTip[]               @relation("BarberTips")
+  barberClientNotes        ClientNote[]              @relation("BarberClientNotes")
+  customerClientNotes      ClientNote[]              @relation("CustomerClientNotes")
+  customerProfile          CustomerProfile?          @relation("CustomerProfileOwner")
+  preferredByProfiles      CustomerProfile[]         @relation("PreferredBarber")
+  emailDeliveryLogs        EmailDeliveryLog[]        @relation("EmailDeliveryRecipient")
+  appNotifications         AppNotification[]         @relation("AppNotificationRecipient")
+  pushSubscriptions        PushSubscription[]        @relation("PushSubscriptionUser")
+  emailChangeRequests      EmailChangeRequest[]
+
+  @@unique([id, shopId])
+  @@unique([shopId, email])
+  @@index([shopId, role, isActive])
+  @@index([shopId, createdAt])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  shopId            String  @default("shop_jak_barber")
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([id, shopId])
+  @@unique([shopId, provider, providerAccountId])
+  @@index([shopId, userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model EmailDeliveryLog {
+  id              String    @id @default(cuid())
+  shopId          String    @default("shop_jak_barber")
+  recipientUserId String?
+  recipientEmail  String
+  template        String
+  eventKey        String
+  status          String    @default("PENDING")
+  attempts        Int       @default(0)
+  subject         String
+  lastError       String?
+  metadata        Json?
+  sentAt          DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  shop      Shop  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  recipient User? @relation("EmailDeliveryRecipient", fields: [recipientUserId], references: [id], onDelete: SetNull)
+
+  @@unique([shopId, template, eventKey, recipientEmail])
+  @@index([shopId, recipientUserId, createdAt])
+  @@index([shopId, status, createdAt])
+}
+
+model AppNotification {
+  id              String    @id @default(cuid())
+  shopId          String    @default("shop_jak_barber")
+  recipientUserId String
+  type            String
+  eventKey        String
+  eyebrow         String?
+  title           String
+  body            String
+  actionUrl       String?
+  metadata        Json?
+  readAt          DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  shop      Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  recipient User @relation("AppNotificationRecipient", fields: [recipientUserId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, recipientUserId, eventKey])
+  @@index([shopId, recipientUserId, readAt, createdAt])
+  @@index([shopId, type, createdAt])
+}
+
+model PushSubscription {
+  id            String    @id @default(cuid())
+  shopId        String    @default("shop_jak_barber")
+  userId        String
+  endpoint      String    @unique
+  p256dh        String
+  auth          String
+  userAgent     String?
+  isActive      Boolean   @default(true)
+  failureCount  Int       @default(0)
+  lastSuccessAt DateTime?
+  lastFailureAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user User @relation("PushSubscriptionUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([id, shopId])
+  @@index([shopId, userId, isActive])
+  @@index([shopId, isActive, updatedAt])
+}
+
+model RateLimitBucket {
+  id        String   @id @default(cuid())
+  keyHash   String   @unique
+  scope     String
+  count     Int      @default(0)
+  resetAt   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([scope, resetAt])
+  @@index([resetAt])
+}
+
+model PendingRegistration {
+  id           String   @id @default(cuid())
+  shopId       String   @default("shop_jak_barber")
+  name         String
+  email        String
+  phone        String?
+  passwordHash String
+  role         String   @default("CUSTOMER")
+  code         String
+  expiresAt    DateTime
+  attempts     Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([id, shopId])
+  @@unique([shopId, email])
+  @@index([shopId, email, expiresAt])
+}
+
+model PasswordResetRequest {
+  id        String   @id @default(cuid())
+  shopId    String   @default("shop_jak_barber")
+  email     String
+  code      String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([id, shopId])
+  @@unique([shopId, email])
+  @@index([shopId, email, expiresAt])
+}
+
+model EmailChangeRequest {
+  id        String   @id @default(cuid())
+  shopId    String   @default("shop_jak_barber")
+  userId    String   @unique
+  email     String
+  code      String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([id, shopId])
+  @@unique([shopId, email])
+  @@index([shopId, email, expiresAt])
+  @@index([shopId, userId, expiresAt])
+}
+
+model Service {
+  id              String   @id @default(cuid())
+  shopId          String   @default("shop_jak_barber")
+  barberId        String?
+  name            String
+  description     String?
+  price           Decimal  @db.Decimal(12, 2)
+  duration        Int
+  bufferAfter     Int      @default(0)
+  commissionType  String   @default("PERCENT")
+  commissionValue Decimal  @default(40) @db.Decimal(12, 2)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  shop   Shop  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  barber User? @relation("BarberServices", fields: [barberId], references: [id], onDelete: Cascade)
+
+  appointmentItems  AppointmentService[]
+  barberCommissions BarberServiceCommission[]
+
+  @@unique([id, shopId])
+  @@index([shopId, isActive, name])
+  @@index([shopId, barberId, isActive])
+}
+
+model Appointment {
+  id             String    @id @default(cuid())
+  shopId         String    @default("shop_jak_barber")
+  publicId       Int
+  customerId     String
+  barberId       String
+  date           DateTime
+  status         String    @default("PENDING")
+  paymentMethod  String?
+  notes          String?
+  isManualFitIn  Boolean   @default(false)
+  manualDurationMinutes Int?
+  reminderSentAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  shop     Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer User @relation("CustomerAppointments", fields: [customerId], references: [id], onDelete: Cascade)
+  barber   User @relation("BarberAppointments", fields: [barberId], references: [id], onDelete: Cascade)
+
+  services AppointmentService[]
+  items    AppointmentItem[]
+  review   Review?
+
+  @@unique([id, shopId])
+  @@unique([shopId, publicId])
+  @@index([shopId, customerId])
+  @@index([shopId, customerId, date])
+  @@index([shopId, barberId, status])
+  @@index([shopId, barberId, date])
+  @@index([shopId, date])
+  @@index([shopId, status, reminderSentAt, date])
+}
+
+model AppointmentService {
+  id                      String   @id @default(cuid())
+  shopId                  String   @default("shop_jak_barber")
+  appointmentId           String
+  serviceId               String
+  orderIndex              Int      @default(0)
+  nameSnapshot            String
+  priceSnapshot           Decimal  @db.Decimal(12, 2)
+  durationSnapshot        Int
+  bufferAfter             Int      @default(0)
+  commissionTypeSnapshot  String   @default("PERCENT")
+  commissionValueSnapshot Decimal  @default(40) @db.Decimal(12, 2)
+  barberPayoutSnapshot    Decimal  @default(0) @db.Decimal(12, 2)
+  shopRevenueSnapshot     Decimal  @default(0) @db.Decimal(12, 2)
+  createdAt               DateTime @default(now())
+
+  shop        Shop        @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  service     Service     @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([id, shopId])
+  @@index([shopId, appointmentId, orderIndex])
+  @@index([shopId, serviceId])
+}
+
+model Review {
+  id            String   @id @default(cuid())
+  shopId        String   @default("shop_jak_barber")
+  appointmentId String   @unique
+  customerId    String
+  barberId      String
+  rating        Int
+  comment       String
+  isVisible     Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  shop        Shop        @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  appointment Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  customer    User        @relation("CustomerReviews", fields: [customerId], references: [id], onDelete: Cascade)
+  barber      User        @relation("BarberReviews", fields: [barberId], references: [id], onDelete: Cascade)
+
+  @@unique([id, shopId])
+  @@index([shopId, customerId])
+  @@index([shopId, barberId])
+  @@index([shopId, isVisible, createdAt])
+}
+
+model BarberAvailability {
+  id        String   @id @default(cuid())
+  shopId    String   @default("shop_jak_barber")
+  barberId  String
+  weekDay   Int
+  startTime String
+  endTime   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop   Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  barber User @relation(fields: [barberId], references: [id], onDelete: Cascade)
+
+  @@unique([id, shopId])
+  @@unique([barberId, weekDay])
+  @@index([shopId, barberId, weekDay])
+}
+
+model BarberBlock {
+  id            String   @id @default(cuid())
+  shopId        String   @default("shop_jak_barber")
+  barberId      String
+  startDateTime DateTime
+  endDateTime   DateTime
+  reason        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  shop   Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  barber User @relation(fields: [barberId], references: [id], onDelete: Cascade)
+
+  @@unique([id, shopId])
+  @@index([shopId, barberId, startDateTime])
+  @@index([shopId, barberId, endDateTime])
+}
+
+model RecurringBarberBlock {
+  id        String   @id @default(cuid())
+  shopId    String   @default("shop_jak_barber")
+  barberId  String
+  weekDay   Int
+  startTime String
+  endTime   String
+  reason    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop   Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  barber User @relation(fields: [barberId], references: [id], onDelete: Cascade)
+
+  @@unique([id, shopId])
+  @@index([shopId, barberId, weekDay, isActive])
+  @@index([shopId, barberId, isActive])
+}
+
+model ClientNote {
+  id         String   @id @default(cuid())
+  shopId     String   @default("shop_jak_barber")
+  barberId   String
+  customerId String
+  note       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  shop     Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  barber   User @relation("BarberClientNotes", fields: [barberId], references: [id], onDelete: Cascade)
+  customer User @relation("CustomerClientNotes", fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([id, shopId])
+  @@unique([barberId, customerId])
+  @@index([shopId, barberId])
+  @@index([shopId, customerId])
+}
+
+model CustomerProfile {
+  id                String    @id @default(cuid())
+  shopId            String    @default("shop_jak_barber")
+  customerId        String    @unique
+  birthDate         DateTime?
+  preferredBarberId String?
+  allergies         String?
+  preferences       String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  shop            Shop  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer        User  @relation("CustomerProfileOwner", fields: [customerId], references: [id], onDelete: Cascade)
+  preferredBarber User? @relation("PreferredBarber", fields: [preferredBarberId], references: [id], onDelete: SetNull)
+
+  @@unique([id, shopId])
+  @@index([shopId, preferredBarberId])
+}
+
+model Product {
+  id          String          @id @default(cuid())
+  shopId      String          @default("shop_jak_barber")
+  name        String
+  description String?
+  category    ProductCategory @default(OTHER)
+  price       Decimal         @db.Decimal(12, 2)
+  imageUrl    String?
+  imagePath   String?         @map("image_path")
+  stock       Int             @default(0)
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  stockMovements  StockMovement[]
+  secondaryImages ProductImage[]
+
+  @@unique([id, shopId])
+  @@index([shopId, isActive, createdAt])
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  shopId    String   @default("shop_jak_barber")
+  productId String
+  url       String
+  imagePath String?  @map("image_path")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop    Shop    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([id, shopId])
+  @@index([productId])
+  @@index([shopId])
+  @@index([shopId, productId])
+}
+
+model BarberServiceCommission {
+  id              String   @id @default(cuid())
+  shopId          String   @default("shop_jak_barber")
+  barberId        String
+  serviceId       String
+  commissionType  String   @default("PERCENT")
+  commissionValue Decimal  @default(40) @db.Decimal(12, 2)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  shop    Shop    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  barber  User    @relation(fields: [barberId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([id, shopId])
+  @@unique([barberId, serviceId])
+  @@index([shopId, barberId])
+  @@index([shopId, serviceId])
+}
+
+model ExtraProduct {
+  id              String        @id @default(cuid())
+  shopId          String        @default("shop_jak_barber")
+  name            String
+  description     String?
+  category        ExtraCategory @default(OTHER)
+  price           Decimal       @db.Decimal(12, 2)
+  commissionType  String        @default("PERCENT")
+  commissionValue Decimal       @default(0) @db.Decimal(12, 2)
+  imageUrl        String?
+  imagePath       String?       @map("image_path")
+  stock           Int           @default(0)
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  appointmentItems AppointmentItem[]
+  stockMovements   ExtraStockMovement[]
+
+  @@unique([id, shopId])
+  @@index([shopId, isActive, createdAt])
+}
+
+model AppointmentItem {
+  id                      String    @id @default(cuid())
+  shopId                  String    @default("shop_jak_barber")
+  appointmentId           String
+  extraProductId          String    @map("productId")
+  productNameSnapshot     String
+  quantity                Int       @default(1)
+  unitPrice               Decimal   @db.Decimal(12, 2)
+  subtotal                Decimal   @db.Decimal(12, 2)
+  commissionTypeSnapshot  String    @default("PERCENT")
+  commissionValueSnapshot Decimal   @default(0) @db.Decimal(12, 2)
+  barberPayoutSnapshot    Decimal   @default(0) @db.Decimal(12, 2)
+  shopRevenueSnapshot     Decimal   @default(0) @db.Decimal(12, 2)
+  isDelivered             Boolean   @default(false)
+  deliveredAt             DateTime?
+  createdAt               DateTime  @default(now())
+
+  shop         Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  appointment  Appointment  @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  extraProduct ExtraProduct @relation(fields: [extraProductId], references: [id], onDelete: Cascade)
+
+  @@unique([id, shopId])
+  @@index([shopId, appointmentId])
+  @@index([shopId, extraProductId])
+}
+
+model StockMovement {
+  id        String   @id @default(cuid())
+  shopId    String   @default("shop_jak_barber")
+  productId String
+  type      String
+  quantity  Int
+  reason    String?
+  createdAt DateTime @default(now())
+
+  shop    Shop    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([id, shopId])
+  @@index([shopId, productId, createdAt])
+  @@index([shopId, type])
+}
+
+model ExtraStockMovement {
+  id             String   @id @default(cuid())
+  shopId         String   @default("shop_jak_barber")
+  extraProductId String
+  type           String
+  quantity       Int
+  reason         String?
+  createdAt      DateTime @default(now())
+
+  shop         Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  extraProduct ExtraProduct @relation(fields: [extraProductId], references: [id], onDelete: Cascade)
+
+  @@unique([id, shopId])
+  @@index([shopId, extraProductId, createdAt])
+  @@index([shopId, type])
+}
+
+model BarberPayout {
+  id              String    @id @default(cuid())
+  shopId          String    @default("shop_jak_barber")
+  barberId        String
+  periodStart     DateTime
+  periodEnd       DateTime
+  grossRevenue    Decimal   @default(0) @db.Decimal(12, 2)
+  commissionTotal Decimal   @default(0) @db.Decimal(12, 2)
+  shopNetRevenue  Decimal   @default(0) @db.Decimal(12, 2)
+  status          String    @default("OPEN")
+  paidAt          DateTime?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  shop   Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  barber User @relation(fields: [barberId], references: [id], onDelete: Cascade)
+
+  @@unique([id, shopId])
+  @@unique([barberId, periodStart, periodEnd])
+  @@index([shopId, barberId, status])
+  @@index([shopId, periodStart, periodEnd])
+}
+
+model BarberTip {
+  id         String   @id @default(cuid())
+  shopId     String   @default("shop_jak_barber")
+  barberId   String
+  clientName String
+  amount     Decimal  @db.Decimal(12, 2)
+  note       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  shop   Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  barber User @relation("BarberTips", fields: [barberId], references: [id], onDelete: Cascade)
+
+  @@unique([id, shopId])
+  @@index([shopId, barberId])
+  @@index([shopId, createdAt])
+  @@index([shopId, barberId, createdAt])
+}
+
+model HomeImage {
+  id        String   @id @default(cuid())
+  shopId    String   @default("shop_jak_barber")
+  imageUrl  String
+  imagePath String
+  position  Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([id, shopId])
+  @@index([shopId, isActive, position])
+}
