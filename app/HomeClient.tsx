@@ -394,13 +394,13 @@ function ThemedDefaultHomeClient({
 
   return (
     <main className="relative min-h-screen text-white">
-      <section className="mx-auto max-w-6xl px-4 pb-8 pt-6 sm:px-6 sm:pt-10">
+      <section className="mx-auto max-w-6xl px-4 pb-8 pt-5 sm:px-6 sm:pt-9">
         <div className="grid gap-7 lg:grid-cols-[1fr_0.95fr] lg:items-start">
           <div className="min-w-0 lg:col-start-1 lg:row-start-1">
             <p className="text-xs font-black uppercase tracking-[0.24em] text-[var(--brand-strong)]">
               {heroEyebrow || "Barbearia premium"}
             </p>
-            <h1 className="mt-5 text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">
+            <h1 className="mt-3 max-w-[17rem] text-[1.95rem] font-semibold leading-[1.14] tracking-[-0.04em] sm:mt-5 sm:max-w-xl sm:text-5xl sm:font-bold sm:leading-tight lg:text-6xl">
               {heroTitle || "Seu estilo comeca aqui."}
             </h1>
             <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-300 sm:text-base">
@@ -623,7 +623,7 @@ function DefaultHomeClient({
       <section className="mx-auto max-w-6xl px-4 pb-8 pt-6 sm:px-6 sm:pt-10">
         <div className="grid items-start gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
           <div className="order-1 min-w-0 lg:col-start-1 lg:row-start-1">
-            <h1 className="mt-5 text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">
+            <h1 className="mt-3 max-w-[17rem] text-[1.95rem] font-semibold leading-[1.14] tracking-[-0.04em] sm:mt-5 sm:max-w-xl sm:text-5xl sm:font-bold sm:leading-tight lg:text-6xl">
               Seu estilo começa aqui.
             </h1>
           </div>

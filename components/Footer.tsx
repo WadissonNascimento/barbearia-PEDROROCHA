@@ -5,6 +5,7 @@ export default function Footer({
   brandName,
   whatsappNumber,
   instagramUrl,
+  addressLine,
   locationUrl,
   businessHours,
 }: {
@@ -19,6 +20,11 @@ export default function Footer({
     `Ola! Vim pelo site da ${brandName} e queria tirar uma dúvida.`
   ;
   const whatsappHref = buildWhatsAppUrl(whatsappNumber, whatsappMessage);
+  const effectiveLocationUrl =
+    locationUrl ||
+    (addressLine && !/sob consulta/i.test(addressLine)
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressLine)}`
+      : "");
   const displayedBusinessHours = businessHours.replace(/\b[Tt]erca\b/g, (match) =>
     match.startsWith("t") ? "terça" : "Terça"
   );
@@ -72,11 +78,15 @@ export default function Footer({
                   <path d="M7.75 2C4.57 2 2 4.57 2 7.75v8.5C2 19.43 4.57 22 7.75 22h8.5C19.43 22 22 19.43 22 16.25v-8.5C22 4.57 19.43 2 16.25 2h-8.5zm0 2h8.5A3.75 3.75 0 0 1 20 7.75v8.5A3.75 3.75 0 0 1 16.25 20h-8.5A3.75 3.75 0 0 1 4 16.25v-8.5A3.75 3.75 0 0 1 7.75 4zm4.25 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm4.75-.88a1.12 1.12 0 1 0 0 2.24 1.12 1.12 0 0 0 0-2.24z" />
                 </svg>
               </a>
-            ) : null}
+            ) : (
+              <UnavailableFooterAction label="Instagram ainda nao configurado">
+                <InstagramIcon />
+              </UnavailableFooterAction>
+            )}
 
-            {locationUrl ? (
+            {effectiveLocationUrl ? (
               <a
-                href={locationUrl}
+                href={effectiveLocationUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-[var(--brand-strong)] transition hover:border-[var(--brand)]/40 hover:bg-[var(--brand-muted)] hover:text-[var(--brand-strong)]"
@@ -92,7 +102,11 @@ export default function Footer({
                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z" />
                 </svg>
               </a>
-            ) : null}
+            ) : (
+              <UnavailableFooterAction label="Localizacao ainda nao configurada">
+                <LocationIcon />
+              </UnavailableFooterAction>
+            )}
 
             {whatsappHref ? (
               <a
@@ -104,7 +118,11 @@ export default function Footer({
               >
                 <WhatsAppIcon />
               </a>
-            ) : null}
+            ) : (
+              <UnavailableFooterAction label="WhatsApp ainda nao configurado">
+                <WhatsAppIcon />
+              </UnavailableFooterAction>
+            )}
           </div>
         </div>
 
@@ -137,6 +155,52 @@ export default function Footer({
         </div>
       </div>
     </footer>
+  );
+}
+
+function UnavailableFooterAction({
+  children,
+  label,
+}: {
+  children: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <span
+      aria-label={label}
+      title={label}
+      className="flex h-11 w-11 cursor-not-allowed items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-[var(--brand-strong)] opacity-55"
+    >
+      {children}
+    </span>
+  );
+}
+
+function InstagramIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path d="M7.75 2C4.57 2 2 4.57 2 7.75v8.5C2 19.43 4.57 22 7.75 22h8.5C19.43 22 22 19.43 22 16.25v-8.5C22 4.57 19.43 2 16.25 2h-8.5zm0 2h8.5A3.75 3.75 0 0 1 20 7.75v8.5A3.75 3.75 0 0 1 16.25 20h-8.5A3.75 3.75 0 0 1 4 16.25v-8.5A3.75 3.75 0 0 1 7.75 4zm4.25 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm4.75-.88a1.12 1.12 0 1 0 0 2.24 1.12 1.12 0 0 0 0-2.24z" />
+    </svg>
+  );
+}
+
+function LocationIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="20"
+      height="20"
+      fill="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z" />
+    </svg>
   );
 }
 

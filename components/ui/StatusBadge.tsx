@@ -24,6 +24,7 @@ export default function StatusBadge({
 }) {
   return (
     <span
+      data-status-variant={variant}
       className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] ${variantClasses[variant]} ${className}`.trim()}
     >
       {children}

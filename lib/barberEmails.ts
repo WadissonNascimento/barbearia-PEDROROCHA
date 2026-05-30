@@ -26,7 +26,7 @@ import {
 } from "@/lib/scheduleTime";
 
 const BARBER_PANEL_PATH = "/barber/agenda";
-const DEFAULT_BRAND_COLOR = "#0ea5e9";
+const DEFAULT_BRAND_COLOR = "#b8945f";
 const TRANSPARENT_LOGO_DATA_URI = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
 
 const appointmentEmailInclude = {

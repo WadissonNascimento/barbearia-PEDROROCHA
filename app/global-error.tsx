@@ -66,10 +66,10 @@ export default function GlobalError({
 
   return (
     <html lang="pt-BR">
-      <body className="min-h-screen bg-[#030712] text-white">
+      <body className="min-h-screen bg-[#080807] text-white">
         <main className="flex min-h-screen items-center justify-center px-5">
           <section className="w-full max-w-md rounded-[28px] border border-white/10 bg-white/[0.04] p-6 text-center shadow-[0_24px_70px_rgba(0,0,0,0.35)]">
-            <p className="text-xs uppercase tracking-[0.28em] text-sky-300">
+            <p className="text-xs uppercase tracking-[0.28em] text-[#e0c79d]">
               Sistema
             </p>
             <h1 className="mt-3 text-2xl font-bold">Vamos recarregar o painel</h1>
@@ -89,7 +89,7 @@ export default function GlobalError({
                   reset();
                   window.location.replace(getCacheBustedUrl());
                 }}
-                className="rounded-2xl bg-[#0ea5e9] px-5 py-3 font-semibold text-white"
+                className="rounded-2xl bg-[#b8945f] px-5 py-3 font-semibold text-[#080807]"
               >
                 Tentar novamente
               </button>

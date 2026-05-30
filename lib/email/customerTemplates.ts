@@ -47,13 +47,15 @@ type EmailLayoutInput = CustomerEmailTheme & {
   footerNote?: string;
 };
 
-const DEFAULT_BRAND_COLOR = "#0ea5e9";
-const PAGE_BG = "#030712";
-const PANEL_BG = "#020617";
-const CARD_BG = "#0f172a";
-const BORDER = "rgba(148, 163, 184, 0.24)";
-const TEXT_MUTED = "#94a3b8";
-const TEXT_SOFT = "#cbd5e1";
+const DEFAULT_BRAND_COLOR = "#b8945f";
+const PAGE_BG = "#050403";
+const PANEL_BG = "#0b0a08";
+const CARD_BG = "#15120f";
+const INNER_BG = "#0f0d0a";
+const BORDER = "rgba(184, 148, 95, 0.32)";
+const SOFT_BORDER = "rgba(255, 255, 255, 0.12)";
+const TEXT_MUTED = "#a8a29a";
+const TEXT_SOFT = "#d8d2c7";
 
 function escapeHtml(value: string) {
   return value
@@ -88,8 +90,8 @@ export function Button({
   return `
     <table role="presentation" cellspacing="0" cellpadding="0" style="margin:24px 0 0;border-collapse:collapse;">
       <tr>
-        <td style="border-radius:14px;background:${escapeHtml(color)};">
-          <a href="${escapeHtml(href)}" style="display:inline-block;padding:14px 20px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:900;color:#ffffff;text-decoration:none;">
+        <td style="border-radius:14px;background:${escapeHtml(color)};box-shadow:0 12px 26px rgba(184,148,95,0.22);">
+          <a href="${escapeHtml(href)}" style="display:inline-block;padding:14px 20px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:900;color:#0b0a08;text-decoration:none;">
             ${escapeHtml(label)}
           </a>
         </td>
@@ -105,7 +107,7 @@ export function InfoRow(label: string, value: string) {
         <p style="margin:0;font-size:11px;line-height:1.4;text-transform:uppercase;letter-spacing:0.16em;color:${TEXT_MUTED};font-weight:800;">
           ${escapeHtml(label)}
         </p>
-        <p style="margin:7px 0 0;font-size:18px;line-height:1.35;font-weight:900;color:#f8fafc;">
+        <p style="margin:7px 0 0;font-size:18px;line-height:1.35;font-weight:900;color:#fffaf2;">
           ${escapeHtml(value)}
         </p>
       </td>
@@ -159,11 +161,11 @@ function NoticeBox({
   }
 
   return `
-    <div style="margin:18px 0 0;padding:18px;border-radius:18px;background:#111827;border:1px solid ${BORDER};">
-      <p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.4;text-transform:uppercase;letter-spacing:0.16em;color:${escapeHtml(color || "#7dd3fc")};font-weight:900;">
+    <div style="margin:18px 0 0;padding:18px;border-radius:18px;background:${INNER_BG};border:1px solid ${BORDER};">
+      <p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.4;text-transform:uppercase;letter-spacing:0.16em;color:${escapeHtml(color || DEFAULT_BRAND_COLOR)};font-weight:900;">
         ${escapeHtml(label)}
       </p>
-      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.65;color:#e5e7eb;">
+      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.65;color:${TEXT_SOFT};">
         ${escapeHtml(value.trim())}
       </p>
     </div>
@@ -177,7 +179,7 @@ export function SecurityCodeBox(code: string, color: string) {
     .map(
       (digit) => `
         <td style="padding:0 4px;">
-          <span style="display:inline-block;width:38px;height:46px;border-radius:12px;background:#111827;border:1px solid ${BORDER};font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:46px;font-weight:900;text-align:center;color:#f8fafc;">
+          <span style="display:inline-block;width:38px;height:46px;border-radius:12px;background:${INNER_BG};border:1px solid ${BORDER};font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:46px;font-weight:900;text-align:center;color:#fffaf2;">
             ${escapeHtml(digit)}
           </span>
         </td>
@@ -206,13 +208,13 @@ export function SecurityCodeBox(code: string, color: string) {
 
 export function RatingBox(color: string) {
   return `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:18px 0 0;border-collapse:collapse;border-radius:18px;background:#07111f;border:1px solid rgba(125,211,252,0.28);">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:18px 0 0;border-collapse:collapse;border-radius:18px;background:${INNER_BG};border:1px solid ${BORDER};">
       <tr>
         <td style="padding:18px;font-family:Arial,Helvetica,sans-serif;">
           <p style="margin:0 0 8px;font-size:11px;line-height:1.4;text-transform:uppercase;letter-spacing:0.16em;color:${escapeHtml(color)};font-weight:900;">
             Avaliacao
           </p>
-          <p style="margin:0;font-size:15px;line-height:1.65;color:#e5e7eb;">
+          <p style="margin:0;font-size:15px;line-height:1.65;color:${TEXT_SOFT};">
             Sua opiniao ajuda a manter o atendimento no padrao da barbearia. A avaliacao leva menos de um minuto.
           </p>
         </td>
@@ -226,7 +228,7 @@ export function EmailHeader(theme: CustomerEmailTheme) {
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
       <tr>
         <td style="vertical-align:middle;">
-          <img src="${escapeHtml(logoSource(theme))}" width="82" alt="${escapeHtml(theme.nomeBarbearia)}" style="display:block;width:82px;height:auto;border:0;outline:none;text-decoration:none;" />
+          <img src="${escapeHtml(logoSource(theme))}" width="96" alt="${escapeHtml(theme.nomeBarbearia)}" style="display:block;width:96px;height:auto;border:0;outline:none;text-decoration:none;" />
         </td>
         <td align="right" style="vertical-align:middle;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:${TEXT_MUTED};">
           ${escapeHtml(theme.nomeBarbearia)}
@@ -264,10 +266,10 @@ export function EmailLayout(input: EmailLayoutInput) {
           <td align="center" style="padding:32px 14px;">
             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;border-collapse:separate;border-spacing:0;">
               <tr>
-                <td style="border-radius:30px;background:linear-gradient(135deg,rgba(148,163,184,0.35),rgba(14,165,233,0.28),rgba(148,163,184,0.14));padding:1px;">
+                <td style="border-radius:30px;background:linear-gradient(135deg,rgba(184,148,95,0.72),rgba(255,255,255,0.14),rgba(184,148,95,0.28));padding:1px;">
                   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:separate;border-spacing:0;background:${PANEL_BG};border-radius:29px;">
                     <tr>
-                      <td style="padding:28px 28px 20px;border-radius:29px 29px 0 0;background:linear-gradient(135deg,#020617 0%,#07111f 68%,rgba(14,165,233,0.18) 100%);">
+                      <td style="padding:28px 28px 20px;border-radius:29px 29px 0 0;background:linear-gradient(135deg,#050403 0%,#15120f 68%,rgba(184,148,95,0.16) 100%);">
                         ${EmailHeader(input)}
                         <p style="margin:28px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.4;text-transform:uppercase;letter-spacing:0.22em;color:${escapeHtml(color)};font-weight:900;">
                           ${escapeHtml(input.eyebrow)}
@@ -283,7 +285,7 @@ export function EmailLayout(input: EmailLayoutInput) {
 
                     <tr>
                       <td style="padding:0 22px 24px;background:${PANEL_BG};">
-                        <div style="border-radius:22px;background:#050b16;padding:14px;border:1px solid rgba(148,163,184,0.14);">
+                        <div style="border-radius:22px;background:${INNER_BG};padding:14px;border:1px solid ${SOFT_BORDER};">
                           ${input.children}
                           ${
                             input.buttonLabel && input.buttonUrl

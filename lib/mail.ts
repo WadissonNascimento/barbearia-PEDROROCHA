@@ -42,7 +42,7 @@ export type SendEmailMessageInput = {
 };
 
 const DEFAULT_SHOP_NAME = "Barbearia";
-const DEFAULT_BRAND_COLOR = "#0ea5e9";
+const DEFAULT_BRAND_COLOR = "#b8945f";
 const RESEND_EMAIL_API_URL = "https://api.resend.com/emails";
 
 function sanitizeEmailHeaderText(value: string | null | undefined) {

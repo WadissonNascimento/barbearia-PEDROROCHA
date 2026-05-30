@@ -56,11 +56,13 @@ type LayoutInput = BarberEmailTheme & {
   footerNote?: string;
 };
 
-const DEFAULT_DARK = "#020617";
-const CARD_DARK = "#0f172a";
-const BORDER = "rgba(148, 163, 184, 0.22)";
-const TEXT_MUTED = "#94a3b8";
-const TEXT_SOFT = "#cbd5e1";
+const DEFAULT_DARK = "#0b0a08";
+const CARD_DARK = "#15120f";
+const INNER_DARK = "#0f0d0a";
+const BORDER = "rgba(184, 148, 95, 0.32)";
+const SOFT_BORDER = "rgba(255, 255, 255, 0.12)";
+const TEXT_MUTED = "#a8a29a";
+const TEXT_SOFT = "#d8d2c7";
 const TRANSPARENT_LOGO_DATA_URI = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
 
 function escapeHtml(value: string) {
@@ -84,8 +86,8 @@ function renderButton(label: string, href: string, color: string) {
   return `
     <table role="presentation" cellspacing="0" cellpadding="0" style="margin:24px 0 0;border-collapse:collapse;">
       <tr>
-        <td style="border-radius:14px;background:${escapeHtml(color)};">
-          <a href="${escapeHtml(href)}" style="display:inline-block;padding:14px 20px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:900;color:#ffffff;text-decoration:none;">
+        <td style="border-radius:14px;background:${escapeHtml(color)};box-shadow:0 12px 26px rgba(184,148,95,0.22);">
+          <a href="${escapeHtml(href)}" style="display:inline-block;padding:14px 20px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:900;color:#0b0a08;text-decoration:none;">
             ${escapeHtml(label)}
           </a>
         </td>
@@ -101,7 +103,7 @@ function renderInfoRow(label: string, value: string) {
         <p style="margin:0;font-size:11px;line-height:1.4;text-transform:uppercase;letter-spacing:0.16em;color:${TEXT_MUTED};font-weight:800;">
           ${escapeHtml(label)}
         </p>
-        <p style="margin:7px 0 0;font-size:18px;line-height:1.35;font-weight:900;color:#f8fafc;">
+        <p style="margin:7px 0 0;font-size:18px;line-height:1.35;font-weight:900;color:#fffaf2;">
           ${escapeHtml(value)}
         </p>
       </td>
@@ -129,11 +131,11 @@ function renderObservation(label: string, value: string | null | undefined) {
   }
 
   return `
-    <div style="margin:18px 0 0;padding:18px;border-radius:18px;background:#111827;border:1px solid ${BORDER};">
-      <p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.4;text-transform:uppercase;letter-spacing:0.16em;color:#7dd3fc;font-weight:900;">
+    <div style="margin:18px 0 0;padding:18px;border-radius:18px;background:${INNER_DARK};border:1px solid ${BORDER};">
+      <p style="margin:0 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.4;text-transform:uppercase;letter-spacing:0.16em;color:#b8945f;font-weight:900;">
         ${escapeHtml(label)}
       </p>
-      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.65;color:#e5e7eb;">
+      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.65;color:${TEXT_SOFT};">
         ${escapeHtml(value.trim())}
       </p>
     </div>
@@ -158,7 +160,7 @@ function renderAgendaList(items: BarberDailyAgendaItem[]) {
               <td style="padding:16px;border-radius:18px;background:${CARD_DARK};border:1px solid ${BORDER};">
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
                   <tr>
-                    <td style="width:78px;vertical-align:top;font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:1;font-weight:900;color:#f8fafc;">
+                    <td style="width:78px;vertical-align:top;font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:1;font-weight:900;color:#fffaf2;">
                       ${escapeHtml(item.horario)}
                     </td>
                     <td style="vertical-align:top;font-family:Arial,Helvetica,sans-serif;">
@@ -192,20 +194,20 @@ function renderAgendaList(items: BarberDailyAgendaItem[]) {
 
 function renderLayout(input: LayoutInput) {
   return `
-    <div style="margin:0;padding:0;background:#030712;">
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background:#030712;">
+    <div style="margin:0;padding:0;background:#050403;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background:#050403;">
         <tr>
           <td align="center" style="padding:32px 14px;">
             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;border-collapse:separate;border-spacing:0;">
               <tr>
-                <td style="border-radius:30px;background:linear-gradient(135deg,rgba(148,163,184,0.35),rgba(14,165,233,0.28),rgba(148,163,184,0.14));padding:1px;">
+                <td style="border-radius:30px;background:linear-gradient(135deg,rgba(184,148,95,0.72),rgba(255,255,255,0.14),rgba(184,148,95,0.28));padding:1px;">
                   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:separate;border-spacing:0;background:${DEFAULT_DARK};border-radius:29px;">
                     <tr>
-                      <td style="padding:28px 28px 20px;border-radius:29px 29px 0 0;background:linear-gradient(135deg,#020617 0%,#0f172a 62%,rgba(14,165,233,0.22) 100%);">
+                      <td style="padding:28px 28px 20px;border-radius:29px 29px 0 0;background:linear-gradient(135deg,#050403 0%,#15120f 68%,rgba(184,148,95,0.16) 100%);">
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
                           <tr>
                             <td style="vertical-align:middle;">
-                              <img src="${escapeHtml(logoSource(input))}" width="82" alt="${escapeHtml(input.nomeBarbearia)}" style="display:block;width:82px;height:auto;border:0;outline:none;text-decoration:none;" />
+                              <img src="${escapeHtml(logoSource(input))}" width="96" alt="${escapeHtml(input.nomeBarbearia)}" style="display:block;width:96px;height:auto;border:0;outline:none;text-decoration:none;" />
                             </td>
                             <td align="right" style="vertical-align:middle;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:${TEXT_MUTED};">
                               ${escapeHtml(input.nomeBarbearia)}
@@ -226,7 +228,7 @@ function renderLayout(input: LayoutInput) {
 
                     <tr>
                       <td style="padding:0 22px 24px;background:${DEFAULT_DARK};">
-                        <div style="border-radius:22px;background:#050b16;padding:14px;border:1px solid rgba(148,163,184,0.14);">
+                        <div style="border-radius:22px;background:${INNER_DARK};padding:14px;border:1px solid ${SOFT_BORDER};">
                           ${input.children}
                           ${
                             input.buttonLabel

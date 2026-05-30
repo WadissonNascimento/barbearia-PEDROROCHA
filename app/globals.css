@@ -306,8 +306,35 @@ body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-[#050b16]"],
 body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-[#020817]"],
 body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-[#020b1a]"],
 body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-[#0f1724]"],
-body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-[#243754]"] {
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-[#243754]"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-[#08111f]"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-[#070a10]"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-[#070d18]"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-[#0b1220]"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-[#0e1a2d]"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-[#07101d]"] {
   background: #0d0c0b !important;
+}
+
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="rgba(18,23,36"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="rgba(5,9,16"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="rgba(18,24,36"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="rgba(5,11,22"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="rgba(18,22,32"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="rgba(8,12,20"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="rgba(20,24,34"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="rgba(28,40,61"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="rgba(13,18,30"] {
+  background: linear-gradient(145deg, rgba(24, 22, 19, 0.98), rgba(10, 9, 8, 0.99)) !important;
+}
+
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="rgba(59,130,246"] {
+  background: radial-gradient(circle at top, rgba(184, 148, 95, 0.15), transparent 36%),
+    radial-gradient(circle at bottom, rgba(127, 101, 64, 0.1), transparent 32%) !important;
+}
+
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="#38bdf8"] {
+  background: linear-gradient(135deg, #b8945f, #7f6540) !important;
 }
 
 body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="border-white/10"] {
@@ -318,15 +345,56 @@ body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="border-white/15"] {
   border-color: rgba(241, 232, 216, 0.24) !important;
 }
 
+body[data-shop-id="shop_pedro_rocha_barbearia"] [data-status-variant="success"] {
+  border-color: rgba(184, 148, 95, 0.62) !important;
+  background: rgba(184, 148, 95, 0.16) !important;
+  color: #f1e8d8 !important;
+}
+
 body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="from-sky-500"] {
   --tw-gradient-from: rgba(184, 148, 95, 0.28) var(--tw-gradient-from-position) !important;
   --tw-gradient-to: rgba(184, 148, 95, 0) var(--tw-gradient-to-position) !important;
 }
 
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="text-sky-"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="text-blue-"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="text-cyan-"] {
+  color: #e0c79d !important;
+}
+
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="border-sky-"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="border-blue-"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="border-cyan-"] {
+  border-color: rgba(184, 148, 95, 0.48) !important;
+}
+
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-sky-"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-blue-"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="bg-cyan-"] {
+  background-color: rgba(184, 148, 95, 0.16) !important;
+}
+
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="ring-sky-"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="ring-blue-"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="ring-cyan-"] {
+  --tw-ring-color: rgba(184, 148, 95, 0.28) !important;
+}
+
 body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="shadow-[0_12px_30px_rgba(14,165,233"],
 body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="shadow-[0_14px_30px_rgba(14,165,233"],
-body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="shadow-[0_18px_36px_rgba(14,165,233"] {
-  box-shadow: 0 16px 34px rgba(184, 148, 95, 0.2) !important;
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="shadow-[0_18px_36px_rgba(14,165,233"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="shadow-[0_18px_40px_rgba(14,165,233"],
+body[data-shop-id="shop_pedro_rocha_barbearia"] [class*="shadow-"][class*="rgba(37,99,235"] {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24) !important;
+}
+
+body[data-shop-id="shop_pedro_rocha_barbearia"] .btn-primary {
+  border-color: rgba(184, 148, 95, 0.5);
+  box-shadow: 0 16px 34px rgba(184, 148, 95, 0.2);
+}
+
+body[data-shop-id="shop_pedro_rocha_barbearia"] .btn-secondary:hover {
+  border-color: rgba(184, 148, 95, 0.48);
 }
 
 body[data-shop-id="shop_pedro_rocha_barbearia"] .form-control:focus,
