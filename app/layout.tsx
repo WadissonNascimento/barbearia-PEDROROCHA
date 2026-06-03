@@ -38,6 +38,9 @@ const headingFont = Space_Grotesk({
   variable: "--font-heading",
 });
 
+const PEDRO_ROCHA_SOCIAL_CARD_PATH =
+  "/brands/pedro-rocha/social-card.png?v=20260603-social1";
+
 type TenantBrandStyle = CSSProperties & Record<`--${string}`, string>;
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -100,18 +103,22 @@ export async function generateMetadata(): Promise<Metadata> {
       description,
       url: "/",
       siteName: brandName,
-      images: shop.logoPath
-        ? [
-            {
-              url: shop.logoPath,
-              width: 1200,
-              height: 630,
-              alt: brandName,
-            },
-          ]
-        : undefined,
+      images: [
+        {
+          url: PEDRO_ROCHA_SOCIAL_CARD_PATH,
+          width: 1200,
+          height: 630,
+          alt: `${brandName} - agendamento online`,
+        },
+      ],
       locale: "pt_BR",
       type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: brandName,
+      description,
+      images: [PEDRO_ROCHA_SOCIAL_CARD_PATH],
     },
   };
 }
