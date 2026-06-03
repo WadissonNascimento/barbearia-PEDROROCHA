@@ -75,8 +75,6 @@ function normalizeInstagram(value: string | null | undefined) {
 function revalidateShopSettingsViews() {
   revalidatePath("/");
   revalidatePath("/agendar");
-  revalidatePath("/maquinas");
-  revalidatePath("/produtos");
   revalidatePath("/admin");
   revalidatePath("/admin/home");
   revalidatePath("/admin/configuracoes");

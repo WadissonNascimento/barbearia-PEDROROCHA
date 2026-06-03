@@ -358,6 +358,8 @@ export function AppointmentsSection({
               date: appointment.date,
               status: appointment.status,
               paymentMethod: appointment.paymentMethod,
+              isVipPlanUse: appointment.isVipPlanUse,
+              vipSubscription: appointment.vipSubscription,
               isManualFitIn: appointment.isManualFitIn,
               notes: appointment.notes,
               customer: {

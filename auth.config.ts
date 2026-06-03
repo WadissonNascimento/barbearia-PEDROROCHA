@@ -1,6 +1,7 @@
 import type { NextAuthConfig } from "next-auth";
 
 const authConfig = {
+  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
   providers: [],
 
   session: {

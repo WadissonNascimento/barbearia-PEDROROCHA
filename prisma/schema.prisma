@@ -21,43 +21,44 @@ enum ExtraCategory {
 }
 
 model Shop {
-  id                  String   @id @default(cuid())
-  name                String
-  slug                String   @unique
-  primaryDomain       String?  @unique
-  isDefault           Boolean  @default(false)
-  isActive            Boolean  @default(true)
-  archivedAt          DateTime?
-  planCode            String?
-  barberLimit         Int?
-  metadataTitle       String?
-  metadataDescription String?
-  whatsappNumber      String?
-  instagramUrl        String?
-  addressLine         String?
-  businessHours       String?
-  logoPath            String?
-  faviconPath         String?
-  brandColor          String?
-  brandColorStrong    String?
-  brandColorMuted     String?
-  backgroundColor     String?
-  textColor           String?
-  fontFamily          String?
-  fontStyle           String?
-  designTemplate      String?
-  heroImageUrl        String?
-  heroEyebrow         String?
-  heroTitle           String?
-  heroSubtitle        String?
-  primaryCtaLabel     String?
-  secondaryCtaLabel   String?
-  secondaryCtaHref    String?
-  attendanceText      String?
-  reviewsTitle        String?
-  reviewsEmptyText    String?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                       String    @id @default(cuid())
+  name                     String
+  slug                     String    @unique
+  primaryDomain            String?   @unique
+  isDefault                Boolean   @default(false)
+  isActive                 Boolean   @default(true)
+  archivedAt               DateTime?
+  planCode                 String?
+  barberLimit              Int?
+  subscriptionMonthlyPrice Decimal?  @db.Decimal(10, 2)
+  metadataTitle            String?
+  metadataDescription      String?
+  whatsappNumber           String?
+  instagramUrl             String?
+  addressLine              String?
+  businessHours            String?
+  logoPath                 String?
+  faviconPath              String?
+  brandColor               String?
+  brandColorStrong         String?
+  brandColorMuted          String?
+  backgroundColor          String?
+  textColor                String?
+  fontFamily               String?
+  fontStyle                String?
+  designTemplate           String?
+  heroImageUrl             String?
+  heroEyebrow              String?
+  heroTitle                String?
+  heroSubtitle             String?
+  primaryCtaLabel          String?
+  secondaryCtaLabel        String?
+  secondaryCtaHref         String?
+  attendanceText           String?
+  reviewsTitle             String?
+  reviewsEmptyText         String?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
 
   users                    User[]
   pendingRegistrations     PendingRegistration[]
@@ -410,32 +411,32 @@ model Service {
 }
 
 model Appointment {
-  id             String    @id @default(cuid())
-  shopId         String    @default("shop_pedro_rocha_barbearia")
-  publicId       Int
-  customerId     String
-  barberId       String
-  date           DateTime
-  status         String    @default("PENDING")
-  paymentMethod  String?
-  notes          String?
-  isManualFitIn  Boolean   @default(false)
+  id                    String    @id @default(cuid())
+  shopId                String    @default("shop_pedro_rocha_barbearia")
+  publicId              Int
+  customerId            String
+  barberId              String
+  date                  DateTime
+  status                String    @default("PENDING")
+  paymentMethod         String?
+  notes                 String?
+  isManualFitIn         Boolean   @default(false)
   manualDurationMinutes Int?
-  isVipPlanUse   Boolean   @default(false)
-  vipSubscriptionId String?
-  reminderSentAt DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  isVipPlanUse          Boolean   @default(false)
+  vipSubscriptionId     String?
+  reminderSentAt        DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   shop     Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
   customer User @relation("CustomerAppointments", fields: [customerId], references: [id], onDelete: Cascade)
   barber   User @relation("BarberAppointments", fields: [barberId], references: [id], onDelete: Cascade)
 
-  services AppointmentService[]
-  items    AppointmentItem[]
-  review   Review?
-  vipSubscription VipSubscription? @relation(fields: [vipSubscriptionId], references: [id], onDelete: SetNull)
-  vipUsage VipUsage?
+  services        AppointmentService[]
+  items           AppointmentItem[]
+  review          Review?
+  vipSubscription VipSubscription?     @relation(fields: [vipSubscriptionId], references: [id], onDelete: SetNull)
+  vipUsage        VipUsage?
 
   @@unique([id, shopId])
   @@unique([shopId, publicId])
@@ -482,9 +483,9 @@ model VipSubscription {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  shop         Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  customer     User         @relation("VipSubscriptionCustomer", fields: [customerId], references: [id], onDelete: Cascade)
-  plan         VipPlan      @relation(fields: [planId], references: [id], onDelete: Restrict)
+  shop         Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer     User          @relation("VipSubscriptionCustomer", fields: [customerId], references: [id], onDelete: Cascade)
+  plan         VipPlan       @relation(fields: [planId], references: [id], onDelete: Restrict)
   payments     VipPayment[]
   usages       VipUsage[]
   appointments Appointment[]

@@ -1,12 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { DEFAULT_SHOP_ID } from "@/lib/shop";
 
-export const ADMIN_BARBER_PROFILE = {
-  name: "Jackson Barber",
-  email: "jackson.barber@jakbarber.local",
-  image: "/uploads/barbers/jackson-barber.jpg",
-};
-
 export const SHOPS_WITHOUT_ADMIN_BARBER_PROFILE = new Set([
   "shop_pedro_rocha_barbearia",
 ]);
@@ -18,10 +12,6 @@ export function canAdminActAsBarber(shopId?: string | null) {
 }
 
 function getAdminBarberProfile(shopId: string) {
-  if (shopId === DEFAULT_SHOP_ID) {
-    return ADMIN_BARBER_PROFILE;
-  }
-
   return {
     name: "Barbeiro da equipe",
     email: `admin-barber+${shopId}@local.invalid`,

@@ -201,11 +201,11 @@ function normalizeVipServiceText(value: string) {
     .toLowerCase();
 }
 
-function isVipServiceSelectionAllowed(
+function isServiceCoveredByVipPlan(
   planCode: string,
-  services: Array<{ name: string }>
+  service: { name: string }
 ) {
-  const text = normalizeVipServiceText(services.map((service) => service.name).join(" "));
+  const text = normalizeVipServiceText(service.name);
   const hasCorte = text.includes("corte");
   const hasBarba = text.includes("barba");
   const hasSobrancelha = text.includes("sobrancelha");
@@ -223,6 +223,13 @@ function isVipServiceSelectionAllowed(
   }
 
   return false;
+}
+
+function hasVipPlanServiceSelection(
+  planCode: string,
+  services: Array<{ name: string }>
+) {
+  return services.some((service) => isServiceCoveredByVipPlan(planCode, service));
 }
 
 async function getNextAppointmentPublicId(
@@ -646,10 +653,6 @@ async function createCustomerAppointmentInTransaction(
   > | null = null;
 
   if (input.useVipPlan) {
-    if (manualFitIn) {
-      throw new AppointmentMutationError("Atendimento VIP deve ser agendado pelo cliente.");
-    }
-
     vipSubscription = await getActiveVipSubscriptionForCustomer(db, {
       shopId,
       customerId,
@@ -663,15 +666,15 @@ async function createCustomerAppointmentInTransaction(
       throw new AppointmentMutationError("Seu plano VIP nao possui tokens disponiveis.");
     }
 
-    const isPaid = await hasPaidCurrentVipCycle(db, vipSubscription.id, appointmentDate);
+    const isPaid = await hasPaidCurrentVipCycle(db, vipSubscription.id);
 
     if (!isPaid) {
       throw new AppointmentMutationError("Seu plano VIP ainda esta com pagamento pendente.");
     }
 
-    if (!isVipServiceSelectionAllowed(vipSubscription.plan.code, orderedServices)) {
+    if (!hasVipPlanServiceSelection(vipSubscription.plan.code, orderedServices)) {
       throw new AppointmentMutationError(
-        "O servico escolhido nao pertence ao combo do seu plano VIP."
+        "Selecione o combo do seu plano VIP para usar o atendimento mensal."
       );
     }
 
@@ -816,7 +819,10 @@ async function createCustomerAppointmentInTransaction(
       services: {
         create: orderedServices.map((service, index) => {
           const barberCommission = commissionByServiceId.get(service.id);
-          const servicePrice = vipSubscription ? new Prisma.Decimal(0) : service.price;
+          const servicePrice =
+            vipSubscription && isServiceCoveredByVipPlan(vipSubscription.plan.code, service)
+              ? new Prisma.Decimal(0)
+              : service.price;
           const financials = calculateServiceFinancials({
             price: servicePrice,
             commissionType: barberCommission?.commissionType || service.commissionType,
@@ -966,6 +972,11 @@ async function rescheduleCustomerAppointmentInTransaction(
     include: {
       items: true,
       services: true,
+      vipSubscription: {
+        include: {
+          plan: true,
+        },
+      },
     },
   });
 
@@ -1159,15 +1170,15 @@ async function rescheduleCustomerAppointmentInTransaction(
       throw new AppointmentMutationError("Nenhuma assinatura VIP ativa foi encontrada.");
     }
 
-    const isPaid = await hasPaidCurrentVipCycle(db, vipSubscription.id, appointmentDate);
+    const isPaid = await hasPaidCurrentVipCycle(db, vipSubscription.id);
 
     if (!isPaid) {
       throw new AppointmentMutationError("Seu plano VIP ainda esta com pagamento pendente.");
     }
 
-    if (!isVipServiceSelectionAllowed(vipSubscription.plan.code, orderedServices)) {
+    if (!hasVipPlanServiceSelection(vipSubscription.plan.code, orderedServices)) {
       throw new AppointmentMutationError(
-        "O servico escolhido nao pertence ao combo do seu plano VIP."
+        "Selecione o combo do seu plano VIP para usar o atendimento mensal."
       );
     }
 
@@ -1365,7 +1376,12 @@ async function rescheduleCustomerAppointmentInTransaction(
   await db.appointmentService.createMany({
     data: orderedServices.map((service, index) => {
       const barberCommission = commissionByServiceId.get(service.id);
-      const servicePrice = shouldUseVipPlan ? new Prisma.Decimal(0) : service.price;
+      const servicePrice =
+        shouldUseVipPlan && currentAppointment.vipSubscription?.plan
+          ? isServiceCoveredByVipPlan(currentAppointment.vipSubscription.plan.code, service)
+            ? new Prisma.Decimal(0)
+            : service.price
+          : service.price;
       const financials = calculateServiceFinancials({
         price: servicePrice,
         commissionType: barberCommission?.commissionType || service.commissionType,
@@ -1508,6 +1524,11 @@ async function editCompletedAppointmentFinancialItemsInTransaction(
     include: {
       items: true,
       services: true,
+      vipSubscription: {
+        include: {
+          plan: true,
+        },
+      },
     },
   });
 
@@ -1720,8 +1741,14 @@ async function editCompletedAppointmentFinancialItemsInTransaction(
   await db.appointmentService.createMany({
     data: orderedServices.map((service, index) => {
       const barberCommission = commissionByServiceId.get(service.id);
+      const servicePrice =
+        currentAppointment.isVipPlanUse && currentAppointment.vipSubscription?.plan
+          ? isServiceCoveredByVipPlan(currentAppointment.vipSubscription.plan.code, service)
+            ? new Prisma.Decimal(0)
+            : service.price
+          : service.price;
       const financials = calculateServiceFinancials({
-        price: service.price,
+        price: servicePrice,
         commissionType: barberCommission?.commissionType || service.commissionType,
         commissionValue: barberCommission?.commissionValue ?? service.commissionValue,
       });
@@ -1732,7 +1759,7 @@ async function editCompletedAppointmentFinancialItemsInTransaction(
         serviceId: service.id,
         orderIndex: index,
         nameSnapshot: service.name,
-        priceSnapshot: service.price,
+        priceSnapshot: servicePrice,
         durationSnapshot: service.duration,
         bufferAfter: service.bufferAfter || 0,
         commissionTypeSnapshot: financials.commissionType,

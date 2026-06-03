@@ -24,7 +24,6 @@ import type { LucideIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useId, useRef } from "react";
 import { LogoutButton } from "@/components/LogoutButton";
-import { JAKBARBER_PWA_VERSION } from "@/lib/pwaAssets";
 
 type HeaderRole = "ADMIN" | "SHOP_ADMIN" | "BARBER" | "CUSTOMER" | null;
 
@@ -163,33 +162,19 @@ export default function Header({
   const eyebrow = role ? nav.eyebrow : publicEyebrow;
   const menuToggleId = useId();
   const menuToggleRef = useRef<HTMLInputElement | null>(null);
-  const isJakBarber = shopId === "shop_jak_barber";
   const isPedroRocha = shopId === "shop_pedro_rocha_barbearia";
-  const headerInnerClass = isJakBarber
-    ? "mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-5 sm:px-6 sm:py-6"
-    : isPedroRocha
+  const headerInnerClass = isPedroRocha
     ? "mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3.5 sm:px-6 sm:py-4"
     : "mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6";
-  const logoClassName = isJakBarber
-    ? "h-auto w-[132px] object-contain sm:w-[148px]"
-    : isPedroRocha
+  const logoClassName = isPedroRocha
     ? "h-[88px] w-auto translate-y-0.5 object-contain sm:h-[96px]"
     : "h-auto w-[108px] object-contain sm:w-[120px]";
-  const logoSrc =
-    isJakBarber && logoPath === "/logo.png"
-      ? `${logoPath}?v=${JAKBARBER_PWA_VERSION}`
-      : logoPath;
-  const logoWidth = isJakBarber ? 960 : isPedroRocha ? 512 : 640;
-  const logoHeight = isJakBarber ? 540 : isPedroRocha ? 512 : 179;
-  const menuButtonClassName = `group fixed right-4 ${
-    isJakBarber ? "top-5 h-14 w-14 rounded-[1.35rem]" : "top-3 h-12 w-12 rounded-2xl"
-  } ${isPedroRocha ? "top-9" : ""} z-[130] grid cursor-pointer place-items-center border border-[var(--site-header-control-border)] bg-[var(--site-header-control-bg)] text-[var(--site-header-control-text)] leading-none transition hover:border-[var(--brand)]/50 hover:bg-[var(--brand-muted)] active:scale-95 md:relative md:right-auto md:top-auto md:z-auto`;
-  const closeButtonClassName = `pointer-events-none fixed right-4 ${
-    isJakBarber ? "top-5 h-14 w-14 rounded-[1.35rem]" : "top-3 h-12 w-12 rounded-2xl"
-  } ${isPedroRocha ? "top-9" : ""} z-[160] grid cursor-pointer place-items-center border border-[var(--site-header-control-border)] bg-[var(--site-header-control-bg)] text-[var(--site-header-control-text)] leading-none opacity-0 shadow-[0_12px_32px_rgba(0,0,0,0.18)] transition hover:border-[var(--brand)]/50 hover:bg-[var(--brand-muted)] active:scale-95 peer-checked:pointer-events-auto peer-checked:opacity-100 sm:right-6`;
-  const menuPanelClassName = `pointer-events-none fixed left-3 right-3 ${
-    isJakBarber ? "top-[96px] sm:top-[108px]" : "top-[76px] sm:top-[84px]"
-  } z-[170] max-w-[calc(100vw-1.5rem)] translate-y-2 rounded-3xl border border-[var(--site-header-border)] bg-[var(--site-header-bg)] p-3 opacity-0 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl transition duration-200 peer-checked:pointer-events-auto peer-checked:translate-y-0 peer-checked:opacity-100 sm:left-auto sm:right-4 sm:w-[320px]`;
+  const logoSrc = logoPath;
+  const logoWidth = isPedroRocha ? 512 : 640;
+  const logoHeight = isPedroRocha ? 512 : 179;
+  const menuButtonClassName = `group fixed right-4 top-3 h-12 w-12 rounded-2xl ${isPedroRocha ? "top-9" : ""} z-[130] grid cursor-pointer place-items-center border border-[var(--site-header-control-border)] bg-[var(--site-header-control-bg)] text-[var(--site-header-control-text)] leading-none transition hover:border-[var(--brand)]/50 hover:bg-[var(--brand-muted)] active:scale-95 md:relative md:right-auto md:top-auto md:z-auto`;
+  const closeButtonClassName = `pointer-events-none fixed right-4 top-3 h-12 w-12 rounded-2xl ${isPedroRocha ? "top-9" : ""} z-[160] grid cursor-pointer place-items-center border border-[var(--site-header-control-border)] bg-[var(--site-header-control-bg)] text-[var(--site-header-control-text)] leading-none opacity-0 shadow-[0_12px_32px_rgba(0,0,0,0.18)] transition hover:border-[var(--brand)]/50 hover:bg-[var(--brand-muted)] active:scale-95 peer-checked:pointer-events-auto peer-checked:opacity-100 sm:right-6`;
+  const menuPanelClassName = "pointer-events-none fixed left-3 right-3 top-[76px] z-[170] max-w-[calc(100vw-1.5rem)] translate-y-2 rounded-3xl border border-[var(--site-header-border)] bg-[var(--site-header-bg)] p-3 opacity-0 shadow-[0_20px_60px_rgba(0,0,0,0.18)] backdrop-blur-2xl transition duration-200 peer-checked:pointer-events-auto peer-checked:translate-y-0 peer-checked:opacity-100 sm:left-auto sm:right-4 sm:top-[84px] sm:w-[320px]";
 
   function closeMenu() {
     if (menuToggleRef.current) {

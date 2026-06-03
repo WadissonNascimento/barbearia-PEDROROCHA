@@ -138,96 +138,6 @@ h6 {
   backdrop-filter: blur(14px);
 }
 
-body[data-shop-id="shop_rodrigo_style"] {
-  color-scheme: light;
-}
-
-body[data-shop-id="shop_rodrigo_style"]::before {
-  background:
-    radial-gradient(circle at top right, rgba(212, 175, 55, 0.18), transparent 34%),
-    linear-gradient(
-      180deg,
-      var(--app-gradient-start) 0%,
-      var(--app-gradient-mid) 52%,
-      var(--app-gradient-end) 100%
-    );
-}
-
-body[data-shop-id="shop_rodrigo_style"] .surface-card,
-body[data-shop-id="shop_rodrigo_style"] .surface-card-strong,
-body[data-shop-id="shop_rodrigo_style"] .dashboard-panel {
-  border-color: #e6dfd2 !important;
-  background: #ffffff !important;
-  color: #111111 !important;
-  box-shadow: 0 18px 48px rgba(26, 18, 8, 0.08) !important;
-}
-
-body[data-shop-id="shop_rodrigo_style"] .surface-card-strong {
-  width: min(100%, calc(100vw - 2rem)) !important;
-}
-
-body[data-shop-id="shop_rodrigo_style"] main {
-  overflow-x: hidden;
-}
-
-body[data-shop-id="shop_rodrigo_style"] .page-shell,
-body[data-shop-id="shop_rodrigo_style"] .dashboard-shell {
-  color: #111111 !important;
-}
-
-body[data-shop-id="shop_rodrigo_style"] footer {
-  border-color: #e6dfd2 !important;
-  background: #ffffff !important;
-  color: #111111 !important;
-}
-
-body[data-shop-id="shop_rodrigo_style"] footer::before,
-body[data-shop-id="shop_rodrigo_style"] footer > div:first-child {
-  opacity: 0.25;
-}
-
-body[data-shop-id="shop_rodrigo_style"] [class*="bg-[#030712]"],
-body[data-shop-id="shop_rodrigo_style"] [class*="bg-[#050b16]"],
-body[data-shop-id="shop_rodrigo_style"] [class*="bg-[#0f1724]"],
-body[data-shop-id="shop_rodrigo_style"] [class*="bg-[#020b1a]"],
-body[data-shop-id="shop_rodrigo_style"] [class*="bg-[#020817]"],
-body[data-shop-id="shop_rodrigo_style"] [class*="bg-[#243754]"],
-body[data-shop-id="shop_rodrigo_style"] [class*="bg-zinc-900"],
-body[data-shop-id="shop_rodrigo_style"] [class*="bg-zinc-950"],
-body[data-shop-id="shop_rodrigo_style"] [class*="bg-[linear-gradient"] {
-  border-color: #e6dfd2 !important;
-  background: #ffffff !important;
-  color: #111111 !important;
-}
-
-body[data-shop-id="shop_rodrigo_style"] [class*="text-white"] {
-  color: #111111 !important;
-}
-
-body[data-shop-id="shop_rodrigo_style"] [class*="text-zinc-200"],
-body[data-shop-id="shop_rodrigo_style"] [class*="text-zinc-300"],
-body[data-shop-id="shop_rodrigo_style"] [class*="text-zinc-400"],
-body[data-shop-id="shop_rodrigo_style"] [class*="text-zinc-500"] {
-  color: #5f5f5f !important;
-}
-
-body[data-shop-id="shop_rodrigo_style"] [class*="border-white/10"],
-body[data-shop-id="shop_rodrigo_style"] [class*="border-white/15"],
-body[data-shop-id="shop_rodrigo_style"] [class*="border-zinc-800"] {
-  border-color: #e6dfd2 !important;
-}
-
-body[data-shop-id="shop_rodrigo_style"] [class*="bg-black/20"],
-body[data-shop-id="shop_rodrigo_style"] [class*="bg-black/25"],
-body[data-shop-id="shop_rodrigo_style"] [class*="bg-white/[0.03]"],
-body[data-shop-id="shop_rodrigo_style"] [class*="bg-white/[0.035]"],
-body[data-shop-id="shop_rodrigo_style"] [class*="bg-white/[0.04]"],
-body[data-shop-id="shop_rodrigo_style"] [class*="bg-white/[0.05]"],
-body[data-shop-id="shop_rodrigo_style"] [class*="bg-white/5"],
-body[data-shop-id="shop_rodrigo_style"] [class*="bg-white/10"] {
-  background: #ffffff !important;
-}
-
 body[data-shop-id="shop_pedro_rocha_barbearia"]::before {
   background:
     radial-gradient(circle at 22% 12%, rgba(241, 232, 216, 0.08), transparent 30%),
@@ -401,35 +311,6 @@ body[data-shop-id="shop_pedro_rocha_barbearia"] .form-control:focus,
 body[data-shop-id="shop_pedro_rocha_barbearia"] .compact-filter-control:focus {
   border-color: rgba(184, 148, 95, 0.72);
   box-shadow: 0 0 0 3px rgba(184, 148, 95, 0.16);
-}
-
-body[data-shop-id="shop_rodrigo_style"] [class*="bg-[var(--brand-muted)]"] {
-  border-color: rgba(201, 151, 43, 0.42) !important;
-  background: rgba(212, 175, 55, 0.16) !important;
-}
-
-body[data-shop-id="shop_rodrigo_style"] input,
-body[data-shop-id="shop_rodrigo_style"] select,
-body[data-shop-id="shop_rodrigo_style"] textarea {
-  border-color: #e6dfd2 !important;
-  background: #ffffff !important;
-  color: #111111 !important;
-}
-
-body[data-shop-id="shop_rodrigo_style"] input::placeholder,
-body[data-shop-id="shop_rodrigo_style"] textarea::placeholder {
-  color: #8b8374 !important;
-}
-
-body[data-shop-id="shop_rodrigo_style"] .bg-\[var\(--brand\)\] {
-  color: #0b0b0b !important;
-  box-shadow: 0 14px 28px rgba(201, 151, 43, 0.24) !important;
-}
-
-body[data-shop-id="shop_rodrigo_style"] [class*="shadow-[0_24px_90px"],
-body[data-shop-id="shop_rodrigo_style"] [class*="shadow-[0_24px_80px"],
-body[data-shop-id="shop_rodrigo_style"] [class*="shadow-[0_20px_60px"] {
-  box-shadow: 0 22px 58px rgba(26, 18, 8, 0.12) !important;
 }
 
 .dashboard-shell {

@@ -8,6 +8,7 @@ import { getCurrentShop } from "@/lib/shop";
 import { CUSTOMER_ROLES, requireTenantSession } from "@/lib/tenantSession";
 import {
   getActiveVipSubscriptionForCustomer,
+  getWeekRange,
   hasPaidCurrentVipCycle,
 } from "@/lib/vip";
 import {
@@ -54,6 +55,10 @@ function getNextDays(count: number) {
   return days;
 }
 
+function getWeekStartValue(date: Date) {
+  return getScheduleDateValue(getWeekRange(date).start);
+}
+
 type AgendarPageSearchParams = {
   remarcar?: string | string[];
 };
@@ -72,6 +77,7 @@ export default async function AgendarPage({
     roles: CUSTOMER_ROLES,
   });
 
+  const bookingDays = getNextDays(12);
   const [barbers, services, initialExtras, activeVipSubscription] = await Promise.all([
     prisma.user.findMany({
       where: {
@@ -130,6 +136,31 @@ export default async function AgendarPage({
   const vipPaymentPaid = activeVipSubscription
     ? await hasPaidCurrentVipCycle(prisma, activeVipSubscription.id)
     : false;
+  const vipWeeklyUsedAppointments = activeVipSubscription
+    ? await prisma.appointment.findMany({
+        where: {
+          shopId: shop.id,
+          customerId: session.user.id,
+          vipSubscriptionId: activeVipSubscription.id,
+          isVipPlanUse: true,
+          status: {
+            in: ["PENDING", "CONFIRMED", "COMPLETED", "DONE"],
+          },
+          date: {
+            gte: getWeekRange(new Date(`${bookingDays[0]}T00:00:00`)).start,
+            lt: getWeekRange(
+              new Date(`${bookingDays[bookingDays.length - 1]}T00:00:00`)
+            ).end,
+          },
+        },
+        select: {
+          date: true,
+        },
+      })
+    : [];
+  const vipWeeklyUsedWeekStarts = Array.from(
+    new Set(vipWeeklyUsedAppointments.map((appointment) => getWeekStartValue(appointment.date)))
+  );
   let extras = initialExtras;
   const rescheduleAppointmentId = getSearchParam(resolvedSearchParams.remarcar).trim();
   let rescheduleAppointment: {
@@ -256,7 +287,7 @@ export default async function AgendarPage({
         stock: extra.stock + (rescheduleExtraQuantityById.get(extra.id) || 0),
       }))}
       initialDate={getTodayString()}
-      nextDays={getNextDays(12)}
+      nextDays={bookingDays}
       whatsappNumber={shop.whatsappNumber || ""}
       rescheduleAppointment={rescheduleAppointment}
       vipPlan={
@@ -266,6 +297,7 @@ export default async function AgendarPage({
               name: activeVipSubscription.plan.name,
               tokensRemaining: activeVipSubscription.tokensRemaining,
               paymentPaid: vipPaymentPaid,
+              weeklyUsedWeekStarts: vipWeeklyUsedWeekStarts,
             }
           : null
       }

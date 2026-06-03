@@ -47,6 +47,7 @@ const appointmentBaseSelect = {
   publicId: true,
   customerId: true,
   barberId: true,
+  isVipPlanUse: true,
   date: true,
   status: true,
   paymentMethod: true,
@@ -59,6 +60,15 @@ const appointmentBaseSelect = {
 
 export const appointmentForBarberSelect = {
   ...appointmentBaseSelect,
+  vipSubscription: {
+    select: {
+      plan: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  },
   customer: {
     select: appointmentCustomerSelect,
   },
@@ -72,6 +82,15 @@ export const appointmentForBarberSelect = {
 
 export const appointmentForAdminSelect = {
   ...appointmentBaseSelect,
+  vipSubscription: {
+    select: {
+      plan: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  },
   barber: {
     select: appointmentBarberSelect,
   },
@@ -88,6 +107,15 @@ export const appointmentForAdminSelect = {
 
 export const appointmentForFinanceSelect = {
   ...appointmentBaseSelect,
+  vipSubscription: {
+    select: {
+      plan: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  },
   barber: {
     select: appointmentBarberSelect,
   },

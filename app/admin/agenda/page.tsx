@@ -200,6 +200,8 @@ export default async function AdminAgendaPage({
           date: appointment.date,
           status: appointment.status,
           paymentMethod: appointment.paymentMethod,
+          isVipPlanUse: appointment.isVipPlanUse,
+          vipSubscription: appointment.vipSubscription,
           notes: appointment.isManualFitIn
             ? getManualFitInVisibleNotes(appointment.notes) || null
             : appointment.notes,

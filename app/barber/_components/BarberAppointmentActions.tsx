@@ -669,7 +669,7 @@ function ActionButton({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className={`inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-black transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 [&>svg]:h-4 [&>svg]:w-4 [&>svg]:shrink-0 ${classes[variant]}`}
+      className={`inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-black transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 [&>svg]:h-4 [&>svg]:w-4 [&>svg]:shrink-0 ${classes[variant]}`}
     >
       {pending ? null : icon}
       <span className="truncate">{pending ? "Salvando..." : children}</span>

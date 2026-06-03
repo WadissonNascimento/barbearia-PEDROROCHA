@@ -26,6 +26,7 @@ import {
 } from "@/lib/scheduleTime";
 import { toMoneyNumber, type MoneyValue } from "@/lib/money";
 import { buildAgendaBlockItems } from "@/lib/agendaBlocks";
+import { getWeekRange } from "@/lib/vip";
 
 export type BarberDashboardFilters = {
   view?: "day" | "today" | "upcoming" | "all";
@@ -111,21 +112,55 @@ function buildShopClientsDirectory(
     customerAppointments: Array<{
       date: Date;
     }>;
+    vipSubscriptions?: Array<{
+      id: string;
+      tokensRemaining: number;
+      plan: {
+        code: string;
+        name: string;
+      };
+      payments: Array<{
+        cycleMonth: string;
+        status: string;
+      }>;
+      appointments: Array<{
+        date: Date;
+      }>;
+    }>;
   }>
 ) {
   const noteMap = new Map(
     clientNotes.map((note) => [note.customerId, note.note] as const)
   );
 
-  return customers.map((customer) => ({
-    id: customer.id,
-    name: customer.name || "Cliente",
-    email: customer.email || null,
-    phone: customer.phone || null,
-    lastAppointment: customer.customerAppointments[0]?.date || customer.createdAt,
-    totalAppointments: customer.customerAppointments.length,
-    note: noteMap.get(customer.id) || "",
-  }));
+  return customers.map((customer) => {
+    const vipSubscription = customer.vipSubscriptions?.[0] || null;
+
+    return {
+      id: customer.id,
+      name: customer.name || "Cliente",
+      email: customer.email || null,
+      phone: customer.phone || null,
+      lastAppointment: customer.customerAppointments[0]?.date || customer.createdAt,
+      totalAppointments: customer.customerAppointments.length,
+      note: noteMap.get(customer.id) || "",
+      vipSubscription: vipSubscription
+        ? {
+            id: vipSubscription.id,
+            tokensRemaining: vipSubscription.tokensRemaining,
+            plan: vipSubscription.plan,
+            payments: vipSubscription.payments,
+            weeklyUsedWeekStarts: Array.from(
+              new Set(
+                vipSubscription.appointments.map((appointment) =>
+                  getScheduleDateValue(getWeekRange(appointment.date).start)
+                )
+              )
+            ),
+          }
+        : null,
+    };
+  });
 }
 
 function getAppointmentCustomerForBarberCard(appointment: {
@@ -338,6 +373,42 @@ export async function getBarberDashboardData(
               date: "desc",
             },
           },
+          vipSubscriptions: {
+            where: {
+              status: "ACTIVE",
+            },
+            orderBy: {
+              startedAt: "desc",
+            },
+            take: 1,
+            select: {
+              id: true,
+              tokensRemaining: true,
+              plan: {
+                select: {
+                  code: true,
+                  name: true,
+                },
+              },
+              payments: {
+                select: {
+                  cycleMonth: true,
+                  status: true,
+                },
+              },
+              appointments: {
+                where: {
+                  isVipPlanUse: true,
+                  status: {
+                    in: ["PENDING", "CONFIRMED", "COMPLETED", "DONE"],
+                  },
+                },
+                select: {
+                  date: true,
+                },
+              },
+            },
+          },
         },
         orderBy: [
           {
@@ -449,6 +520,8 @@ export async function getBarberDashboardData(
         date: appointment.date,
         status: appointment.status,
         paymentMethod: appointment.paymentMethod,
+        isVipPlanUse: appointment.isVipPlanUse,
+        vipSubscription: appointment.vipSubscription,
         isManualFitIn: appointment.isManualFitIn,
         notes: appointment.isManualFitIn
           ? getManualFitInVisibleNotes(appointment.notes) || null
@@ -474,6 +547,8 @@ export async function getBarberDashboardData(
         date: appointment.date,
         status: normalizeAppointmentStatus(appointment.status),
         paymentMethod: appointment.paymentMethod,
+        isVipPlanUse: appointment.isVipPlanUse,
+        vipSubscription: appointment.vipSubscription,
         isManualFitIn: appointment.isManualFitIn,
         notes: appointment.isManualFitIn
           ? getManualFitInVisibleNotes(appointment.notes) || null
@@ -827,19 +902,55 @@ export async function getBarberTodayDashboardData(barberId: string) {
         email: true,
         phone: true,
         createdAt: true,
-        customerAppointments: {
-          where: {
-            barberId,
-            isManualFitIn: false,
+          customerAppointments: {
+            where: {
+              barberId,
+              isManualFitIn: false,
           },
           select: {
             date: true,
           },
-          orderBy: {
-            date: "desc",
+            orderBy: {
+              date: "desc",
+            },
+          },
+          vipSubscriptions: {
+            where: {
+              status: "ACTIVE",
+            },
+            orderBy: {
+              startedAt: "desc",
+            },
+            take: 1,
+            select: {
+              id: true,
+              tokensRemaining: true,
+              plan: {
+                select: {
+                  code: true,
+                  name: true,
+                },
+              },
+              payments: {
+                select: {
+                  cycleMonth: true,
+                  status: true,
+                },
+              },
+              appointments: {
+                where: {
+                  isVipPlanUse: true,
+                  status: {
+                    in: ["PENDING", "CONFIRMED", "COMPLETED", "DONE"],
+                  },
+                },
+                select: {
+                  date: true,
+                },
+              },
+            },
           },
         },
-      },
       orderBy: [
         {
           name: "asc",
@@ -941,6 +1052,8 @@ export async function getBarberTodayDashboardData(barberId: string) {
         date: appointment.date,
         status: appointment.status,
         paymentMethod: appointment.paymentMethod,
+        isVipPlanUse: appointment.isVipPlanUse,
+        vipSubscription: appointment.vipSubscription,
         isManualFitIn: appointment.isManualFitIn,
         notes: appointment.isManualFitIn
           ? getManualFitInVisibleNotes(appointment.notes) || null

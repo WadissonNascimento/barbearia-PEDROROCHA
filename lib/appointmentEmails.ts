@@ -31,8 +31,6 @@ import type { MoneyValue } from "@/lib/money";
 const ACTIVE_REMINDER_STATUSES = ["PENDING", "CONFIRMED"];
 const REMINDER_LOOKAHEAD_MINUTES = 30;
 const REMINDER_WINDOW_MINUTES = 10;
-const TRANSPARENT_LOGO_DATA_URI = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
-
 type EmailAppointment = {
   id: string;
   shopId: string;
@@ -45,6 +43,9 @@ type EmailAppointment = {
     brandColor: string | null;
     addressLine: string | null;
     whatsappNumber: string | null;
+    emailSettings: {
+      fromName: string | null;
+    } | null;
   };
   customer: {
     id: string;
@@ -76,6 +77,11 @@ const appointmentEmailInclude = {
       brandColor: true,
       addressLine: true,
       whatsappNumber: true,
+      emailSettings: {
+        select: {
+          fromName: true,
+        },
+      },
     },
   },
   customer: {
@@ -166,7 +172,8 @@ function buildAppointmentEmailPayload(
     shopId: appointment.shopId,
     recipientUserId: appointment.customer.id,
     eventKey: `customer:appointment:${appointment.id}`,
-    nomeBarbearia: appointment.shop.name,
+    nomeBarbearia:
+      appointment.shop.emailSettings?.fromName?.trim() || appointment.shop.name,
     logoBarbearia: resolveEmailLogoUrl(appointment.shop.logoPath, appointment.shop),
     corPrimaria: appointment.shop.brandColor || undefined,
     enderecoBarbearia: appointment.shop.addressLine,
@@ -563,3 +570,4 @@ export async function sendCustomerAppointmentDayReminderNotifications({
     date: dateValue,
   };
 }
+const TRANSPARENT_LOGO_DATA_URI = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";

@@ -27,8 +27,6 @@ import {
 
 const BARBER_PANEL_PATH = "/barber/agenda";
 const DEFAULT_BRAND_COLOR = "#b8945f";
-const TRANSPARENT_LOGO_DATA_URI = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
-
 const appointmentEmailInclude = {
   shop: {
     select: {
@@ -38,6 +36,11 @@ const appointmentEmailInclude = {
       addressLine: true,
       logoPath: true,
       brandColor: true,
+      emailSettings: {
+        select: {
+          fromName: true,
+        },
+      },
     },
   },
   barber: {
@@ -97,9 +100,12 @@ function buildTheme(shop: {
   addressLine: string | null;
   logoPath: string | null;
   brandColor: string | null;
+  emailSettings?: {
+    fromName: string | null;
+  } | null;
 }): BarberEmailTheme {
   return {
-    nomeBarbearia: shop.name,
+    nomeBarbearia: shop.emailSettings?.fromName?.trim() || shop.name,
     logoBarbearia: resolveLogoUrl(shop.logoPath, shop),
     corPrimaria: shop.brandColor || DEFAULT_BRAND_COLOR,
     enderecoBarbearia: shop.addressLine,
@@ -366,6 +372,11 @@ export async function notifyBarberNewReview(reviewId: string) {
             addressLine: true,
             logoPath: true,
             brandColor: true,
+            emailSettings: {
+              select: {
+                fromName: true,
+              },
+            },
           },
         },
         barber: {
@@ -529,6 +540,11 @@ export async function sendDailyBarberAgendaEmails({
           addressLine: true,
           logoPath: true,
           brandColor: true,
+          emailSettings: {
+            select: {
+              fromName: true,
+            },
+          },
         },
       },
       barberAppointments: {
@@ -652,3 +668,4 @@ export async function sendDailyBarberAgendaEmails({
     failed,
   };
 }
+const TRANSPARENT_LOGO_DATA_URI = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";

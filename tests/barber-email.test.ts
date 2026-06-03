@@ -60,7 +60,7 @@ test("barber email orchestration wires existing business events", () => {
 test("barber email logs and cron route are protected and deduplicated", () => {
   const schema = read("prisma/schema.prisma");
   const migration = read(
-    "prisma/migrations/20260509110000_add_email_delivery_logs/migration.sql"
+    "prisma/migrations/20260531161000_pedro_rocha_security/migration.sql"
   );
   const route = read("app/api/cron/barber-daily-agenda/route.ts");
 

@@ -1,7 +1,7 @@
 # Dominios customizados
 
-Este fluxo existe para escalar dominios proprios de clientes sem deixar um
-dominio desconhecido cair na JakBarber por acidente.
+Este fluxo existe para publicar o dominio proprio da Pedro Rocha Barbearia sem
+deixar um dominio desconhecido cair na aplicacao por acidente.
 
 ## Regras de seguranca
 
@@ -17,18 +17,18 @@ dominio desconhecido cair na JakBarber por acidente.
    principal do cliente.
 2. Pedir para o cliente apontar o DNS:
    - `A @ -> 2.24.65.212`
-   - `CNAME www -> dominio-principal.com` ou `A www -> 2.24.65.212`
+   - `CNAME www -> barbeariarocha.com.br` ou `A www -> 2.24.65.212`
 3. Na VPS, validar DNS:
 
 ```bash
-cd /var/www/jakbarber
-npm run domain:check -- --domain dominio-do-cliente.com
+cd /var/www/pedro-rocha-barbearia
+npm run domain:check -- --domain barbeariarocha.com.br
 ```
 
 4. Validar que o app autoriza o dominio:
 
 ```bash
-curl -i "http://127.0.0.1:3000/api/domain-allow?domain=dominio-do-cliente.com"
+curl -i "http://127.0.0.1:3001/api/domain-allow?domain=barbeariarocha.com.br"
 ```
 
 O retorno esperado e HTTP 200 com `ok: true`. Se retornar 404, nao emita SSL.
@@ -49,7 +49,7 @@ server {
     }
 
     location / {
-        proxy_pass http://127.0.0.1:3000;
+        proxy_pass http://127.0.0.1:3001;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-Host $host;
@@ -83,15 +83,15 @@ Depois que o dominio ja estiver com `DNS OK` e autorizado por
 `/api/domain-allow`, use o script assistido. Por padrao ele roda em dry-run:
 
 ```bash
-cd /var/www/jakbarber
-npm run domain:activate -- --domain dominio-do-cliente.com
+cd /var/www/pedro-rocha-barbearia
+npm run domain:activate -- --domain barbeariarocha.com.br
 ```
 
 Para executar de verdade:
 
 ```bash
-cd /var/www/jakbarber
-DOMAIN_ACTIVATION_ENABLED=1 npm run domain:activate -- --domain dominio-do-cliente.com --execute
+cd /var/www/pedro-rocha-barbearia
+DOMAIN_ACTIVATION_ENABLED=1 npm run domain:activate -- --domain barbeariarocha.com.br --execute
 ```
 
 O script valida DNS, valida `/api/domain-allow`, emite certificado se ainda nao

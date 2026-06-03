@@ -5,7 +5,12 @@ import { getCurrentShop } from "@/lib/shop";
 import { CUSTOMER_ROLES, getTenantSession } from "@/lib/tenantSession";
 import { formatCurrency } from "@/lib/utils";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
-import { getActiveVipSubscriptionForCustomer, hasPaidCurrentVipCycle } from "@/lib/vip";
+import {
+  getActiveVipSubscriptionForCustomer,
+  getVipPaymentDueDate,
+  getWeekRange,
+  hasPaidCurrentVipCycle,
+} from "@/lib/vip";
 
 export const metadata = {
   title: "Planos",
@@ -54,6 +59,68 @@ function planWhatsAppUrl(planName: string) {
   );
 }
 
+function getPlanCombo(code: string) {
+  if (code === "CORTE") {
+    return "Bronze";
+  }
+
+  if (code === "CORTE_SOBRANCELHA") {
+    return "Prata";
+  }
+
+  if (code === "CORTE_BARBA_SOBRANCELHA") {
+    return "Ouro";
+  }
+
+  return "VIP";
+}
+
+function getPlanComboDescription(code: string) {
+  if (code === "CORTE") {
+    return "Corte";
+  }
+
+  if (code === "CORTE_SOBRANCELHA") {
+    return "Corte + Sobrancelha";
+  }
+
+  if (code === "CORTE_BARBA_SOBRANCELHA") {
+    return "Corte + Sobrancelha + Barba";
+  }
+
+  return "Combo mensal";
+}
+
+function getPlanItems(code: string) {
+  if (code === "CORTE") {
+    return "Corte";
+  }
+
+  if (code === "CORTE_SOBRANCELHA") {
+    return "Corte e sobrancelha";
+  }
+
+  if (code === "CORTE_BARBA_SOBRANCELHA") {
+    return "Corte, sobrancelha e barba";
+  }
+
+  return "Combo mensal";
+}
+
+function formatLongDate(date: Date) {
+  return date.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function formatMonthName(date: Date) {
+  return date.toLocaleDateString("pt-BR", {
+    month: "long",
+  });
+}
+
 export default async function PlanosPage() {
   const shop = await getCurrentShop();
   const tenantSession = await getTenantSession({
@@ -68,6 +135,31 @@ export default async function PlanosPage() {
 
   if (activeSubscription) {
     const paymentPaid = await hasPaidCurrentVipCycle(prisma, activeSubscription.id);
+    const customerName =
+      tenantSession?.session.user.name?.split(" ")[0] ||
+      tenantSession?.session.user.email?.split("@")[0] ||
+      "cliente";
+    const planLevel = getPlanCombo(activeSubscription.plan.code);
+    const planCombo = getPlanComboDescription(activeSubscription.plan.code);
+    const planItems = getPlanItems(activeSubscription.plan.code);
+    const { start: weekStart, end: weekEnd } = getWeekRange(new Date());
+    const weeklyUsage = await prisma.vipUsage.findFirst({
+      where: {
+        subscriptionId: activeSubscription.id,
+        usedAt: {
+          gte: weekStart,
+          lt: weekEnd,
+        },
+      },
+      select: {
+        id: true,
+        usedAt: true,
+      },
+    });
+    const nextPaymentDate = getVipPaymentDueDate(
+      new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
+    );
+    const currentMonthName = formatMonthName(new Date());
     const usages = await prisma.vipUsage.findMany({
       where: {
         subscriptionId: activeSubscription.id,
@@ -91,35 +183,52 @@ export default async function PlanosPage() {
     });
 
     return (
-      <main className="min-h-screen bg-[#050504] px-4 py-10 text-[#f5efe3] sm:px-6 lg:px-8">
+      <main className="min-h-screen bg-[#050504] px-4 py-6 text-[#f5efe3] sm:px-6 lg:px-8">
         <div className="mx-auto max-w-5xl">
-          <div className="rounded-lg border border-[#b8945f]/25 bg-[#0b0a09] p-5 shadow-[0_18px_54px_rgba(0,0,0,0.36)] sm:p-7">
-            <p className="inline-flex items-center gap-2 rounded-full border border-[#b8945f]/35 bg-[#b8945f]/10 px-4 py-2 text-[11px] font-black uppercase tracking-[0.22em] text-[#e8c57d]">
-              <Crown className="h-4 w-4" aria-hidden="true" />
-              Area VIP
-            </p>
-            <h1 className="mt-5 text-3xl font-black text-[#f8f3e7] sm:text-5xl">
-              Meu plano VIP
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-[#c9c0b2]">
-              Acompanhe seus tokens, pagamento e historico de cortes usados pelo plano.
-            </p>
+          <div className="overflow-hidden rounded-2xl border border-[#b8945f]/25 bg-[#0b0a09] shadow-[0_18px_54px_rgba(0,0,0,0.36)]">
+            <div className="border-b border-[#b8945f]/15 bg-[linear-gradient(135deg,_rgba(184,148,95,0.18),_rgba(8,8,7,0.98))] p-5 sm:p-7">
+              <p className="inline-flex items-center gap-2 rounded-full border border-[#b8945f]/35 bg-[#b8945f]/10 px-4 py-2 text-[11px] font-black uppercase tracking-[0.22em] text-[#e8c57d]">
+                <Crown className="h-4 w-4" aria-hidden="true" />
+                Area VIP
+              </p>
+              <h1 className="mt-5 text-3xl font-black leading-tight text-[#f8f3e7] sm:text-5xl">
+                Olá {customerName}, você é assinante do plano {planLevel}
+              </h1>
+            </div>
 
-            <div className="mt-7 grid gap-3 md:grid-cols-3">
-              <VipInfoCard label="Plano" value={activeSubscription.plan.name} />
+            <div className="divide-y divide-white/10 border-b border-white/10 bg-black/20 px-5 py-1">
               <VipInfoCard
-                label="Tokens restantes"
-                value={`${activeSubscription.tokensRemaining} de ${activeSubscription.plan.tokensPerCycle}`}
+                label="Itens do seu plano"
+                value={planItems}
+              />
+              <VipInfoCard
+                label="Semana"
+                value={
+                  weeklyUsage
+                    ? "Atendimento da semana já utilizado"
+                    : "1 atendimento disponível esta semana"
+                }
+                helper={
+                  weeklyUsage
+                    ? `Usado em ${weeklyUsage.usedAt.toLocaleDateString("pt-BR")}`
+                    : "Você ainda não usou seu benefício semanal"
+                }
+                tone={weeklyUsage ? "warning" : "success"}
               />
               <VipInfoCard
                 label="Pagamento"
-                value={paymentPaid ? "Pago este mes" : "Pendente"}
+                value={
+                  paymentPaid
+                    ? `${currentMonthName} está pago`
+                    : `${currentMonthName} está pendente`
+                }
+                helper={`Próximo pagamento: ${formatLongDate(nextPaymentDate)}`}
                 tone={paymentPaid ? "success" : "warning"}
               />
             </div>
           </div>
 
-          <section className="mt-5 rounded-lg border border-white/10 bg-[#0b0a09] p-5 sm:p-7">
+          <section className="mt-5 rounded-2xl border border-white/10 bg-[#0b0a09] p-5 sm:p-7">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.22em] text-[#e8c57d]">
@@ -166,7 +275,7 @@ export default async function PlanosPage() {
           <div className="mt-6 flex justify-center">
             <Link
               href="/agendar"
-              className="inline-flex min-h-12 items-center justify-center rounded-lg bg-[#f1e8d8] px-5 text-sm font-black text-[#080807] transition hover:bg-white"
+              className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-[#f1e8d8] px-5 text-sm font-black text-[#080807] transition hover:bg-white sm:w-auto"
             >
               Agendar usando meu plano
             </Link>
@@ -298,10 +407,12 @@ export default async function PlanosPage() {
 function VipInfoCard({
   label,
   value,
+  helper,
   tone,
 }: {
   label: string;
   value: string;
+  helper?: string;
   tone?: "success" | "warning";
 }) {
   const toneClass =
@@ -312,11 +423,18 @@ function VipInfoCard({
       : "text-[#f8f3e7]";
 
   return (
-    <div className="rounded-lg border border-white/10 bg-black/25 p-4">
-      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#e8c57d]">
+    <div className="min-w-0 py-4">
+      <p className="truncate text-[10px] font-black uppercase tracking-[0.16em] text-[#e8c57d] sm:text-xs">
         {label}
       </p>
-      <p className={`mt-2 text-xl font-black ${toneClass}`}>{value}</p>
+      <p className={`mt-2 text-base font-black leading-6 sm:text-lg ${toneClass}`}>
+        {value}
+      </p>
+      {helper ? (
+        <p className="mt-1 truncate text-[11px] font-bold text-[#a89f91] sm:text-xs">
+          {helper}
+        </p>
+      ) : null}
     </div>
   );
 }

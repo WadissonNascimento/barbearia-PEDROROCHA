@@ -1,20 +1,17 @@
 import type { MetadataRoute } from "next";
 import { getCurrentShop } from "@/lib/shop";
 import {
-  JAKBARBER_APP_NAME,
-  JAKBARBER_BACKGROUND_COLOR,
-  JAKBARBER_ICON_192_PATH,
-  JAKBARBER_ICON_512_PATH,
-  JAKBARBER_MASKABLE_ICON_512_PATH,
-  JAKBARBER_THEME_COLOR,
+  PEDRO_ROCHA_APP_NAME,
+  PEDRO_ROCHA_BACKGROUND_COLOR,
+  PEDRO_ROCHA_ICON_192_PATH,
+  PEDRO_ROCHA_ICON_512_PATH,
+  PEDRO_ROCHA_MASKABLE_ICON_512_PATH,
+  PEDRO_ROCHA_THEME_COLOR,
 } from "@/lib/pwaAssets";
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const shop = await getCurrentShop();
-  const isJakBarber = shop.id === "shop_jak_barber";
-  const isPedroRocha = shop.id === "shop_pedro_rocha_barbearia";
-  const appName = isJakBarber ? JAKBARBER_APP_NAME : shop.name || "Barbearia";
-  const iconPath = shop.faviconPath || shop.logoPath || "/favicon.png";
+  const appName = PEDRO_ROCHA_APP_NAME;
 
   return {
     name: appName,
@@ -26,50 +23,25 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     start_url: "/",
     scope: "/",
     display: "standalone",
-    background_color: isJakBarber
-      ? JAKBARBER_BACKGROUND_COLOR
-      : shop.brandColorMuted || "#05070b",
-    theme_color: isJakBarber
-      ? JAKBARBER_THEME_COLOR
-      : shop.brandColor || "#05070b",
-    icons: isJakBarber
-      ? [
-          {
-            src: JAKBARBER_ICON_192_PATH,
-            sizes: "192x192",
-            type: "image/png",
-          },
-          {
-            src: JAKBARBER_ICON_512_PATH,
-            sizes: "512x512",
-            type: "image/png",
-          },
-          {
-            src: JAKBARBER_MASKABLE_ICON_512_PATH,
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "maskable",
-          },
-        ]
-      : isPedroRocha
-      ? [
-          {
-            src: "/brands/pedro-rocha/icon-192.png",
-            sizes: "192x192",
-            type: "image/png",
-          },
-          {
-            src: "/brands/pedro-rocha/icon-512.png",
-            sizes: "512x512",
-            type: "image/png",
-          },
-        ]
-      : [
-          {
-            src: iconPath,
-            sizes: "512x512",
-            type: "image/png",
-          },
-        ],
+    background_color: PEDRO_ROCHA_BACKGROUND_COLOR,
+    theme_color: PEDRO_ROCHA_THEME_COLOR,
+    icons: [
+      {
+        src: PEDRO_ROCHA_ICON_192_PATH,
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        src: PEDRO_ROCHA_ICON_512_PATH,
+        sizes: "512x512",
+        type: "image/png",
+      },
+      {
+        src: PEDRO_ROCHA_MASKABLE_ICON_512_PATH,
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
+      },
+    ],
   };
 }

@@ -45,6 +45,7 @@ type VipPlanOption = {
   name: string;
   tokensRemaining: number;
   paymentPaid: boolean;
+  weeklyUsedWeekStarts: string[];
 };
 
 type RescheduleAppointmentOption = {
@@ -136,6 +137,48 @@ function removeSlotFromPeriods(periods: PeriodSlots, slot: string): PeriodSlots 
   };
 }
 
+function getWeekStartValue(dateValue: string) {
+  const base = new Date(`${dateValue}T00:00:00`);
+  base.setHours(0, 0, 0, 0);
+  const day = base.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  base.setDate(base.getDate() + diffToMonday);
+
+  const year = base.getFullYear();
+  const month = String(base.getMonth() + 1).padStart(2, "0");
+  const dayOfMonth = String(base.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${dayOfMonth}`;
+}
+
+function normalizeServiceText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function serviceMatchesVipPlan(service: ServiceOption, planCode: string) {
+  const text = normalizeServiceText(service.name);
+  const hasCorte = text.includes("corte");
+  const hasBarba = text.includes("barba");
+  const hasSobrancelha = text.includes("sobrancelha");
+
+  if (planCode === "CORTE") {
+    return hasCorte && !hasBarba && !hasSobrancelha;
+  }
+
+  if (planCode === "CORTE_SOBRANCELHA") {
+    return hasCorte && hasSobrancelha && !hasBarba;
+  }
+
+  if (planCode === "CORTE_BARBA_SOBRANCELHA") {
+    return hasCorte && hasBarba && hasSobrancelha;
+  }
+
+  return false;
+}
+
 export default function BookingClient({
   barbers,
   services,
@@ -170,6 +213,7 @@ export default function BookingClient({
   const [bookingSlot, setBookingSlot] = useState<string | null>(null);
   const [extrasSlot, setExtrasSlot] = useState<string | null>(null);
   const [confirmationSlot, setConfirmationSlot] = useState<string | null>(null);
+  const [vipPlanWarning, setVipPlanWarning] = useState<string | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [bookingDetails, setBookingDetails] = useState<BookingDetails | null>(null);
   const [useVipPlan, setUseVipPlan] = useState(false);
@@ -208,7 +252,29 @@ export default function BookingClient({
     0
   );
   const selectedPrice = selectedServices.reduce((sum, service) => sum + service.price, 0);
-  const effectiveSelectedPrice = useVipPlan ? 0 : selectedPrice;
+  const vipCoveredServiceIds = useMemo(
+    () =>
+      vipPlan && useVipPlan
+        ? new Set(
+            selectedServices
+              .filter((service) => serviceMatchesVipPlan(service, vipPlan.code))
+              .map((service) => service.id)
+          )
+        : new Set<string>(),
+    [selectedServices, useVipPlan, vipPlan]
+  );
+  const vipCoveredPrice = selectedServices
+    .filter((service) => vipCoveredServiceIds.has(service.id))
+    .reduce((sum, service) => sum + service.price, 0);
+  const effectiveSelectedPrice = useVipPlan
+    ? Math.max(0, selectedPrice - vipCoveredPrice)
+    : selectedPrice;
+  const selectedVipWeekAlreadyUsed = Boolean(
+    vipPlan?.weeklyUsedWeekStarts.includes(getWeekStartValue(selectedDate))
+  );
+  const canUseVipPlan =
+    Boolean(vipPlan?.paymentPaid) &&
+    Boolean(vipPlan && vipPlan.tokensRemaining > 0);
   const selectedExtras = useMemo(
     () =>
       extras
@@ -278,6 +344,17 @@ export default function BookingClient({
     setBookingSuccess(null);
     setBookingDetails(null);
   }, [visibleServices]);
+
+  useEffect(() => {
+    if (!useVipPlan || !selectedVipWeekAlreadyUsed) {
+      return;
+    }
+
+    setUseVipPlan(false);
+    setVipPlanWarning(
+      "Voce ja possui um atendimento do plano mensal nesta semana. Para usar o plano, escolha uma semana sem atendimento do plano agendado ou concluido."
+    );
+  }, [selectedVipWeekAlreadyUsed, useVipPlan]);
 
   const loadAvailability = useCallback(
     async (signal?: AbortSignal, options: { force?: boolean } = {}) => {
@@ -379,7 +456,14 @@ export default function BookingClient({
   }, [loadAvailability, selectedBarberId, selectedDate, selectedServiceIds]);
 
   function toggleService(serviceId: string) {
-    setUseVipPlan(false);
+    const service = visibleServices.find((item) => item.id === serviceId);
+    const isVipCoveredService =
+      Boolean(vipPlan && service && serviceMatchesVipPlan(service, vipPlan.code));
+
+    if (!useVipPlan || isVipCoveredService) {
+      setUseVipPlan(false);
+    }
+
     setSelectedServiceIds((current) =>
       current.includes(serviceId)
         ? current.filter((id) => id !== serviceId)
@@ -390,36 +474,31 @@ export default function BookingClient({
     setBookingDetails(null);
   }
 
-  function normalizeServiceText(value: string) {
-    return value
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase();
-  }
-
-  function serviceMatchesVipPlan(service: ServiceOption, planCode: string) {
-    const text = normalizeServiceText(service.name);
-    const hasCorte = text.includes("corte");
-    const hasBarba = text.includes("barba");
-    const hasSobrancelha = text.includes("sobrancelha");
-
+  function getVipPlanItems(planCode: string) {
     if (planCode === "CORTE") {
-      return hasCorte && !hasBarba && !hasSobrancelha;
+      return "Corte";
     }
 
     if (planCode === "CORTE_SOBRANCELHA") {
-      return hasCorte && hasSobrancelha && !hasBarba;
+      return "Corte e sobrancelha";
     }
 
     if (planCode === "CORTE_BARBA_SOBRANCELHA") {
-      return hasCorte && hasBarba && hasSobrancelha;
+      return "Corte, sobrancelha e barba";
     }
 
-    return false;
+    return "Combo mensal";
   }
 
   function selectVipPlanServices() {
-    if (!vipPlan || !vipPlan.paymentPaid || vipPlan.tokensRemaining < 1) {
+    if (!vipPlan || !canUseVipPlan) {
+      return;
+    }
+
+    if (selectedVipWeekAlreadyUsed) {
+      setVipPlanWarning(
+        "Voce ja possui um atendimento do plano mensal nesta semana. Para usar o plano, escolha uma semana sem atendimento do plano agendado ou concluido."
+      );
       return;
     }
 
@@ -440,6 +519,14 @@ export default function BookingClient({
   }
 
   function openBookingConfirmation(time: string) {
+    if (useVipPlan && selectedVipWeekAlreadyUsed) {
+      setUseVipPlan(false);
+      setVipPlanWarning(
+        "Voce ja possui um atendimento do plano mensal nesta semana. Escolha outra semana para usar o plano ou marque este horario como atendimento avulso."
+      );
+      return;
+    }
+
     setBookingError(null);
     setBookingSuccess(null);
     setExtrasSlot(time);
@@ -673,25 +760,33 @@ export default function BookingClient({
                 Serviços
               </label>
               {vipPlan ? (
-                <div className="mb-3 rounded-2xl border border-[#d9ae55]/45 bg-[#d9ae55]/10 p-3">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div
+                  className="relative mb-3 overflow-hidden rounded-2xl border border-[#d9ae55]/45 bg-[#d9ae55]/10 p-3 transition"
+                >
+                  <div className="flex flex-col gap-3 transition sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
                       <p className="text-xs font-black uppercase tracking-[0.18em] text-[#e8c57d]">
-                        Combo do meu plano VIP
+                        Use seu plano mensal
                       </p>
-                      <p className="mt-1 text-sm font-bold text-white">{vipPlan.name}</p>
-                      <p className="mt-1 text-xs text-zinc-300">
-                        {vipPlan.tokensRemaining} token(s) disponiveis
-                        {vipPlan.paymentPaid ? "" : " - pagamento pendente"}
+                      <p className="mt-1 text-sm font-bold text-white">
+                        {getVipPlanItems(vipPlan.code)}
+                      </p>
+                      {!vipPlan.paymentPaid ? (
+                        <p className="mt-1 text-xs font-bold text-amber-200">
+                          Pagamento pendente
+                        </p>
+                      ) : null}
+                      <p className="mt-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs leading-5 text-zinc-300">
+                        Servicos fora do seu plano, escolhidos abaixo, serao cobrados a parte.
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={selectVipPlanServices}
-                      disabled={!vipPlan.paymentPaid || vipPlan.tokensRemaining < 1}
-                      className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#f1e8d8] px-4 text-sm font-black text-[#080807] transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={!canUseVipPlan}
+                      className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#f1e8d8] px-4 text-sm font-black text-[#080807] transition hover:bg-white disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-zinc-500"
                     >
-                      Usar combo do plano
+                      Usar plano mensal
                     </button>
                   </div>
                 </div>
@@ -923,6 +1018,13 @@ export default function BookingClient({
             setBookingError(null);
             void loadAvailability(undefined, { force: true });
           }}
+        />
+      ) : null}
+
+      {vipPlanWarning ? (
+        <VipPlanWarningDialog
+          message={vipPlanWarning}
+          onClose={() => setVipPlanWarning(null)}
         />
       ) : null}
 
@@ -1380,6 +1482,58 @@ function BookingSummary({
         />
       </div>
     </div>
+  );
+}
+
+function VipPlanWarningDialog({
+  message,
+  onClose,
+}: {
+  message: string;
+  onClose: () => void;
+}) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return null;
+  }
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 px-4 py-6 backdrop-blur-md"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="vip-plan-warning-title"
+    >
+      <div className="w-full max-w-md rounded-2xl border border-amber-300/35 bg-[#050b16] p-5 text-white shadow-[0_24px_80px_rgba(0,0,0,0.6)]">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-amber-300/35 bg-amber-300/10 text-amber-100">
+          <span className="text-sm font-black">!</span>
+        </div>
+
+        <div className="mt-4 text-center">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-amber-200">
+            Plano mensal
+          </p>
+          <h2 id="vip-plan-warning-title" className="mt-2 text-2xl font-bold">
+            Semana ja utilizada
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-zinc-300">{message}</p>
+        </div>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-5 min-h-11 w-full rounded-xl bg-[#f1e8d8] px-4 py-3 text-sm font-black text-[#080807] transition hover:bg-white"
+        >
+          Entendi
+        </button>
+      </div>
+    </div>,
+    document.body
   );
 }
 

@@ -49,6 +49,7 @@ import {
   BRAZILIAN_PHONE_EXAMPLE,
   isValidBrazilianPhone,
   normalizeBrazilianPhoneForSubmit,
+  stripPhoneDigits,
 } from "@/lib/phone";
 import {
   createScheduleDateTimeInput,
@@ -679,6 +680,7 @@ export async function createWalkInAppointmentAction(
     String(formData.get("fitInMode") || "standard") === "quick"
       ? "quick"
       : "standard";
+  const useVipPlan = String(formData.get("useVipPlan") || "") === "true";
   const manualDurationMinutes = normalizeQuickFitInDuration(
     formData.get("manualDurationMinutes"),
   );
@@ -722,6 +724,7 @@ export async function createWalkInAppointmentAction(
       !isValidBrazilianPhone(rawCustomerPhone)) ||
     (hasRawCustomerPhone && !customerPhone) ||
     customerName.length > 80 ||
+    (useVipPlan && !customerPhone) ||
     selectedServiceIds.length === 0 ||
     selectedServiceIds.length > 8 ||
     selectedExtras.length > 12 ||
@@ -777,13 +780,31 @@ export async function createWalkInAppointmentAction(
     throw error;
   }
 
-  const selectedCustomer = customerId
-    ? await prisma.user.findFirst({
+  const [selectedCustomerById, customersWithPhone] = await Promise.all([
+    customerId
+      ? prisma.user.findFirst({
+          where: {
+            id: customerId,
+            shopId: barber.shopId,
+            role: "CUSTOMER",
+            isActive: true,
+          },
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+          },
+        })
+      : null,
+    customerPhone
+      ? prisma.user.findMany({
         where: {
-          id: customerId,
           shopId: barber.shopId,
           role: "CUSTOMER",
           isActive: true,
+          phone: {
+            not: null,
+          },
         },
         select: {
           id: true,
@@ -791,20 +812,41 @@ export async function createWalkInAppointmentAction(
           phone: true,
         },
       })
-    : null;
+      : [],
+  ]);
+  const customerPhoneDigits = stripPhoneDigits(customerPhone);
+  const customerMatchedByPhone =
+    customersWithPhone.find(
+      (customer) => stripPhoneDigits(customer.phone) === customerPhoneDigits,
+    ) || null;
+  const selectedCustomer = customerMatchedByPhone || selectedCustomerById;
 
   if (customerId && !selectedCustomer) {
     return mutationError("Cliente selecionado nao pertence a sua base.");
   }
 
+  if (useVipPlan && !customerMatchedByPhone) {
+    return mutationError(
+      "Informe o telefone cadastrado do cliente assinante para usar o plano mensal.",
+    );
+  }
+
   const walkInCustomer = await getOrCreateWalkInCustomer(barber.shopId);
+  const appointmentCustomerId =
+    (useVipPlan ? customerMatchedByPhone?.id : selectedCustomer?.id) ||
+    walkInCustomer.id;
+
+  if (!appointmentCustomerId) {
+    return mutationError("Selecione o cliente assinante para usar o plano mensal.");
+  }
+
   const displayCustomerName =
     customerName || selectedCustomer?.name || "Cliente sem cadastro";
   const displayCustomerPhone = customerPhone || selectedCustomer?.phone || "";
 
   try {
     await createManualFitInAppointment({
-      customerId: walkInCustomer.id,
+      customerId: appointmentCustomerId,
       barberId: barber.id,
       serviceIds: selectedServiceIds,
       extras: selectedExtras,
@@ -813,6 +855,7 @@ export async function createWalkInAppointmentAction(
       conflictMode: fitInMode === "quick" ? "SAME_START_ONLY" : "OVERLAP",
       manualDurationMinutes:
         fitInMode === "quick" ? manualDurationMinutes : null,
+      useVipPlan,
       notes: formatManualFitInNotes({
         customerName: displayCustomerName,
         customerPhone: displayCustomerPhone,

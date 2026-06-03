@@ -1,4 +1,5 @@
 import Link from "next/link";
+import VipMonthlyFinancialPanel from "@/components/admin/VipMonthlyFinancialPanel";
 import BackLink from "@/components/ui/BackLink";
 import DashboardShell from "@/components/ui/DashboardShell";
 import EmptyState from "@/components/ui/EmptyState";
@@ -23,6 +24,7 @@ import {
 import { normalizeAppointmentStatus } from "@/lib/appointmentStatus";
 import { prisma } from "@/lib/prisma";
 import { requireTenantSession, SHOP_ADMIN_ROLES } from "@/lib/tenantSession";
+import { getVipMonthlyFinancialSummary } from "@/lib/vipFinancials";
 import FinancePeriodFilters from "./FinancePeriodFilters";
 import FinanceHistoryFilters from "./FinanceHistoryFilters";
 import GeneratePayoutsButton from "./GeneratePayoutsButton";
@@ -190,6 +192,8 @@ async function getAdminFinanceAppointments({
         date: appointment.date,
         status: normalizedStatus,
         paymentMethod: appointment.paymentMethod,
+        isVipPlanUse: appointment.isVipPlanUse,
+        vipPlanName: appointment.vipSubscription?.plan.name || null,
         customerName: appointment.isManualFitIn
           ? getManualFitInCustomerDisplay({
               notes: appointment.notes,
@@ -269,17 +273,20 @@ export default async function AdminFinanceiroPage({
     roles: SHOP_ADMIN_ROLES,
   });
 
-  const data = await getFinanceDashboardData({
-    shopId,
-    period: resolvedSearchParams.period,
-    start: resolvedSearchParams.start,
-    end: resolvedSearchParams.end,
-    historyStart: resolvedSearchParams.historyStart,
-    historyEnd: resolvedSearchParams.historyEnd,
-    compareMode: resolvedSearchParams.compareMode,
-    compareStart: resolvedSearchParams.compareStart,
-    compareEnd: resolvedSearchParams.compareEnd,
-  });
+  const [data, vipFinancialSummary] = await Promise.all([
+    getFinanceDashboardData({
+      shopId,
+      period: resolvedSearchParams.period,
+      start: resolvedSearchParams.start,
+      end: resolvedSearchParams.end,
+      historyStart: resolvedSearchParams.historyStart,
+      historyEnd: resolvedSearchParams.historyEnd,
+      compareMode: resolvedSearchParams.compareMode,
+      compareStart: resolvedSearchParams.compareStart,
+      compareEnd: resolvedSearchParams.compareEnd,
+    }),
+    getVipMonthlyFinancialSummary(prisma, shopId),
+  ]);
   const financeAppointments = await getAdminFinanceAppointments({
     shopId,
     start: data.filters.start,
@@ -359,6 +366,8 @@ export default async function AdminFinanceiroPage({
         </section>
 
         <div className="grid gap-5 pt-5">
+          <VipMonthlyFinancialPanel summary={vipFinancialSummary} />
+
           <FinancePanel
             eyebrow="Leitura rápida"
             title="Resumo do período"

@@ -11,7 +11,7 @@ import { redirect } from "next/navigation";
 import type { CSSProperties } from "react";
 import { getConfiguredAppUrl } from "@/lib/appUrl";
 import { prisma } from "@/lib/prisma";
-import { getTenantDesignTemplate, getTenantFontStyle } from "@/lib/tenantDesign";
+import { getTenantDesignTemplate } from "@/lib/tenantDesign";
 import {
   DEFAULT_SHOP_ID,
   getCurrentShop,
@@ -20,14 +20,12 @@ import {
   logTenantObservabilityEvent,
 } from "@/lib/shop";
 import {
-  JAKBARBER_APP_NAME,
-  JAKBARBER_APPLE_TOUCH_ICON_PATH,
-  JAKBARBER_BACKGROUND_COLOR,
-  JAKBARBER_FAVICON_32_PATH,
-  JAKBARBER_FAVICON_48_PATH,
-  JAKBARBER_ICON_192_PATH,
-  JAKBARBER_STARTUP_IMAGES,
-  JAKBARBER_THEME_COLOR,
+  PEDRO_ROCHA_APP_NAME,
+  PEDRO_ROCHA_APPLE_TOUCH_ICON_PATH,
+  PEDRO_ROCHA_FAVICON_PATH,
+  PEDRO_ROCHA_ICON_192_PATH,
+  PEDRO_ROCHA_STARTUP_IMAGES,
+  PEDRO_ROCHA_THEME_COLOR,
 } from "@/lib/pwaAssets";
 
 const bodyFont = Manrope({
@@ -45,14 +43,10 @@ type TenantBrandStyle = CSSProperties & Record<`--${string}`, string>;
 export async function generateMetadata(): Promise<Metadata> {
   const shop = await getCurrentShop();
   const brandName = shop.name || "Barbearia";
-  const isJakBarber = shop.id === "shop_jak_barber";
-  const appName = isJakBarber ? JAKBARBER_APP_NAME : brandName;
+  const appName = PEDRO_ROCHA_APP_NAME;
   const description =
     shop.metadataDescription ||
     "Agende seu horario e acompanhe seus atendimentos com praticidade.";
-  const faviconPath = isJakBarber
-    ? JAKBARBER_FAVICON_32_PATH
-    : shop.faviconPath || "";
   const title = shop.metadataTitle || brandName;
 
   return {
@@ -64,68 +58,38 @@ export async function generateMetadata(): Promise<Metadata> {
       template: "%s",
     },
     description,
-    icons: isJakBarber
-      ? {
-          icon: [
-            {
-              url: JAKBARBER_FAVICON_32_PATH,
-              sizes: "32x32",
-              type: "image/png",
-            },
-            {
-              url: JAKBARBER_FAVICON_48_PATH,
-              sizes: "48x48",
-              type: "image/png",
-            },
-            {
-              url: JAKBARBER_ICON_192_PATH,
-              sizes: "192x192",
-              type: "image/png",
-            },
-          ],
-          shortcut: [
-            {
-              url: JAKBARBER_FAVICON_32_PATH,
-              type: "image/png",
-            },
-          ],
-          apple: [
-            {
-              url: JAKBARBER_APPLE_TOUCH_ICON_PATH,
-              sizes: "180x180",
-              type: "image/png",
-            },
-          ],
-        }
-      : faviconPath
-      ? {
-          icon: [
-            {
-              url: faviconPath,
-              sizes: "64x64",
-              type: "image/png",
-            },
-          ],
-          shortcut: [
-            {
-              url: faviconPath,
-              type: "image/png",
-            },
-          ],
-          apple: [
-            {
-              url: faviconPath,
-              sizes: "180x180",
-              type: "image/png",
-            },
-          ],
-        }
-      : undefined,
+    icons: {
+      icon: [
+        {
+          url: PEDRO_ROCHA_FAVICON_PATH,
+          sizes: "64x64",
+          type: "image/png",
+        },
+        {
+          url: PEDRO_ROCHA_ICON_192_PATH,
+          sizes: "192x192",
+          type: "image/png",
+        },
+      ],
+      shortcut: [
+        {
+          url: PEDRO_ROCHA_FAVICON_PATH,
+          type: "image/png",
+        },
+      ],
+      apple: [
+        {
+          url: PEDRO_ROCHA_APPLE_TOUCH_ICON_PATH,
+          sizes: "180x180",
+          type: "image/png",
+        },
+      ],
+    },
     appleWebApp: {
       capable: true,
       title: appName,
-      statusBarStyle: isJakBarber ? "black-translucent" : "default",
-      startupImage: isJakBarber ? JAKBARBER_STARTUP_IMAGES : undefined,
+      statusBarStyle: "black-translucent",
+      startupImage: PEDRO_ROCHA_STARTUP_IMAGES,
     },
     other: {
       "mobile-web-app-capable": "yes",
@@ -153,17 +117,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export async function generateViewport(): Promise<Viewport> {
-  const shop = await getCurrentShop();
-  const isJakBarber = shop.id === "shop_jak_barber";
-
   return {
     width: "device-width",
     initialScale: 1,
     viewportFit: "cover",
-    themeColor: isJakBarber
-      ? JAKBARBER_THEME_COLOR
-      : shop.brandColor || "#05070b",
-    colorScheme: isJakBarber ? "dark" : "light dark",
+    themeColor: PEDRO_ROCHA_THEME_COLOR,
+    colorScheme: "dark",
   };
 }
 
@@ -204,41 +163,9 @@ export default async function RootLayout({
   const brandName = shop.name || "Barbearia";
   const logoPath = shop.logoPath || "";
   const designTemplate = getTenantDesignTemplate(shop.designTemplate);
-  const tenantFont = getTenantFontStyle(shop.fontStyle);
   const backgroundColor = shop.backgroundColor || designTemplate.backgroundColor;
   const textColor = shop.textColor || designTemplate.textColor;
-  const tenantBrandStyle: TenantBrandStyle =
-    shop.id === "shop_rodrigo_style"
-      ? {
-          "--app-bg": backgroundColor,
-          "--app-gradient-start": "#fafaf7",
-          "--app-gradient-mid": backgroundColor,
-          "--app-gradient-end": "#efe7d8",
-          "--panel-bg": "#ffffff",
-          "--panel-bg-strong": "#ffffff",
-          "--panel-border": "#e6dfd2",
-          "--surface-soft": "rgba(255, 255, 255, 0.76)",
-          "--text-primary": textColor,
-          "--text-secondary": "#5f5f5f",
-          "--text-muted": "#767064",
-          "--brand": shop.brandColor || designTemplate.brandColor,
-          "--brand-strong": "#0b0b0b",
-          "--brand-muted": "rgba(201, 151, 43, 0.16)",
-          "--tenant-font-family": tenantFont.cssFamily,
-          "--tenant-heading-font-family": tenantFont.cssFamily,
-          "--site-header-bg": "rgba(255, 255, 255, 0.96)",
-          "--site-header-border": "#e6dfd2",
-          "--site-header-text": "#0b0b0b",
-          "--site-header-muted": "#5f5f5f",
-          "--site-header-link": "#222222",
-          "--site-header-link-hover": "#0b0b0b",
-          "--site-header-active-text": "#0b0b0b",
-          "--site-header-control-bg": "#ffffff",
-          "--site-header-control-border": "#d8cfbf",
-          "--site-header-control-text": "#0b0b0b",
-        }
-      : shop.id === "shop_pedro_rocha_barbearia"
-      ? {
+  const tenantBrandStyle: TenantBrandStyle = {
           "--app-bg": backgroundColor,
           "--app-gradient-start": "#11100f",
           "--app-gradient-mid": "#080807",
@@ -265,19 +192,6 @@ export default async function RootLayout({
           "--site-header-control-bg": "rgba(255, 255, 255, 0.045)",
           "--site-header-control-border": "rgba(241, 232, 216, 0.16)",
           "--site-header-control-text": "#f5efe3",
-        }
-      : {
-          "--app-bg": backgroundColor,
-          "--app-gradient-start": backgroundColor,
-          "--app-gradient-mid": backgroundColor,
-          "--app-gradient-end": "#030712",
-          "--text-primary": textColor,
-          "--text-secondary": textColor,
-          "--brand": shop.brandColor || "#14b8a6",
-          "--brand-strong": shop.brandColorStrong || "#99f6e4",
-          "--brand-muted": shop.brandColorMuted || "rgba(20, 184, 166, 0.18)",
-          "--tenant-font-family": tenantFont.cssFamily,
-          "--tenant-heading-font-family": tenantFont.cssFamily,
         };
   const customerPhone =
     role === "CUSTOMER" && session?.user?.id

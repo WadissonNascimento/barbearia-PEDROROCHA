@@ -155,6 +155,30 @@ export async function markVipPaymentPaidAction(formData: FormData) {
   revalidatePath("/agendar");
 }
 
+export async function reopenVipPaymentAction(formData: FormData) {
+  const shopId = await requireAdminShop();
+  const subscriptionId = getRequiredString(formData, "subscriptionId");
+  const now = new Date();
+  const { cycleMonth } = getVipCycle(now);
+
+  await prisma.vipPayment.updateMany({
+    where: {
+      shopId,
+      subscriptionId,
+      cycleMonth,
+      status: "PAID",
+    },
+    data: {
+      status: "PENDING",
+      paidAt: null,
+    },
+  });
+
+  revalidatePath("/admin/vip");
+  revalidatePath("/planos");
+  revalidatePath("/agendar");
+}
+
 export async function renewVipCycleAction(formData: FormData) {
   const shopId = await requireAdminShop();
   const subscriptionId = getRequiredString(formData, "subscriptionId");
@@ -233,6 +257,26 @@ export async function cancelVipSubscriptionAction(formData: FormData) {
       status: "CANCELLED",
       cancelledAt: new Date(),
       tokensRemaining: 0,
+    },
+  });
+
+  revalidatePath("/admin/vip");
+  revalidatePath("/planos");
+  revalidatePath("/agendar");
+}
+
+export async function pauseVipSubscriptionAction(formData: FormData) {
+  const shopId = await requireAdminShop();
+  const subscriptionId = getRequiredString(formData, "subscriptionId");
+
+  await prisma.vipSubscription.updateMany({
+    where: {
+      id: subscriptionId,
+      shopId,
+      status: "ACTIVE",
+    },
+    data: {
+      status: "PAUSED",
     },
   });
 

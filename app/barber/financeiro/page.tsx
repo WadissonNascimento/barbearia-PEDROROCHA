@@ -104,6 +104,8 @@ export default async function BarberFinancePage({
         </section>
       </div>
 
+      <VipPlanSummaryCard appointments={data.appointments} />
+
       <section className="mt-6 rounded-[28px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -333,6 +335,8 @@ async function getBarberFinanceData(
       date: appointment.date,
       status: normalizedStatus,
       paymentMethod: appointment.paymentMethod,
+      isVipPlanUse: appointment.isVipPlanUse,
+      vipPlanName: appointment.vipSubscription?.plan.name || null,
       customerName: appointment.isManualFitIn
         ? getManualFitInCustomerDisplay({
             notes: appointment.notes,
@@ -410,6 +414,84 @@ async function getBarberFinanceData(
     })),
     tips,
   };
+}
+
+function VipPlanSummaryCard({
+  appointments,
+}: {
+  appointments: Array<{
+    isVipPlanUse?: boolean;
+    vipPlanName?: string | null;
+  }>;
+}) {
+  const counts = getVipPlanCounts(appointments);
+  const total = counts.reduce((sum, item) => sum + item.count, 0);
+
+  return (
+    <section className="mt-6 rounded-[28px] border border-white/10 bg-white/[0.04] p-4 backdrop-blur sm:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[var(--brand-strong)]">
+            Assinaturas
+          </p>
+          <h2 className="mt-1 text-xl font-bold text-white">
+            Atendimentos de clientes com assinatura
+          </h2>
+          <p className="mt-1 text-sm leading-5 text-zinc-400">
+            Combos do plano nao entram no repasse.
+          </p>
+        </div>
+        <span className="shrink-0 rounded-full border border-white/10 bg-black/25 px-3 py-1 text-xs font-bold text-zinc-300">
+          {total}
+        </span>
+      </div>
+
+      <div className="mt-4 border-t border-white/10 pt-3">
+        {counts.map((item) => (
+          <div
+            key={item.name}
+            className="flex items-center justify-between gap-3 py-1.5"
+          >
+            <p className={`text-sm font-bold ${item.color}`}>{item.name}</p>
+            <p className="text-sm font-black text-white">
+              {item.count} cliente(s)
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function getVipPlanCounts(
+  appointments: Array<{ isVipPlanUse?: boolean; vipPlanName?: string | null }>
+) {
+  const order = [
+    { name: "Bronze", color: "text-orange-200" },
+    { name: "Prata", color: "text-zinc-200" },
+    { name: "Ouro", color: "text-amber-200" },
+  ];
+  const countByPlan = new Map<string, number>();
+
+  for (const appointment of appointments) {
+    if (!appointment.isVipPlanUse) continue;
+    const planName = appointment.vipPlanName || "VIP";
+    countByPlan.set(planName, (countByPlan.get(planName) || 0) + 1);
+  }
+
+  const known = order.map((plan) => ({
+    ...plan,
+    count: countByPlan.get(plan.name) || 0,
+  }));
+  const extras = Array.from(countByPlan.entries())
+    .filter(([name]) => !order.some((plan) => plan.name === name))
+    .map(([name, count]) => ({
+      name,
+      count,
+      color: "text-[var(--brand-strong)]",
+    }));
+
+  return [...known, ...extras];
 }
 
 function FinanceMetricCard({

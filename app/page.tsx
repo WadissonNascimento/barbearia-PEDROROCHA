@@ -4,7 +4,6 @@ import { toMoneyNumber } from "@/lib/money";
 import { getCurrentShop } from "@/lib/shop";
 import HomeClient, {
   type HomeBarber,
-  type HomeProduct,
   type HomeReview,
   type HomeService,
 } from "./HomeClient";
@@ -58,7 +57,7 @@ const getHomeImages = unstable_cache(
 
 const getHomePublicData = unstable_cache(
   async (shopId: string) => {
-    const [services, barbers, products] = await Promise.all([
+    const [services, barbers] = await Promise.all([
       basePrisma.service.findMany({
         where: {
           shopId,
@@ -89,20 +88,6 @@ const getHomePublicData = unstable_cache(
         orderBy: [{ name: "asc" }],
         take: 6,
       }),
-      basePrisma.product.findMany({
-        where: {
-          shopId,
-          isActive: true,
-        },
-        select: {
-          id: true,
-          name: true,
-          price: true,
-          imageUrl: true,
-        },
-        orderBy: [{ createdAt: "desc" }],
-        take: 4,
-      }),
     ]);
 
     return {
@@ -120,14 +105,6 @@ const getHomePublicData = unstable_cache(
           id: barber.id,
           name: barber.name || "Barbeiro",
           image: barber.image,
-        })
-      ),
-      products: products.map(
-        (product): HomeProduct => ({
-          id: product.id,
-          name: product.name,
-          price: toMoneyNumber(product.price),
-          imageUrl: product.imageUrl,
         })
       ),
     };
@@ -168,7 +145,6 @@ export default async function HomePage() {
       instagramUrl={shop.instagramUrl || ""}
       services={publicData.services}
       barbers={publicData.barbers}
-      products={publicData.products}
       heroImageUrl={shop.heroImageUrl || ""}
       heroEyebrow={shop.heroEyebrow || ""}
       heroTitle={shop.heroTitle || ""}

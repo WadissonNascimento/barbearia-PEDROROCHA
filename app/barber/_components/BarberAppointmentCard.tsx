@@ -27,8 +27,14 @@ export type BarberAppointmentCardData = {
   date: Date;
   status: string;
   paymentMethod?: string | null;
+  isVipPlanUse?: boolean;
   isManualFitIn: boolean;
   notes: string | null;
+  vipSubscription?: {
+    plan: {
+      name: string;
+    };
+  } | null;
   customer: {
     id: string;
     name: string;
@@ -110,6 +116,19 @@ export default function BarberAppointmentCard({
     allPickupItemsReviewed,
     itemDeliveryDecisions,
   });
+  const vipPlanName = appointment.isVipPlanUse
+    ? appointment.vipSubscription?.plan.name || "VIP"
+    : null;
+  const normalizedStatus = normalizeAppointmentStatus(appointment.status);
+  const isConfirmedStatus = normalizedStatus === "CONFIRMED";
+  const vipPlanColorClass =
+    vipPlanName === "Ouro"
+      ? "text-amber-200"
+      : vipPlanName === "Prata"
+        ? "text-zinc-200"
+        : vipPlanName === "Bronze"
+          ? "text-orange-200"
+          : "text-[var(--brand-strong)]";
 
   useEffect(() => {
     setItems(appointment.items);
@@ -141,33 +160,35 @@ export default function BarberAppointmentCard({
           setIsExpanded((current) => !current);
         }
       }}
-      className={`relative max-w-full cursor-pointer overflow-hidden rounded-[24px] border p-4 shadow-[0_18px_44px_rgba(0,0,0,0.2)] transition ${
+      className={`relative max-w-full cursor-pointer overflow-hidden rounded-[22px] border p-4 shadow-[0_18px_44px_rgba(0,0,0,0.2)] transition ${
         highlighted
           ? "border-white/20 bg-[linear-gradient(145deg,rgba(20,24,34,0.96),rgba(8,12,20,0.98))]"
-          : "border-white/10 bg-black/25"
+          : "border-white/10 bg-[linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))]"
       }`}
     >
       {highlighted ? (
         <span className="absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-[var(--brand-strong)]/70 to-transparent" />
       ) : null}
 
-      <StatusBadge
-        variant={appointmentStatusVariant(appointment.status)}
-        className="absolute right-4 top-4 w-fit max-w-[130px] shrink-0 justify-center px-2.5 py-1 text-[10px]"
-      >
-        {appointmentStatusLabel(appointment.status)}
-      </StatusBadge>
-      {normalizeAppointmentStatus(appointment.status) === "COMPLETED" ? (
-        <span className="absolute right-4 top-12 rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-black text-emerald-100">
-          {paymentMethodLabel(appointment.paymentMethod)}
-        </span>
-      ) : null}
-
-      <div className="min-w-0 pr-28">
+      <div className="min-w-0">
         <div className="min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
-            {formatAppointmentPublicId(appointment.publicId)}
-          </p>
+          <div className="flex min-w-0 items-start justify-between gap-3">
+            <p className="min-w-0 truncate text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-300">
+              {formatAppointmentPublicId(appointment.publicId)}
+            </p>
+            {isConfirmedStatus ? (
+              <span className="inline-flex w-fit max-w-[130px] shrink-0 justify-center rounded-full border border-sky-300/35 bg-sky-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-100">
+                {appointmentStatusLabel(appointment.status)}
+              </span>
+            ) : (
+              <StatusBadge
+                variant={appointmentStatusVariant(appointment.status)}
+                className="w-fit max-w-[130px] shrink-0 justify-center px-2.5 py-1 text-[10px]"
+              >
+                {appointmentStatusLabel(appointment.status)}
+              </StatusBadge>
+            )}
+          </div>
           {appointment.isManualFitIn ? (
             <span className="mt-2 inline-flex w-fit rounded-full border border-sky-300/25 bg-sky-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-sky-200">
               Encaixe manual
@@ -178,15 +199,35 @@ export default function BarberAppointmentCard({
               {formatCardDate(appointment.date)}
             </p>
           ) : null}
-          <p className="text-2xl font-bold text-white">
-            {formatCardTime(appointment.date)}
-          </p>
+          <div className="mt-2 flex min-w-0 items-end justify-between gap-3">
+            <p className="shrink-0 text-3xl font-black leading-none text-white">
+              {formatCardTime(appointment.date)}
+            </p>
+            {normalizedStatus === "COMPLETED" ? (
+              <span className="rounded-full border border-emerald-300/25 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-black text-emerald-100">
+                {paymentMethodLabel(appointment.paymentMethod)}
+              </span>
+            ) : null}
+          </div>
           <div className="mt-2 flex min-w-0 items-center gap-2">
             <p className="block min-w-0 truncate text-base font-semibold text-white">
               {appointment.customer.name}
             </p>
             {contactHref ? <WhatsAppShortcut href={contactHref} /> : null}
           </div>
+          {vipPlanName ? (
+            <div className="mt-2">
+              <p className="text-sm font-bold text-zinc-300">
+                Assinante:{" "}
+                <span className={`font-black ${vipPlanColorClass}`}>
+                  {vipPlanName}
+                </span>
+              </p>
+              <p className="mt-0.5 text-sm font-bold text-zinc-300">
+                Agendamento pelo plano mensal
+              </p>
+            </div>
+          ) : null}
           <p className="mt-1 text-sm text-zinc-400">
             {appointment.serviceName}
           </p>

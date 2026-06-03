@@ -155,13 +155,10 @@ test("custom domain readiness remains read-only for shop domains", () => {
 });
 
 test("service role storage helpers are server-only and not imported from client components", () => {
-  assert.match(read("lib/productImages.ts"), /import "server-only"/);
   assert.match(read("lib/extraProductImages.ts"), /import "server-only"/);
   assert.match(read("lib/tenantBrandAssets.ts"), /import "server-only"/);
 
   const clientFiles = [
-    "app/admin/produtos/ProductCardClient.tsx",
-    "app/admin/produtos/novo/NewProductForm.tsx",
     "app/admin/extras/AdminExtrasClient.tsx",
     "app/admin/extras/ExtraProductCardClient.tsx",
   ];
@@ -171,7 +168,7 @@ test("service role storage helpers are server-only and not imported from client 
     assert.doesNotMatch(contents, /SUPABASE_SERVICE_ROLE_KEY/, file);
     assert.doesNotMatch(
       contents,
-      /@\/lib\/productImages|@\/lib\/extraProductImages|@\/lib\/tenantBrandAssets/,
+      /@\/lib\/extraProductImages|@\/lib\/tenantBrandAssets/,
       file,
     );
   }

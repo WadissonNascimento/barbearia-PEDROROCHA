@@ -8,6 +8,8 @@ type PayoutAppointment = {
   id: string;
   time: string;
   customerName: string;
+  isVipPlanUse?: boolean;
+  vipPlanName?: string | null;
   gross: number;
   payout: number;
   servicesPayout: number;
@@ -28,6 +30,7 @@ export default function PayoutAppointmentCard({
   appointment: PayoutAppointment;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const vipPlanColorClass = getVipPlanColorClass(appointment.vipPlanName);
 
   return (
     <article
@@ -54,6 +57,19 @@ export default function PayoutAppointmentCard({
           <p className="mt-2 truncate text-base font-bold text-white">
             {appointment.customerName}
           </p>
+          {appointment.isVipPlanUse ? (
+            <div className="mt-2">
+              <p className="text-sm font-bold text-zinc-300">
+                Assinante:{" "}
+                <span className={`font-black ${vipPlanColorClass}`}>
+                  {appointment.vipPlanName || "VIP"}
+                </span>
+              </p>
+              <p className="mt-0.5 text-sm font-bold text-zinc-300">
+                Atendido pelo plano mensal
+              </p>
+            </div>
+          ) : null}
           <p className="mt-1 line-clamp-2 text-sm text-zinc-400">
             {appointment.items.map((item) => item.name).join(", ") || "Atendimento"}
           </p>
@@ -113,6 +129,14 @@ export default function PayoutAppointmentCard({
       ) : null}
     </article>
   );
+}
+
+function getVipPlanColorClass(planName?: string | null) {
+  if (planName === "Ouro") return "text-amber-200";
+  if (planName === "Prata") return "text-zinc-200";
+  if (planName === "Bronze") return "text-orange-200";
+
+  return "text-[var(--brand-strong)]";
 }
 
 function BreakdownPill({

@@ -64,6 +64,23 @@ function formatFromAddress(from: string, fromName?: string) {
   return from.includes("<") ? from : `Atendimento <${from}>`;
 }
 
+function buildCustomerThemeFromShop(shop: {
+  name?: string | null;
+  primaryDomain?: string | null;
+  logoPath?: string | null;
+  brandColor?: string | null;
+  addressLine?: string | null;
+  whatsappNumber?: string | null;
+}): CustomerEmailTheme {
+  return {
+    nomeBarbearia: shop.name?.trim() || DEFAULT_SHOP_NAME,
+    logoBarbearia: resolveEmailLogoUrl(shop.logoPath, shop),
+    corPrimaria: shop.brandColor?.trim() || DEFAULT_BRAND_COLOR,
+    enderecoBarbearia: shop.addressLine || null,
+    telefoneBarbearia: shop.whatsappNumber || null,
+  };
+}
+
 function resolveEmailLogoUrl(
   logoPath: string | null | undefined,
   shop?: { primaryDomain?: string | null } | null
@@ -83,38 +100,25 @@ function resolveEmailLogoUrl(
   return `${appUrl}${normalizedPath}`;
 }
 
-function buildCustomerThemeFromShop(shop: {
-  name?: string | null;
-  primaryDomain?: string | null;
-  logoPath?: string | null;
-  brandColor?: string | null;
-  addressLine?: string | null;
-  whatsappNumber?: string | null;
-}): CustomerEmailTheme {
-  return {
-    nomeBarbearia: shop.name?.trim() || DEFAULT_SHOP_NAME,
-    logoBarbearia: resolveEmailLogoUrl(shop.logoPath, shop),
-    corPrimaria: shop.brandColor?.trim() || DEFAULT_BRAND_COLOR,
-    enderecoBarbearia: shop.addressLine || null,
-    telefoneBarbearia: shop.whatsappNumber || null,
-  };
-}
-
 async function getCurrentCustomerEmailTheme() {
   const shop = await getCurrentShop().catch(() => null);
   const emailIdentity = await getShopEmailIdentity(shop?.id);
+  const theme = buildCustomerThemeFromShop({
+    name: shop?.name,
+    primaryDomain: shop?.primaryDomain,
+    logoPath: shop?.logoPath,
+    brandColor: shop?.brandColor,
+    addressLine: shop?.addressLine,
+    whatsappNumber: shop?.whatsappNumber,
+  });
 
   return {
     shopId: shop?.id || DEFAULT_SHOP_ID,
     appUrl: getShopAppUrl(shop),
-    theme: buildCustomerThemeFromShop({
-      name: shop?.name,
-      primaryDomain: shop?.primaryDomain,
-      logoPath: shop?.logoPath,
-      brandColor: shop?.brandColor,
-      addressLine: shop?.addressLine,
-      whatsappNumber: shop?.whatsappNumber,
-    }),
+    theme: {
+      ...theme,
+      nomeBarbearia: emailIdentity.fromName || theme.nomeBarbearia,
+    },
     emailIdentity,
   };
 }

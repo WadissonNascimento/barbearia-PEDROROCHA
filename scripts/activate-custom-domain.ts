@@ -11,7 +11,7 @@ type CliArgs = Record<string, string | true>;
 const LETSENCRYPT_WEBROOT = "/var/www/letsencrypt";
 const NGINX_AVAILABLE_DIR = "/etc/nginx/sites-available";
 const NGINX_ENABLED_DIR = "/etc/nginx/sites-enabled";
-const APP_ORIGIN = "http://127.0.0.1:3000";
+const APP_ORIGIN = "http://127.0.0.1:3001";
 
 function parseArgs(argv: string[]) {
   const parsed: CliArgs = {};
@@ -85,7 +85,7 @@ server {
     client_max_body_size 20m;
 
     location / {
-        proxy_pass http://127.0.0.1:3000;
+        proxy_pass http://127.0.0.1:3001;
         proxy_http_version 1.1;
 
         proxy_set_header Host $host;

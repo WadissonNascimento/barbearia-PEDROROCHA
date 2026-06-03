@@ -76,13 +76,13 @@ test("appointment mailer exposes customer confirmation, completion, cancellation
 test("appointment reminders are cron-protected and deduplicated in the database", () => {
   const schema = read("prisma/schema.prisma");
   const migration = read(
-    "prisma/migrations/20260509100000_add_appointment_email_reminders/migration.sql"
+    "prisma/migrations/20260531160000_pedro_rocha_baseline/migration.sql"
   );
   const reminders = read("lib/appointmentEmails.ts");
   const route = read("app/api/cron/appointment-reminders/route.ts");
 
   assert.match(schema, /reminderSentAt\s+DateTime\?/);
-  assert.match(migration, /ADD COLUMN IF NOT EXISTS "reminderSentAt"/);
+  assert.match(migration, /"reminderSentAt" TIMESTAMP\(3\)/);
   assert.match(reminders, /getCurrentScheduleDate/);
   assert.match(reminders, /reminderSentAt:\s*null/);
   assert.match(reminders, /sendAppointmentReminderEmail/);

@@ -26,6 +26,8 @@ export type FinanceAppointmentCardData = {
   date: Date;
   status: string;
   paymentMethod?: string | null;
+  isVipPlanUse?: boolean;
+  vipPlanName?: string | null;
   customerName: string;
   barberId?: string;
   barberName?: string;
@@ -81,6 +83,7 @@ export default function FinanceAppointmentCard({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const muted = ["CANCELLED", "NO_SHOW"].includes(appointment.status);
+  const vipPlanColorClass = getVipPlanColorClass(appointment.vipPlanName);
 
   return (
     <article
@@ -116,6 +119,19 @@ export default function FinanceAppointmentCard({
           <p className="mt-2 truncate text-base font-bold text-white">
             {appointment.customerName}
           </p>
+          {appointment.isVipPlanUse ? (
+            <div className="mt-2">
+              <p className="text-sm font-bold text-zinc-300">
+                Assinante:{" "}
+                <span className={`font-black ${vipPlanColorClass}`}>
+                  {appointment.vipPlanName || "VIP"}
+                </span>
+              </p>
+              <p className="mt-0.5 text-sm font-bold text-zinc-300">
+                Atendido pelo plano mensal
+              </p>
+            </div>
+          ) : null}
           {appointment.barberName ? (
             <p className="mt-1 truncate text-xs font-semibold text-zinc-500">
               Barbeiro: {appointment.barberName}
@@ -237,6 +253,14 @@ export default function FinanceAppointmentCard({
       ) : null}
     </article>
   );
+}
+
+function getVipPlanColorClass(planName?: string | null) {
+  if (planName === "Ouro") return "text-amber-200";
+  if (planName === "Prata") return "text-zinc-200";
+  if (planName === "Bronze") return "text-orange-200";
+
+  return "text-[var(--brand-strong)]";
 }
 
 function FinanceEditAppointmentModal({

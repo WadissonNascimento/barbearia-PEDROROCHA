@@ -20,10 +20,6 @@ export type PublicHomeContent = {
   barbersEyebrow: string;
   barbersTitle: string;
   barbersDescription: string;
-  showProducts: boolean;
-  productsEyebrow: string;
-  productsTitle: string;
-  productsDescription: string;
   showReviews: boolean;
   reviewsEyebrow: string;
   reviewsTitle: string;
@@ -62,10 +58,6 @@ export const DEFAULT_PUBLIC_HOME_CONTENT: PublicHomeContent = {
   barbersEyebrow: "Equipe",
   barbersTitle: "Profissionais preparados para seu estilo.",
   barbersDescription: "Escolha o profissional no fluxo de agendamento.",
-  showProducts: false,
-  productsEyebrow: "Catalogo",
-  productsTitle: "Produtos e maquinas em destaque.",
-  productsDescription: "Itens disponiveis na barbearia.",
   showReviews: true,
   reviewsEyebrow: "Avaliacoes",
   reviewsTitle: "O que os clientes acharam.",
@@ -138,13 +130,6 @@ export function mergePublicHomeContent(
     barbersDescription: stringOrDefault(
       content?.barbersDescription,
       base.barbersDescription
-    ),
-    showProducts: booleanOrDefault(content?.showProducts, base.showProducts),
-    productsEyebrow: stringOrDefault(content?.productsEyebrow, base.productsEyebrow),
-    productsTitle: stringOrDefault(content?.productsTitle, base.productsTitle),
-    productsDescription: stringOrDefault(
-      content?.productsDescription,
-      base.productsDescription
     ),
     showReviews: booleanOrDefault(content?.showReviews, base.showReviews),
     reviewsEyebrow: stringOrDefault(content?.reviewsEyebrow, base.reviewsEyebrow),

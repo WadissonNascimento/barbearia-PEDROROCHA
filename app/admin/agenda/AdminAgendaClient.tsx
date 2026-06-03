@@ -70,7 +70,13 @@ export type AdminAgendaAppointment = {
   date: Date;
   status: string;
   paymentMethod: string | null;
+  isVipPlanUse?: boolean;
   notes: string | null;
+  vipSubscription?: {
+    plan: {
+      name: string;
+    };
+  } | null;
   barber: {
     id: string;
     name: string | null;
@@ -485,7 +491,15 @@ export default function AdminAgendaClient({
                         <td>{formatScheduleDate(date)}</td>
                         <td>{formatScheduleTime(date)}</td>
                         <td>{appointment.barber.name}</td>
-                        <td>{appointment.customer.name}</td>
+                        <td>
+                          <span>{appointment.customer.name}</span>
+                          {appointment.isVipPlanUse ? (
+                            <span className="mt-1 block w-fit rounded-full border border-amber-300/35 bg-amber-300/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-amber-100">
+                              Assinante do plano{" "}
+                              {appointment.vipSubscription?.plan.name || "VIP"}
+                            </span>
+                          ) : null}
+                        </td>
                         <td>{getAppointmentDisplayName(appointment.services)}</td>
                         <td className="text-zinc-300">
                           {getAppointmentItemsLabel(appointment.items)}
@@ -959,6 +973,17 @@ function AppointmentMobileCard({
   const [isExpanded, setIsExpanded] = useState(false);
   const status = normalizeAppointmentStatus(appointment.status);
   const serviceName = getAppointmentDisplayName(appointment.services);
+  const vipPlanName = appointment.isVipPlanUse
+    ? appointment.vipSubscription?.plan.name || "VIP"
+    : null;
+  const vipPlanColorClass =
+    vipPlanName === "Ouro"
+      ? "text-amber-200"
+      : vipPlanName === "Prata"
+        ? "text-zinc-200"
+        : vipPlanName === "Bronze"
+          ? "text-orange-200"
+          : "text-[var(--brand-strong)]";
 
   return (
     <article
@@ -974,12 +999,18 @@ function AppointmentMobileCard({
       }}
       className="relative min-w-0 max-w-full cursor-pointer overflow-hidden rounded-[24px] border border-white/10 bg-black/25 p-4 shadow-[0_18px_44px_rgba(0,0,0,0.2)] transition hover:border-white/15 hover:bg-white/[0.035]"
     >
-      <StatusBadge
-        variant={appointmentStatusVariant(appointment.status)}
-        className="absolute right-4 top-4 w-fit max-w-[130px] shrink-0 justify-center px-2.5 py-1 text-[10px]"
-      >
-        {appointmentStatusLabel(appointment.status)}
-      </StatusBadge>
+      {status === "CONFIRMED" ? (
+        <span className="absolute right-4 top-4 inline-flex w-fit max-w-[130px] shrink-0 justify-center rounded-full border border-sky-300/35 bg-sky-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-100">
+          {appointmentStatusLabel(appointment.status)}
+        </span>
+      ) : (
+        <StatusBadge
+          variant={appointmentStatusVariant(appointment.status)}
+          className="absolute right-4 top-4 w-fit max-w-[130px] shrink-0 justify-center px-2.5 py-1 text-[10px]"
+        >
+          {appointmentStatusLabel(appointment.status)}
+        </StatusBadge>
+      )}
 
       <div className="min-w-0 pr-28">
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
@@ -994,6 +1025,19 @@ function AppointmentMobileCard({
         <h3 className="mt-3 min-w-0 truncate text-base font-semibold text-white">
           {appointment.customer.name || "Cliente"}
         </h3>
+        {vipPlanName ? (
+          <div className="mt-2">
+            <p className="text-sm font-bold text-zinc-300">
+              Assinante:{" "}
+              <span className={`font-black ${vipPlanColorClass}`}>
+                {vipPlanName}
+              </span>
+            </p>
+            <p className="mt-0.5 text-sm font-bold text-zinc-300">
+              Agendamento pelo plano mensal
+            </p>
+          </div>
+        ) : null}
         <p className="mt-1 min-w-0 truncate text-sm text-zinc-400">{serviceName}</p>
       </div>
 
