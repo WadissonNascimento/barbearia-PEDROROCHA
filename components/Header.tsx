@@ -43,14 +43,14 @@ function getHeaderLinks(role: HeaderRole): {
       homeHref: "/admin",
       eyebrow: "Admin",
       primary: [
-        { href: "/admin", label: "Inicio" },
+        { href: "/admin", label: "Início" },
         { href: "/admin/agenda", label: "Agenda geral" },
         { href: "/admin/barbeiros", label: "Equipe" },
         { href: "/admin/financeiro", label: "Financeiro" },
       ],
       secondary: [
         { href: "/admin/vip", label: "Clientes VIP" },
-        { href: "/admin/servicos", label: "Servicos" },
+        { href: "/admin/servicos", label: "Serviços" },
         { href: "/admin/extras", label: "Extras" },
       ],
     };
@@ -66,7 +66,7 @@ function getHeaderLinks(role: HeaderRole): {
         { href: "/barber/clientes", label: "Clientes" },
         { href: "/barber/disponibilidade", label: "Pausas" },
       ],
-      secondary: [{ href: "/barber?notifications=1", label: "Notificacoes" }],
+      secondary: [{ href: "/barber?notifications=1", label: "Notificações" }],
     };
   }
 
@@ -80,7 +80,7 @@ function getHeaderLinks(role: HeaderRole): {
         { href: "/customer/agendamentos", label: "Meus horários" },
       ],
       secondary: [
-        { href: "/customer/notificacoes", label: "Notificacoes" },
+        { href: "/customer/notificacoes", label: "Notificações" },
         { href: "/meu-perfil", label: "Meu perfil" },
       ],
     };
