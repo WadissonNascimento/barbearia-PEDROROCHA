@@ -13,6 +13,12 @@ import {
 } from "lucide-react";
 import { PremiumTimePicker } from "@/components/ui/PremiumFilters";
 import { weekDays } from "@/lib/barberSchedule";
+import {
+  formatScheduleDate,
+  formatScheduleTime,
+  getScheduleDateValue,
+  getScheduleDayOfWeek,
+} from "@/lib/scheduleTime";
 
 type WeeklyAvailabilityFormProps = {
   availabilities: Array<{
@@ -50,12 +56,15 @@ type DayState = {
 };
 
 function formatBlockTime(value: Date | string) {
-  return new Date(value).toLocaleString("pt-BR", {
+  const date = new Date(value);
+  return `${formatScheduleDate(date, {
     day: "2-digit",
     month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  })} ${formatScheduleTime(date)}`;
+}
+
+function getBlockWeekDay(value: Date | string) {
+  return getScheduleDayOfWeek(getScheduleDateValue(new Date(value)));
 }
 
 function buildDays(
@@ -129,7 +138,7 @@ export function WeeklyAvailabilityForm({
             (block) => block.weekDay === day.weekDay,
           );
           const dayBlocks = blocks.filter(
-            (block) => new Date(block.startDateTime).getDay() === day.weekDay,
+            (block) => getBlockWeekDay(block.startDateTime) === day.weekDay,
           );
           const pausesCount = dayRecurringBlocks.length + dayBlocks.length;
 

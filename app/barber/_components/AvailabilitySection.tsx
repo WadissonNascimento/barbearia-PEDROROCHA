@@ -14,11 +14,16 @@ import FeedbackMessage from "@/components/FeedbackMessage";
 import EmptyState from "@/components/ui/EmptyState";
 import ExclusiveDetails from "@/components/ui/ExclusiveDetails";
 import {
-  PremiumDateTimePicker,
+  PremiumDatePicker,
   PremiumTimePicker,
 } from "@/components/ui/PremiumFilters";
 import SectionCard from "@/components/ui/SectionCard";
 import { weekDays } from "@/lib/barberSchedule";
+import {
+  formatScheduleDate,
+  formatScheduleTime,
+  getCurrentScheduleDateValue,
+} from "@/lib/scheduleTime";
 import { WeeklyAvailabilityForm } from "./WeeklyAvailabilityForm";
 import {
   createBarberBlockAction,
@@ -38,12 +43,11 @@ type AvailabilityMutationAction = (formData: FormData) => Promise<{
 }>;
 
 function formatDateTime(value: Date | string) {
-  return new Date(value).toLocaleString("pt-BR", {
+  const date = new Date(value);
+  return `${formatScheduleDate(date, {
     day: "2-digit",
     month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  })} ${formatScheduleTime(date)}`;
 }
 
 function MobilePanel({
@@ -129,6 +133,11 @@ export function AvailabilitySection({
   }>({ message: null, tone: "success" });
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const todayValue = getCurrentScheduleDateValue();
+  const [blockStartDate, setBlockStartDate] = useState(todayValue);
+  const [blockStartTime, setBlockStartTime] = useState("");
+  const [blockEndDate, setBlockEndDate] = useState(todayValue);
+  const [blockEndTime, setBlockEndTime] = useState("");
 
   function runAction(
     key: string,
@@ -208,21 +217,68 @@ export function AvailabilitySection({
               onSubmit={(event) => {
                 event.preventDefault();
                 const form = event.currentTarget;
+                const formData = new FormData(form);
+                formData.set(
+                  "startDateTime",
+                  blockStartDate && blockStartTime
+                    ? `${blockStartDate}T${blockStartTime}`
+                    : "",
+                );
+                formData.set(
+                  "endDateTime",
+                  blockEndDate && blockEndTime
+                    ? `${blockEndDate}T${blockEndTime}`
+                    : "",
+                );
 
                 runAction(
                   "create-block",
                   createBlockAction,
-                  new FormData(form),
-                  () => form.reset(),
+                  formData,
+                  () => {
+                    form.reset();
+                    setBlockStartDate(todayValue);
+                    setBlockStartTime("");
+                    setBlockEndDate(todayValue);
+                    setBlockEndTime("");
+                  },
                 );
               }}
             >
-              <PremiumDateTimePicker
-                name="startDateTime"
-                label="Início"
-                required
-              />
-              <PremiumDateTimePicker name="endDateTime" label="Fim" required />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <PremiumDatePicker
+                  label="Data inicial"
+                  value={blockStartDate}
+                  onChange={(value) => {
+                    setBlockStartDate(value);
+                    if (!blockEndDate || blockEndDate < value) {
+                      setBlockEndDate(value);
+                    }
+                  }}
+                  required
+                />
+                <PremiumTimePicker
+                  label="Hora inicial"
+                  value={blockStartTime}
+                  onChange={setBlockStartTime}
+                  required
+                />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <PremiumDatePicker
+                  label="Data final"
+                  value={blockEndDate}
+                  onChange={setBlockEndDate}
+                  required
+                />
+                <PremiumTimePicker
+                  label="Hora final"
+                  value={blockEndTime}
+                  onChange={setBlockEndTime}
+                  required
+                />
+              </div>
 
               <label className="block">
                 <span className="mb-2 block text-[11px] font-medium uppercase tracking-[0.18em] text-zinc-400">

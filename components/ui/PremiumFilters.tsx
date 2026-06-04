@@ -422,10 +422,8 @@ export function PremiumTimePicker({
   useEffect(() => {
     if (value !== undefined) {
       setInternalValue(value);
-      if (value) {
-        setDraftHour(value.slice(0, 2));
-        setDraftMinute(value.slice(3, 5));
-      }
+      setDraftHour(value ? value.slice(0, 2) : "08");
+      setDraftMinute(value ? value.slice(3, 5) : "00");
     }
   }, [value]);
 
@@ -739,15 +737,13 @@ export function PremiumDateTimePicker({
                 })}
               </div>
 
-              <label className="mt-4 block">
-                <span className="mb-2 block text-sm text-zinc-300">Horário</span>
-                <input
-                  type="time"
+              <div className="mt-4">
+                <PremiumTimePicker
+                  label="Horário"
                   value={draftTime}
-                  onChange={(event) => setDraftTime(event.target.value)}
-                  className="min-h-11 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none transition focus:border-[var(--brand)]/60"
+                  onChange={setDraftTime}
                 />
-              </label>
+              </div>
 
               <div className="mt-4 grid gap-3 border-t border-white/10 pt-4 sm:grid-cols-3">
                 <button
