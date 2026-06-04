@@ -5,12 +5,14 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
+  ArrowRight,
   CalendarPlus,
   Check,
   CheckCircle2,
   Clock3,
   Loader2,
   Scissors,
+  Search,
   X,
 } from "lucide-react";
 import OperationalFeedbackDialog, {
@@ -20,7 +22,12 @@ import {
   isValidCustomerFullName,
   normalizeCustomerName,
 } from "@/lib/customerRegistrationValidation";
-import { formatBrazilianPhone, isValidBrazilianPhone, maskBrazilianPhone } from "@/lib/phone";
+import {
+  formatBrazilianPhone,
+  isValidBrazilianPhone,
+  maskBrazilianPhone,
+  stripPhoneDigits,
+} from "@/lib/phone";
 import { getCurrentScheduleDateValue } from "@/lib/scheduleTime";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -30,6 +37,7 @@ import {
 } from "./actions";
 import type {
   AdminAgendaBarber,
+  AdminAgendaCustomer,
   AdminAgendaExtra,
   AdminAgendaService,
 } from "./AdminAgendaClient";
@@ -126,12 +134,14 @@ export default function AdminWalkInAppointmentButton({
   barbers,
   services,
   extras,
+  customers,
   selectedBarberId,
   selectedDate,
 }: {
   barbers: AdminAgendaBarber[];
   services: AdminAgendaService[];
   extras: AdminAgendaExtra[];
+  customers: AdminAgendaCustomer[];
   selectedBarberId: string;
   selectedDate: string;
 }) {
@@ -140,7 +150,10 @@ export default function AdminWalkInAppointmentButton({
   const [isOpen, setIsOpen] = useState(false);
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [isQuickConflictOpen, setIsQuickConflictOpen] = useState(false);
+  const [isClientPickerOpen, setIsClientPickerOpen] = useState(false);
   const [step, setStep] = useState<WalkInStep>("customer");
+  const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const [clientSearch, setClientSearch] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [date, setDate] = useState(selectedDate || getCurrentScheduleDateValue());
@@ -216,8 +229,33 @@ export default function AdminWalkInAppointmentButton({
   const selectedGrandTotal = selectedTotal + selectedExtrasTotal;
   const activeDuration =
     fitInMode === "quick" ? Number(quickDurationMinutes) || 0 : selectedDuration;
+  const selectedCustomerById =
+    customers.find((customer) => customer.id === selectedCustomerId) || null;
+  const customerPhoneDigits = stripPhoneDigits(customerPhone);
+  const customerMatchedByPhone =
+    customerPhoneDigits.length === 11
+      ? customers.find(
+          (customer) => stripPhoneDigits(customer.phone) === customerPhoneDigits
+        ) || null
+      : null;
+  const selectedCustomer = customerPhone.trim()
+    ? customerMatchedByPhone
+    : selectedCustomerById;
+  const filteredCustomers = useMemo(() => {
+    const search = clientSearch.trim().toLowerCase();
+
+    if (!search) {
+      return customers;
+    }
+
+    return customers.filter((customer) =>
+      [customer.name, customer.phone || "", customer.email || ""].some((value) =>
+        value.toLowerCase().includes(search)
+      )
+    );
+  }, [clientSearch, customers]);
   const hasCustomerMinimum =
-    isValidCustomerFullName(customerName) &&
+    (isValidCustomerFullName(customerName) || Boolean(selectedCustomer)) &&
     (!customerPhone.trim() || isValidBrazilianPhone(customerPhone));
   const dateOptions = useMemo(() => getAdminWalkInDateOptions(), []);
   const isCreating = isPending || isSubmitLocked;
@@ -246,7 +284,10 @@ export default function AdminWalkInAppointmentButton({
   }, [selectedBarberId, services]);
 
   useEffect(() => {
-    if (!mounted || (!isOpen && !isSuccessOpen && !isQuickConflictOpen)) {
+    if (
+      !mounted ||
+      (!isOpen && !isSuccessOpen && !isQuickConflictOpen && !isClientPickerOpen)
+    ) {
       return;
     }
 
@@ -263,7 +304,7 @@ export default function AdminWalkInAppointmentButton({
       document.documentElement.style.overflow = previousHtmlOverflow;
       document.body.style.touchAction = previousTouchAction;
     };
-  }, [isOpen, isQuickConflictOpen, isSuccessOpen, mounted]);
+  }, [isOpen, isClientPickerOpen, isQuickConflictOpen, isSuccessOpen, mounted]);
 
   useEffect(() => {
     if (!isOpen || step !== "schedule") {
@@ -353,6 +394,9 @@ export default function AdminWalkInAppointmentButton({
   }, [date, isOpen, selectedBarberId, selectedServiceIds, step]);
 
   function resetForm() {
+    setSelectedCustomerId("");
+    setClientSearch("");
+    setIsClientPickerOpen(false);
     setCustomerName("");
     setCustomerPhone("");
     setSelectedServiceIds([]);
@@ -387,6 +431,7 @@ export default function AdminWalkInAppointmentButton({
     }
 
     setIsOpen(false);
+    setIsClientPickerOpen(false);
     setIsQuickConflictOpen(false);
     setQuickPreview(null);
     setFeedback({ message: null, tone: "success" });
@@ -398,13 +443,33 @@ export default function AdminWalkInAppointmentButton({
     setActionFeedback({ title, message, tone: "error" });
   }
 
+  function selectExistingCustomer(customerId: string) {
+    setSelectedCustomerId(customerId);
+
+    const customer = customers.find((item) => item.id === customerId);
+    if (!customer) {
+      return;
+    }
+
+    setCustomerName(customer.name);
+    setCustomerPhone(formatBrazilianPhone(customer.phone));
+    setClientSearch("");
+    setIsClientPickerOpen(false);
+  }
+
+  function clearSelectedCustomer() {
+    setSelectedCustomerId("");
+    setClientSearch("");
+    setIsClientPickerOpen(false);
+  }
+
   function goToServicesStep() {
     const normalizedName = normalizeCustomerName(customerName);
     const hasPhone = Boolean(customerPhone.trim());
 
     setCustomerName(normalizedName);
 
-    if (!isValidCustomerFullName(normalizedName)) {
+    if (!isValidCustomerFullName(normalizedName) && !selectedCustomer) {
       showWalkInError(
         "Confira o cliente",
         "Informe nome e sobrenome do cliente para criar o encaixe."
@@ -538,7 +603,7 @@ export default function AdminWalkInAppointmentButton({
         ? selectedExtras.map((extra) => extra.name).join(" + ")
         : "";
 
-    if (!isValidCustomerFullName(submittedCustomerName)) {
+    if (!isValidCustomerFullName(submittedCustomerName) && !selectedCustomer) {
       showWalkInError(
         "Confira o cliente",
         "Informe nome e sobrenome do cliente antes de criar o encaixe."
@@ -563,6 +628,7 @@ export default function AdminWalkInAppointmentButton({
     }
 
     formData.set("barberId", selectedBarberId);
+    formData.set("customerId", selectedCustomer?.id || "");
     formData.set("customerName", submittedCustomerName);
     formData.set("customerPhone", submittedCustomerPhone);
     formData.set("date", date);
@@ -692,6 +758,29 @@ export default function AdminWalkInAppointmentButton({
                         <div className="space-y-4">
                           <StepTitle title="Cliente do encaixe" />
 
+                          <button
+                            type="button"
+                            onClick={() => setIsClientPickerOpen(true)}
+                            className="flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border border-[var(--brand)]/25 bg-[var(--brand-muted)] px-4 py-3 text-left text-sm text-white transition hover:border-[var(--brand)]/50"
+                          >
+                            <span className="min-w-0">
+                              <span className="block text-xs font-bold uppercase tracking-[0.18em] text-[var(--brand-strong)]">
+                                Cliente cadastrado
+                              </span>
+                              <span className="mt-1 block truncate font-black">
+                                {selectedCustomer?.name || "Selecionar cliente"}
+                              </span>
+                              <span className="mt-1 block truncate text-xs text-zinc-400">
+                                {selectedCustomer
+                                  ? formatBrazilianPhone(selectedCustomer.phone) ||
+                                    selectedCustomer.email ||
+                                    "Sem contato"
+                                  : "Opcional: buscar na base da barbearia"}
+                              </span>
+                            </span>
+                            <Search className="h-4 w-4 shrink-0 text-[var(--brand-strong)]" />
+                          </button>
+
                           <div className="grid gap-3">
                             <label className="block">
                               <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-500">
@@ -699,7 +788,10 @@ export default function AdminWalkInAppointmentButton({
                               </span>
                               <input
                                 value={customerName}
-                                onChange={(event) => setCustomerName(event.target.value)}
+                                onChange={(event) => {
+                                  setSelectedCustomerId("");
+                                  setCustomerName(event.target.value);
+                                }}
                                 onBlur={() =>
                                   setCustomerName((current) => normalizeCustomerName(current))
                                 }
@@ -719,9 +811,10 @@ export default function AdminWalkInAppointmentButton({
                               </span>
                               <input
                                 value={customerPhone}
-                                onChange={(event) =>
-                                  setCustomerPhone(maskBrazilianPhone(event.target.value))
-                                }
+                                onChange={(event) => {
+                                  setSelectedCustomerId("");
+                                  setCustomerPhone(maskBrazilianPhone(event.target.value));
+                                }}
                                 type="tel"
                                 inputMode="tel"
                                 autoComplete="tel"
@@ -729,6 +822,11 @@ export default function AdminWalkInAppointmentButton({
                                 placeholder="(11) 96590-0713"
                                 className="min-h-12 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-base text-white outline-none transition placeholder:text-zinc-600 focus:border-[var(--brand)]/40"
                               />
+                              {customerMatchedByPhone ? (
+                                <span className="mt-2 block text-xs font-bold text-emerald-300">
+                                  Cliente cadastrado identificado pelo telefone.
+                                </span>
+                              ) : null}
                             </label>
                           </div>
 
@@ -794,7 +892,7 @@ export default function AdminWalkInAppointmentButton({
 
                           {selectedServiceIds.length > 0 ? (
                             <div className="sticky bottom-0 -mx-5 -mb-5 border-t border-white/10 bg-[#050b16]/95 p-4 backdrop-blur-xl">
-                              <div className="flex items-center justify-between gap-3 rounded-2xl bg-[var(--brand)] px-4 py-3 text-white shadow-[0_18px_40px_rgba(14,165,233,0.25)]">
+                              <div className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--brand)]/45 bg-[linear-gradient(135deg,rgba(184,148,95,0.95),rgba(124,94,50,0.95))] px-4 py-3 text-white shadow-[0_18px_40px_rgba(0,0,0,0.35)]">
                                 <div>
                                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/75">
                                     {selectedServiceIds.length} item(ns)
@@ -806,9 +904,10 @@ export default function AdminWalkInAppointmentButton({
                                 <button
                                   type="button"
                                   onClick={goToScheduleStep}
-                                  className="min-h-10 rounded-xl bg-white px-4 py-2 text-sm font-black text-sky-600 transition hover:bg-sky-50"
+                                  className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-5 py-2 text-sm font-black text-[#14100a] shadow-[0_8px_20px_rgba(0,0,0,0.22)] transition hover:bg-[#fff7e8] active:scale-[0.98]"
                                 >
                                   Continuar
+                                  <ArrowRight className="h-4 w-4" />
                                 </button>
                               </div>
                             </div>
@@ -1194,6 +1293,21 @@ export default function AdminWalkInAppointmentButton({
           )
         : null}
 
+      {mounted && isClientPickerOpen
+        ? createPortal(
+            <ClientPickerPopup
+              customers={filteredCustomers}
+              search={clientSearch}
+              selectedCustomerId={selectedCustomer?.id || ""}
+              onSearchChange={setClientSearch}
+              onSelect={selectExistingCustomer}
+              onClear={clearSelectedCustomer}
+              onClose={() => setIsClientPickerOpen(false)}
+            />,
+            document.body
+          )
+        : null}
+
       {mounted && isSuccessOpen && successDetails
         ? createPortal(
             <ModalShell
@@ -1308,6 +1422,137 @@ function StepActions({ onBack }: { onBack: () => void }) {
     >
       Voltar
     </button>
+  );
+}
+
+function ClientPickerPopup({
+  customers,
+  search,
+  selectedCustomerId,
+  onSearchChange,
+  onSelect,
+  onClear,
+  onClose,
+}: {
+  customers: AdminAgendaCustomer[];
+  search: string;
+  selectedCustomerId: string;
+  onSearchChange: (value: string) => void;
+  onSelect: (customerId: string) => void;
+  onClear: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[11100] flex touch-none items-center justify-center overflow-hidden overscroll-none bg-black/75 px-4 py-6 backdrop-blur-md"
+      onWheel={(event) => event.preventDefault()}
+      onTouchMove={(event) => {
+        if (!(event.target as HTMLElement).closest("[data-client-picker-scroll]")) {
+          event.preventDefault();
+        }
+      }}
+    >
+      <button
+        type="button"
+        aria-label="Fechar seletor de cliente"
+        className="absolute inset-0"
+        onClick={onClose}
+      />
+
+      <div className="relative z-[11110] flex max-h-[calc(100svh-2rem)] w-full max-w-sm flex-col overflow-hidden rounded-[28px] border border-white/10 bg-[#050b16] shadow-[0_28px_90px_rgba(0,0,0,0.7)]">
+        <div className="border-b border-white/10 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
+                Clientes
+              </p>
+              <h3 className="mt-1 text-xl font-black text-white">
+                Selecionar cliente
+              </h3>
+              <p className="mt-1 text-sm text-zinc-400">
+                Busque na base da barbearia.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-white transition hover:bg-white/[0.08]"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="mt-4 flex min-h-11 items-center gap-2 rounded-2xl border border-white/10 bg-black/25 px-3">
+            <Search className="h-4 w-4 shrink-0 text-zinc-500" />
+            <input
+              name="clientSearch"
+              type="search"
+              inputMode="search"
+              enterKeyHint="search"
+              value={search}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="Nome, numero ou e-mail"
+              autoComplete="off"
+              className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-600"
+              autoFocus
+            />
+          </div>
+        </div>
+
+        <div
+          data-client-picker-scroll
+          className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain p-3"
+        >
+          <button
+            type="button"
+            onClick={onClear}
+            className="mb-2 flex min-h-12 w-full items-center justify-between rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3 text-left text-sm font-bold text-zinc-200 transition hover:bg-white/[0.06]"
+          >
+            Preencher manualmente
+            {!selectedCustomerId ? <Check className="h-4 w-4 text-[var(--brand-strong)]" /> : null}
+          </button>
+
+          {customers.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-white/10 p-4 text-sm text-zinc-400">
+              Nenhum cliente encontrado.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {customers.map((customer) => {
+                const selected = customer.id === selectedCustomerId;
+
+                return (
+                  <button
+                    key={customer.id}
+                    type="button"
+                    onClick={() => onSelect(customer.id)}
+                    className={`flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition ${
+                      selected
+                        ? "border-[var(--brand)]/45 bg-[var(--brand-muted)]"
+                        : "border-white/10 bg-black/20 hover:bg-white/[0.05]"
+                    }`}
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-black text-white">
+                        {customer.name}
+                      </span>
+                      <span className="mt-1 block truncate text-xs text-zinc-400">
+                        {formatBrazilianPhone(customer.phone) ||
+                          customer.email ||
+                          "Sem contato"}
+                      </span>
+                    </span>
+                    {selected ? (
+                      <Check className="h-4 w-4 shrink-0 text-[var(--brand-strong)]" />
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 

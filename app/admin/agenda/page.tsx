@@ -71,7 +71,7 @@ export default async function AdminAgendaPage({
     : {};
   const shouldLoadBlocks = Boolean(initialFilters.barberId);
 
-  const [report, barbers, services, extras, blocks, recurringBlocks] =
+  const [report, barbers, services, extras, customers, blocks, recurringBlocks] =
     await Promise.all([
     getAdminAgendaReport({
       shopId,
@@ -125,6 +125,27 @@ export default async function AdminAgendaPage({
         orderBy: {
           name: "asc",
         },
+      }),
+      prisma.user.findMany({
+        where: {
+          shopId,
+          role: "CUSTOMER",
+          isActive: true,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+        },
+        orderBy: [
+          {
+            name: "asc",
+          },
+          {
+            createdAt: "desc",
+          },
+        ],
       }),
       shouldLoadBlocks
         ? prisma.barberBlock.findMany({
@@ -242,6 +263,10 @@ export default async function AdminAgendaPage({
       extras={extras.map((extra) => ({
         ...extra,
         price: toMoneyNumber(extra.price),
+      }))}
+      customers={customers.map((customer) => ({
+        ...customer,
+        name: customer.name || "Cliente",
       }))}
       initialFilters={initialFilters}
       isTruncated={report.isTruncated}

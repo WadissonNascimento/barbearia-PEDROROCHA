@@ -121,6 +121,13 @@ export type AdminAgendaExtra = {
   stock: number;
 };
 
+export type AdminAgendaCustomer = {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+};
+
 export type AdminAgendaBlock = AgendaBlockItem;
 type BlockMutationAction = (formData: FormData) => Promise<{
   ok: boolean;
@@ -141,6 +148,7 @@ export default function AdminAgendaClient({
   barbers,
   services,
   extras,
+  customers,
   initialFilters,
   isTruncated = false,
   limit = null,
@@ -150,6 +158,7 @@ export default function AdminAgendaClient({
   barbers: AdminAgendaBarber[];
   services: AdminAgendaService[];
   extras: AdminAgendaExtra[];
+  customers: AdminAgendaCustomer[];
   initialFilters: AdminAgendaFilters;
   isTruncated?: boolean;
   limit?: number | null;
@@ -387,6 +396,7 @@ export default function AdminAgendaClient({
               barbers={barbers}
               services={services}
               extras={extras}
+              customers={customers}
               selectedBarberId={selectedBarberId}
               selectedDate={draftFilters.dateFrom || appliedFilters.dateFrom}
             />

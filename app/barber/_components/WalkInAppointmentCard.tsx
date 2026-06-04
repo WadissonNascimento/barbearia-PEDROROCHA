@@ -1156,7 +1156,7 @@ export default function WalkInAppointmentCard({
                                 <button
                                   type="button"
                                   onClick={goToScheduleStep}
-                                  className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-white/90 bg-white px-4 py-2 text-sm font-black text-[#14100a] shadow-[0_8px_20px_rgba(0,0,0,0.22)] transition hover:bg-[#fff7e8] active:scale-[0.98]"
+                                  className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-5 py-2 text-sm font-black text-[#14100a] shadow-[0_8px_20px_rgba(0,0,0,0.22)] transition hover:bg-[#fff7e8] active:scale-[0.98]"
                                 >
                                   Continuar
                                   <ArrowRight className="h-4 w-4" />

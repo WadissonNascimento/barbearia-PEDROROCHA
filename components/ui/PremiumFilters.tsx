@@ -373,8 +373,6 @@ function formatTimeLabel(value: string) {
   return value || "--:--";
 }
 
-const quickTimeOptions = ["08:00", "09:00", "10:00", "12:00", "14:00", "18:00"];
-
 function clampTimePart(value: number, max: number) {
   if (value < 0) return max;
   if (value > max) return 0;
@@ -382,11 +380,21 @@ function clampTimePart(value: number, max: number) {
 }
 
 function normalizeMinute(value: number) {
-  return clampTimePart(value, 55);
+  return clampTimePart(value, 59);
 }
 
 function toTimePart(value: number) {
   return String(value).padStart(2, "0");
+}
+
+function normalizeTypedTimePart(value: string, max: number, fallback: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 2);
+
+  if (!digits) {
+    return fallback;
+  }
+
+  return toTimePart(Math.min(Number(digits), max));
 }
 
 export function PremiumTimePicker({
@@ -442,11 +450,6 @@ export function PremiumTimePicker({
     setDraftMinute((current) => toTimePart(normalizeMinute(Number(current) + offset)));
   }
 
-  function selectQuickTime(time: string) {
-    setDraftHour(time.slice(0, 2));
-    setDraftMinute(time.slice(3, 5));
-  }
-
   const dialog =
     open && !disabled && isMounted
       ? createPortal(
@@ -486,9 +489,20 @@ export function PremiumTimePicker({
                     >
                       <Minus className="h-4 w-4" />
                     </button>
-                    <div className="text-center text-3xl font-black tracking-tight">
-                      {draftHour}
-                    </div>
+                    <input
+                      value={draftHour}
+                      onChange={(event) =>
+                        setDraftHour(event.target.value.replace(/\D/g, "").slice(0, 2))
+                      }
+                      onBlur={() =>
+                        setDraftHour((current) =>
+                          normalizeTypedTimePart(current, 23, "08")
+                        )
+                      }
+                      inputMode="numeric"
+                      aria-label="Hora"
+                      className="h-11 min-w-0 rounded-xl border border-white/10 bg-black/25 px-2 text-center text-3xl font-black tracking-tight text-white outline-none transition focus:border-[var(--brand)]/60"
+                    />
                     <button
                       type="button"
                       onClick={() => moveHour(1)}
@@ -513,9 +527,20 @@ export function PremiumTimePicker({
                     >
                       <Minus className="h-4 w-4" />
                     </button>
-                    <div className="text-center text-3xl font-black tracking-tight">
-                      {draftMinute}
-                    </div>
+                    <input
+                      value={draftMinute}
+                      onChange={(event) =>
+                        setDraftMinute(event.target.value.replace(/\D/g, "").slice(0, 2))
+                      }
+                      onBlur={() =>
+                        setDraftMinute((current) =>
+                          normalizeTypedTimePart(current, 59, "00")
+                        )
+                      }
+                      inputMode="numeric"
+                      aria-label="Minuto"
+                      className="h-11 min-w-0 rounded-xl border border-white/10 bg-black/25 px-2 text-center text-3xl font-black tracking-tight text-white outline-none transition focus:border-[var(--brand)]/60"
+                    />
                     <button
                       type="button"
                       onClick={() => moveMinute(5)}
@@ -525,28 +550,6 @@ export function PremiumTimePicker({
                       <Plus className="h-4 w-4" />
                     </button>
                   </div>
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-500">
-                  Atalhos
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  {quickTimeOptions.map((time) => (
-                    <button
-                      key={time}
-                      type="button"
-                      onClick={() => selectQuickTime(time)}
-                      className={`min-h-10 rounded-xl border px-2 text-sm font-bold transition ${
-                        `${draftHour}:${draftMinute}` === time
-                          ? "border-[var(--brand)]/55 bg-[var(--brand-muted)] text-[var(--brand-strong)]"
-                          : "border-white/10 bg-black/20 text-zinc-300 hover:bg-white/[0.06] hover:text-white"
-                      }`}
-                    >
-                      {time}
-                    </button>
-                  ))}
                 </div>
               </div>
 

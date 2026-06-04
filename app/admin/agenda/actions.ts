@@ -55,6 +55,7 @@ import {
   BRAZILIAN_PHONE_EXAMPLE,
   isValidBrazilianPhone,
   normalizeBrazilianPhoneForSubmit,
+  stripPhoneDigits,
 } from "@/lib/phone";
 import { enforceRateLimit, logSecurityEvent } from "@/lib/security";
 import {
@@ -444,6 +445,7 @@ export async function createAdminWalkInAppointmentAction(
 ): Promise<MutationResult> {
   const admin = await requireAdmin();
   const barberId = String(formData.get("barberId") || "").trim();
+  const customerId = String(formData.get("customerId") || "").trim();
   const customerName = normalizeCustomerName(
     String(formData.get("customerName") || "")
   );
@@ -496,7 +498,7 @@ export async function createAdminWalkInAppointmentAction(
 
   if (
     !barberId ||
-    !isValidCustomerFullName(customerName) ||
+    (!customerId && !isValidCustomerFullName(customerName)) ||
     (hasRawCustomerPhone && !isValidBrazilianPhone(rawCustomerPhone)) ||
     (hasRawCustomerPhone && !customerPhone) ||
     customerName.length > 80 ||
@@ -512,7 +514,7 @@ export async function createAdminWalkInAppointmentAction(
     );
   }
 
-  const [barber, services] = await Promise.all([
+  const [barber, services, selectedCustomerById, customersWithPhone] = await Promise.all([
     prisma.user.findFirst({
       where: {
         id: barberId,
@@ -537,6 +539,38 @@ export async function createAdminWalkInAppointmentAction(
         id: true,
       },
     }),
+    customerId
+      ? prisma.user.findFirst({
+          where: {
+            id: customerId,
+            shopId: admin.shopId,
+            role: "CUSTOMER",
+            isActive: true,
+          },
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+          },
+        })
+      : null,
+    customerPhone
+      ? prisma.user.findMany({
+          where: {
+            shopId: admin.shopId,
+            role: "CUSTOMER",
+            isActive: true,
+            phone: {
+              not: null,
+            },
+          },
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+          },
+        })
+      : [],
   ]);
 
   if (!barber) {
@@ -545,6 +579,10 @@ export async function createAdminWalkInAppointmentAction(
 
   if (services.length !== serviceIds.length) {
     return mutationError("Um ou mais servicos estao indisponiveis para esse barbeiro.");
+  }
+
+  if (customerId && !selectedCustomerById) {
+    return mutationError("Cliente selecionado nao pertence a esta barbearia.");
   }
 
   try {
@@ -568,11 +606,28 @@ export async function createAdminWalkInAppointmentAction(
     throw error;
   }
 
-  const walkInCustomer = await getOrCreateWalkInCustomer(admin.shopId);
+  const customerPhoneDigits = stripPhoneDigits(customerPhone);
+  const customerMatchedByPhone =
+    customersWithPhone.find(
+      (customer) => stripPhoneDigits(customer.phone) === customerPhoneDigits
+    ) || null;
+  const linkedCustomer = customerMatchedByPhone || selectedCustomerById;
+  const walkInCustomer = linkedCustomer
+    ? null
+    : await getOrCreateWalkInCustomer(admin.shopId);
+  const appointmentCustomerId = linkedCustomer?.id || walkInCustomer?.id;
+
+  if (!appointmentCustomerId) {
+    return mutationError("Nao foi possivel vincular o cliente do encaixe.");
+  }
+
+  const displayCustomerName =
+    customerName || linkedCustomer?.name || "Cliente sem cadastro";
+  const displayCustomerPhone = customerPhone || linkedCustomer?.phone || "";
 
   try {
     await createManualFitInAppointment({
-      customerId: walkInCustomer.id,
+      customerId: appointmentCustomerId,
       barberId,
       serviceIds,
       extras,
@@ -581,8 +636,8 @@ export async function createAdminWalkInAppointmentAction(
       conflictMode: fitInMode === "quick" ? "SAME_START_ONLY" : "OVERLAP",
       manualDurationMinutes: fitInMode === "quick" ? manualDurationMinutes : null,
       notes: formatManualFitInNotes({
-        customerName,
-        customerPhone,
+        customerName: displayCustomerName,
+        customerPhone: displayCustomerPhone,
         notes:
           fitInMode === "quick" && manualDurationMinutes
             ? `Encaixe rapido (${manualDurationMinutes} min)${notes ? ` - ${notes}` : ""}`
