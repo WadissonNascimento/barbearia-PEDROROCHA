@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Clock3, Minus, Plus } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Clock3 } from "lucide-react";
 
 type FilterOption = {
   value: string;
@@ -373,16 +373,6 @@ function formatTimeLabel(value: string) {
   return value || "--:--";
 }
 
-function clampTimePart(value: number, max: number) {
-  if (value < 0) return max;
-  if (value > max) return 0;
-  return value;
-}
-
-function normalizeMinute(value: number) {
-  return clampTimePart(value, 59);
-}
-
 function toTimePart(value: number) {
   return String(value).padStart(2, "0");
 }
@@ -442,14 +432,6 @@ export function PremiumTimePicker({
     setOpen(false);
   }
 
-  function moveHour(offset: number) {
-    setDraftHour((current) => toTimePart(clampTimePart(Number(current) + offset, 23)));
-  }
-
-  function moveMinute(offset: number) {
-    setDraftMinute((current) => toTimePart(normalizeMinute(Number(current) + offset)));
-  }
-
   const dialog =
     open && !disabled && isMounted
       ? createPortal(
@@ -468,88 +450,38 @@ export function PremiumTimePicker({
                 <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
                   {label || "Horário"}
                 </p>
-                <p className="mt-2 text-5xl font-black tracking-[-0.05em]">
-                  {draftHour}
-                  <span className="mx-1 text-[var(--brand-strong)]">:</span>
-                  {draftMinute}
-                </p>
-              </div>
-
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
-                  <p className="text-center text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-500">
-                    Hora
-                  </p>
-                  <div className="mt-3 grid grid-cols-[44px_1fr_44px] items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => moveHour(-1)}
-                      className="flex h-11 items-center justify-center rounded-xl border border-white/10 text-zinc-300 transition hover:bg-white/[0.06] hover:text-white"
-                      aria-label="Diminuir hora"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </button>
-                    <input
-                      value={draftHour}
-                      onChange={(event) =>
-                        setDraftHour(event.target.value.replace(/\D/g, "").slice(0, 2))
-                      }
-                      onBlur={() =>
-                        setDraftHour((current) =>
-                          normalizeTypedTimePart(current, 23, "08")
-                        )
-                      }
-                      inputMode="numeric"
-                      aria-label="Hora"
-                      className="h-11 min-w-0 rounded-xl border border-white/10 bg-black/25 px-2 text-center text-3xl font-black tracking-tight text-white outline-none transition focus:border-[var(--brand)]/60"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => moveHour(1)}
-                      className="flex h-11 items-center justify-center rounded-xl border border-white/10 text-zinc-300 transition hover:bg-white/[0.06] hover:text-white"
-                      aria-label="Aumentar hora"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
-                  <p className="text-center text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-500">
-                    Minuto
-                  </p>
-                  <div className="mt-3 grid grid-cols-[44px_1fr_44px] items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => moveMinute(-5)}
-                      className="flex h-11 items-center justify-center rounded-xl border border-white/10 text-zinc-300 transition hover:bg-white/[0.06] hover:text-white"
-                      aria-label="Diminuir minuto"
-                    >
-                      <Minus className="h-4 w-4" />
-                    </button>
-                    <input
-                      value={draftMinute}
-                      onChange={(event) =>
-                        setDraftMinute(event.target.value.replace(/\D/g, "").slice(0, 2))
-                      }
-                      onBlur={() =>
-                        setDraftMinute((current) =>
-                          normalizeTypedTimePart(current, 59, "00")
-                        )
-                      }
-                      inputMode="numeric"
-                      aria-label="Minuto"
-                      className="h-11 min-w-0 rounded-xl border border-white/10 bg-black/25 px-2 text-center text-3xl font-black tracking-tight text-white outline-none transition focus:border-[var(--brand)]/60"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => moveMinute(5)}
-                      className="flex h-11 items-center justify-center rounded-xl border border-white/10 text-zinc-300 transition hover:bg-white/[0.06] hover:text-white"
-                      aria-label="Aumentar minuto"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  </div>
+                <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                  <input
+                    value={draftHour}
+                    onChange={(event) =>
+                      setDraftHour(event.target.value.replace(/\D/g, "").slice(0, 2))
+                    }
+                    onBlur={() =>
+                      setDraftHour((current) =>
+                        normalizeTypedTimePart(current, 23, "08")
+                      )
+                    }
+                    inputMode="numeric"
+                    aria-label="Hora"
+                    className="h-16 min-w-0 rounded-2xl border border-white/10 bg-black/25 px-3 text-center text-5xl font-black tracking-tight text-white outline-none transition focus:border-[var(--brand)]/60"
+                  />
+                  <span className="text-5xl font-black text-[var(--brand-strong)]">
+                    :
+                  </span>
+                  <input
+                    value={draftMinute}
+                    onChange={(event) =>
+                      setDraftMinute(event.target.value.replace(/\D/g, "").slice(0, 2))
+                    }
+                    onBlur={() =>
+                      setDraftMinute((current) =>
+                        normalizeTypedTimePart(current, 59, "00")
+                      )
+                    }
+                    inputMode="numeric"
+                    aria-label="Minuto"
+                    className="h-16 min-w-0 rounded-2xl border border-white/10 bg-black/25 px-3 text-center text-5xl font-black tracking-tight text-white outline-none transition focus:border-[var(--brand)]/60"
+                  />
                 </div>
               </div>
 
