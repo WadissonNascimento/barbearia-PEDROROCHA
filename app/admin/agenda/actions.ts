@@ -44,6 +44,7 @@ import {
   normalizeCustomerName,
 } from "@/lib/customerRegistrationValidation";
 import { formatManualFitInNotes } from "@/lib/manualFitIn";
+import { getVipPlanDurationMinutes } from "@/lib/vip";
 import {
   mutationError,
   mutationSuccess,
@@ -297,10 +298,12 @@ export async function getAdminWalkInAvailableSlotsAction({
   barberId,
   date,
   serviceIds,
+  additionalDurationMinutes = 0,
 }: {
   barberId: string;
   date: string;
   serviceIds: string[];
+  additionalDurationMinutes?: number;
 }): Promise<MutationResult<AdminWalkInSlotsPayload>> {
   const admin = await requireAdmin();
   const selectedBarberId = String(barberId || "").trim();
@@ -316,7 +319,7 @@ export async function getAdminWalkInAvailableSlotsAction({
   if (
     !selectedBarberId ||
     !/^\d{4}-\d{2}-\d{2}$/.test(selectedDate) ||
-    selectedServiceIds.length === 0 ||
+    (selectedServiceIds.length === 0 && additionalDurationMinutes <= 0) ||
     selectedServiceIds.length > 8
   ) {
     return adminWalkInSlotsError(
@@ -366,6 +369,7 @@ export async function getAdminWalkInAvailableSlotsAction({
       barberId: selectedBarberId,
       serviceIds: selectedServiceIds,
       date: selectedDate,
+      additionalDurationMinutes,
     });
 
     return mutationSuccess("Horarios carregados.", {
@@ -460,6 +464,7 @@ export async function createAdminWalkInAppointmentAction(
   const fitInMode = String(formData.get("fitInMode") || "standard") === "quick"
     ? "quick"
     : "standard";
+  const useVipPlan = String(formData.get("useVipPlan") || "") === "true";
   const manualDurationMinutes = normalizeQuickFitInDuration(
     formData.get("manualDurationMinutes")
   );
@@ -502,7 +507,8 @@ export async function createAdminWalkInAppointmentAction(
     (hasRawCustomerPhone && !isValidBrazilianPhone(rawCustomerPhone)) ||
     (hasRawCustomerPhone && !customerPhone) ||
     customerName.length > 80 ||
-    serviceIds.length === 0 ||
+    (useVipPlan && !customerPhone) ||
+    (!useVipPlan && serviceIds.length === 0) ||
     serviceIds.length > 8 ||
     extras.length > 12 ||
     !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
@@ -568,6 +574,15 @@ export async function createAdminWalkInAppointmentAction(
             id: true,
             name: true,
             phone: true,
+            vipSubscriptions: {
+              where: {
+                status: "ACTIVE",
+              },
+              include: {
+                plan: true,
+              },
+              take: 1,
+            },
           },
         })
       : [],
@@ -585,12 +600,30 @@ export async function createAdminWalkInAppointmentAction(
     return mutationError("Cliente selecionado nao pertence a esta barbearia.");
   }
 
+  const customerPhoneDigits = stripPhoneDigits(customerPhone);
+  const customerMatchedByPhone =
+    customersWithPhone.find(
+      (customer) => stripPhoneDigits(customer.phone) === customerPhoneDigits
+    ) || null;
+  const customerVipSubscription = customerMatchedByPhone?.vipSubscriptions[0] || null;
+  const linkedCustomer = customerMatchedByPhone || selectedCustomerById;
+
+  if (useVipPlan && !customerVipSubscription) {
+    return mutationError(
+      "Informe o telefone cadastrado do cliente assinante para usar o plano mensal."
+    );
+  }
+
   try {
     if (fitInMode === "standard") {
       const availability = await getBookingAvailability({
         barberId,
         serviceIds,
         date,
+        additionalDurationMinutes:
+          useVipPlan && customerVipSubscription
+            ? getVipPlanDurationMinutes(customerVipSubscription.plan.code)
+            : 0,
       });
       const availableSlots = flattenAvailableSlots(availability.periodSlots);
 
@@ -606,12 +639,6 @@ export async function createAdminWalkInAppointmentAction(
     throw error;
   }
 
-  const customerPhoneDigits = stripPhoneDigits(customerPhone);
-  const customerMatchedByPhone =
-    customersWithPhone.find(
-      (customer) => stripPhoneDigits(customer.phone) === customerPhoneDigits
-    ) || null;
-  const linkedCustomer = customerMatchedByPhone || selectedCustomerById;
   const walkInCustomer = linkedCustomer
     ? null
     : await getOrCreateWalkInCustomer(admin.shopId);
@@ -635,6 +662,7 @@ export async function createAdminWalkInAppointmentAction(
       time: startTime,
       conflictMode: fitInMode === "quick" ? "SAME_START_ONLY" : "OVERLAP",
       manualDurationMinutes: fitInMode === "quick" ? manualDurationMinutes : null,
+      useVipPlan,
       notes: formatManualFitInNotes({
         customerName: displayCustomerName,
         customerPhone: displayCustomerPhone,

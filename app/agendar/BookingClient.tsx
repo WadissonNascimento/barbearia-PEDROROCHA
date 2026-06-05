@@ -53,6 +53,7 @@ type RescheduleAppointmentOption = {
   appointmentCode: string;
   barberId: string;
   serviceIds: string[];
+  isVipPlanUse: boolean;
   date: string;
   time: string;
   extras: Array<{
@@ -151,34 +152,6 @@ function getWeekStartValue(dateValue: string) {
   return `${year}-${month}-${dayOfMonth}`;
 }
 
-function normalizeServiceText(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
-function serviceMatchesVipPlan(service: ServiceOption, planCode: string) {
-  const text = normalizeServiceText(service.name);
-  const hasCorte = text.includes("corte");
-  const hasBarba = text.includes("barba");
-  const hasSobrancelha = text.includes("sobrancelha");
-
-  if (planCode === "CORTE") {
-    return hasCorte && !hasBarba && !hasSobrancelha;
-  }
-
-  if (planCode === "CORTE_SOBRANCELHA") {
-    return hasCorte && hasSobrancelha && !hasBarba;
-  }
-
-  if (planCode === "CORTE_BARBA_SOBRANCELHA") {
-    return hasCorte && hasBarba && hasSobrancelha;
-  }
-
-  return false;
-}
-
 export default function BookingClient({
   barbers,
   services,
@@ -216,7 +189,9 @@ export default function BookingClient({
   const [vipPlanWarning, setVipPlanWarning] = useState<string | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [bookingDetails, setBookingDetails] = useState<BookingDetails | null>(null);
-  const [useVipPlan, setUseVipPlan] = useState(false);
+  const [useVipPlan, setUseVipPlan] = useState(
+    () => Boolean(rescheduleAppointment?.isVipPlanUse && vipPlan)
+  );
   const availabilityCacheRef = useRef<Map<string, AvailabilityCacheEntry>>(new Map());
   const [extraQuantities, setExtraQuantities] = useState<Record<string, number>>(() =>
     Object.fromEntries(
@@ -247,28 +222,17 @@ export default function BookingClient({
     [barbers, selectedBarberId]
   );
 
-  const selectedOccupiedDuration = selectedServices.reduce(
-    (sum, service) => sum + service.duration + Math.max(0, service.bufferAfter || 0),
-    0
+  const vipPlanDuration = useMemo(
+    () => (useVipPlan && vipPlan ? getVipPlanDuration(vipPlan.code) : 0),
+    [useVipPlan, vipPlan]
   );
+  const selectedOccupiedDuration =
+    selectedServices.reduce(
+      (sum, service) => sum + service.duration + Math.max(0, service.bufferAfter || 0),
+      0
+    ) + vipPlanDuration;
   const selectedPrice = selectedServices.reduce((sum, service) => sum + service.price, 0);
-  const vipCoveredServiceIds = useMemo(
-    () =>
-      vipPlan && useVipPlan
-        ? new Set(
-            selectedServices
-              .filter((service) => serviceMatchesVipPlan(service, vipPlan.code))
-              .map((service) => service.id)
-          )
-        : new Set<string>(),
-    [selectedServices, useVipPlan, vipPlan]
-  );
-  const vipCoveredPrice = selectedServices
-    .filter((service) => vipCoveredServiceIds.has(service.id))
-    .reduce((sum, service) => sum + service.price, 0);
-  const effectiveSelectedPrice = useVipPlan
-    ? Math.max(0, selectedPrice - vipCoveredPrice)
-    : selectedPrice;
+  const effectiveSelectedPrice = selectedPrice;
   const selectedVipWeekAlreadyUsed = Boolean(
     vipPlan?.weeklyUsedWeekStarts.includes(getWeekStartValue(selectedDate))
   );
@@ -291,12 +255,13 @@ export default function BookingClient({
     0
   );
   const selectedTotalPrice = effectiveSelectedPrice + selectedExtrasPrice;
+  const selectedItemsCount = selectedServiceIds.length + (useVipPlan ? 1 : 0);
   const selectedItemsLabel =
-    selectedServiceIds.length === 1
+    selectedItemsCount === 1
       ? "1 item selecionado"
-      : `${selectedServiceIds.length} itens selecionados`;
+      : `${selectedItemsCount} itens selecionados`;
   const showMobileContinueBar =
-    selectedServiceIds.length > 0 &&
+    selectedItemsCount > 0 &&
     !isScheduleModalOpen &&
     !extrasSlot &&
     !confirmationSlot &&
@@ -310,17 +275,27 @@ export default function BookingClient({
     () => [...selectedServiceIds].sort().join(","),
     [selectedServiceIds]
   );
+  const hasBookableItem = selectedItemsCount > 0;
   const availabilityKey = useMemo(
     () =>
-      selectedBarberId && selectedServiceKey && selectedDate
+      selectedBarberId && hasBookableItem && selectedDate
         ? [
             selectedBarberId,
             selectedServiceKey,
             selectedDate,
             rescheduleAppointmentId || "",
+            useVipPlan ? `vip:${vipPlanDuration}` : "",
           ].join("|")
         : "",
-    [rescheduleAppointmentId, selectedBarberId, selectedDate, selectedServiceKey]
+    [
+      hasBookableItem,
+      rescheduleAppointmentId,
+      selectedBarberId,
+      selectedDate,
+      selectedServiceKey,
+      useVipPlan,
+      vipPlanDuration,
+    ]
   );
   const groupedExtras = useMemo(() => {
     const categories = ["BEVERAGE", "SHELF", "OTHER"] as const;
@@ -358,7 +333,7 @@ export default function BookingClient({
 
   const loadAvailability = useCallback(
     async (signal?: AbortSignal, options: { force?: boolean } = {}) => {
-      if (!availabilityKey || !selectedBarberId || selectedServiceIds.length === 0 || !selectedDate) {
+      if (!availabilityKey || !selectedBarberId || !hasBookableItem || !selectedDate) {
         setPeriodSlots(emptyPeriodSlots());
         setIsDayAvailable(false);
         setAvailabilityError(null);
@@ -386,6 +361,7 @@ export default function BookingClient({
           body: JSON.stringify({
             barberId: selectedBarberId,
             serviceIds: selectedServiceIds,
+            additionalDurationMinutes: vipPlanDuration,
             date: selectedDate,
             rescheduleAppointmentId,
           }),
@@ -432,11 +408,19 @@ export default function BookingClient({
         }
       }
     },
-    [availabilityKey, rescheduleAppointmentId, selectedBarberId, selectedDate, selectedServiceIds]
+    [
+      availabilityKey,
+      hasBookableItem,
+      rescheduleAppointmentId,
+      selectedBarberId,
+      selectedDate,
+      selectedServiceIds,
+      vipPlanDuration,
+    ]
   );
 
   useEffect(() => {
-    if (!selectedBarberId || selectedServiceIds.length === 0 || !selectedDate) {
+    if (!selectedBarberId || !hasBookableItem || !selectedDate) {
       setPeriodSlots(emptyPeriodSlots());
       setIsDayAvailable(false);
       setAvailabilityError(null);
@@ -453,17 +437,9 @@ export default function BookingClient({
       window.clearTimeout(timeout);
       controller.abort();
     };
-  }, [loadAvailability, selectedBarberId, selectedDate, selectedServiceIds]);
+  }, [hasBookableItem, loadAvailability, selectedBarberId, selectedDate, selectedServiceIds]);
 
   function toggleService(serviceId: string) {
-    const service = visibleServices.find((item) => item.id === serviceId);
-    const isVipCoveredService =
-      Boolean(vipPlan && service && serviceMatchesVipPlan(service, vipPlan.code));
-
-    if (!useVipPlan || isVipCoveredService) {
-      setUseVipPlan(false);
-    }
-
     setSelectedServiceIds((current) =>
       current.includes(serviceId)
         ? current.filter((id) => id !== serviceId)
@@ -490,6 +466,22 @@ export default function BookingClient({
     return "Combo mensal";
   }
 
+  function getVipPlanDuration(planCode: string) {
+    if (planCode === "CORTE") {
+      return 45;
+    }
+
+    if (planCode === "CORTE_SOBRANCELHA") {
+      return 60;
+    }
+
+    if (planCode === "CORTE_BARBA_SOBRANCELHA") {
+      return 60;
+    }
+
+    return 45;
+  }
+
   function selectVipPlanServices() {
     if (!vipPlan || !canUseVipPlan) {
       return;
@@ -502,17 +494,7 @@ export default function BookingClient({
       return;
     }
 
-    const matchingServices = visibleServices.filter((service) =>
-      serviceMatchesVipPlan(service, vipPlan.code)
-    );
-
-    if (matchingServices.length === 0) {
-      setBookingError("O combo do seu plano ainda nao esta cadastrado nos servicos.");
-      return;
-    }
-
     setUseVipPlan(true);
-    setSelectedServiceIds(matchingServices.map((service) => service.id));
     setBookingError(null);
     setBookingSuccess(null);
     setBookingDetails(null);
@@ -617,7 +599,10 @@ export default function BookingClient({
         time,
         barberName: selectedBarber?.name || "Barbeiro",
         barberPhone: selectedBarber?.phone || null,
-        serviceNames: selectedServices.map((service) => service.name),
+        serviceNames: [
+          useVipPlan && vipPlan ? getVipPlanItems(vipPlan.code) : "",
+          ...selectedServices.map((service) => service.name),
+        ].filter(Boolean),
         extras: selectedExtras.map((product) => ({
           name: product.name,
           quantity: product.quantity,
@@ -836,7 +821,7 @@ export default function BookingClient({
                 {nextDays.map((day) => {
                   const isSelected = day === selectedDate;
                   const { weekday, day: dayLabel } = formatShortDate(day);
-                  const disabled = !selectedBarberId || selectedServiceIds.length === 0;
+                  const disabled = !selectedBarberId || !hasBookableItem;
 
                   return (
                     <button
@@ -859,7 +844,7 @@ export default function BookingClient({
                 })}
               </div>
 
-              {(!selectedBarberId || selectedServiceIds.length === 0) && (
+              {(!selectedBarberId || !hasBookableItem) && (
                 <p className="mt-3 text-xs text-zinc-500">
                   Escolha barbeiro e serviços para liberar a agenda.
                 </p>
@@ -880,7 +865,7 @@ export default function BookingClient({
               </p>
             </div>
 
-            {selectedServices.length > 0 && (
+            {hasBookableItem && (
               <div className="min-w-0 rounded-2xl border border-white/10 bg-black/20 px-3 py-2 text-sm text-zinc-200 sm:px-4 sm:py-3">
                 Total atual - {formatCurrency(selectedTotalPrice)}
               </div>
@@ -895,7 +880,7 @@ export default function BookingClient({
             />
           </div>
 
-          {!selectedBarberId || selectedServiceIds.length === 0 || !selectedDate ? (
+          {!selectedBarberId || !hasBookableItem || !selectedDate ? (
             <div className="mt-6 rounded-[24px] border border-dashed border-white/10 px-4 py-6 text-sm text-zinc-400">
               Escolha barbeiro, serviço e data para ver os horários livres.
             </div>
@@ -939,6 +924,7 @@ export default function BookingClient({
           selectedDate={selectedDate}
           selectedBarberId={selectedBarberId}
           selectedServiceIds={selectedServiceIds}
+          hasBookableItem={hasBookableItem}
           selectedTotalPrice={selectedTotalPrice}
           availabilityError={availabilityError}
           bookingError={hasBookingConflict ? null : bookingError}
@@ -1114,6 +1100,7 @@ function BookingScheduleModal({
   selectedDate,
   selectedBarberId,
   selectedServiceIds,
+  hasBookableItem,
   selectedTotalPrice,
   availabilityError,
   bookingError,
@@ -1129,6 +1116,7 @@ function BookingScheduleModal({
   selectedDate: string;
   selectedBarberId: string;
   selectedServiceIds: string[];
+  hasBookableItem: boolean;
   selectedTotalPrice: number;
   availabilityError: string | null;
   bookingError: string | null;
@@ -1188,7 +1176,7 @@ function BookingScheduleModal({
             {nextDays.map((day) => {
               const isSelected = day === selectedDate;
               const { weekday, day: dayLabel } = formatShortDate(day);
-              const disabled = !selectedBarberId || selectedServiceIds.length === 0;
+              const disabled = !selectedBarberId || !hasBookableItem;
 
               return (
                 <button
@@ -1228,7 +1216,7 @@ function BookingScheduleModal({
               <FeedbackMessage message={bookingError} tone="error" />
             </div>
 
-            {!selectedBarberId || selectedServiceIds.length === 0 || !selectedDate ? (
+            {!selectedBarberId || !hasBookableItem || !selectedDate ? (
               <div className="mt-5 rounded-[22px] border border-dashed border-white/10 px-4 py-5 text-sm text-zinc-400">
                 Escolha barbeiro, servico e data para ver os horarios livres.
               </div>

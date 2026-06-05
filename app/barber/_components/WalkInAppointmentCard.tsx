@@ -142,34 +142,6 @@ function addDaysToDateValue(value: string, daysToAdd: number) {
   return `${nextYear}-${nextMonth}-${nextDay}`;
 }
 
-function normalizeServiceText(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
-function serviceMatchesVipPlan(serviceName: string, planCode: string) {
-  const text = normalizeServiceText(serviceName);
-  const hasCorte = text.includes("corte");
-  const hasBarba = text.includes("barba");
-  const hasSobrancelha = text.includes("sobrancelha");
-
-  if (planCode === "CORTE") {
-    return hasCorte && !hasBarba && !hasSobrancelha;
-  }
-
-  if (planCode === "CORTE_SOBRANCELHA") {
-    return hasCorte && hasSobrancelha && !hasBarba;
-  }
-
-  if (planCode === "CORTE_BARBA_SOBRANCELHA") {
-    return hasCorte && hasBarba && hasSobrancelha;
-  }
-
-  return false;
-}
-
 function getWeekStartValue(value: string) {
   const [year, month, day] = value.split("-").map(Number);
   const date = new Date(year, month - 1, day);
@@ -204,6 +176,38 @@ function getWalkInDateOptions(): WalkInDateOption[] {
       }),
     };
   });
+}
+
+function getVipPlanItems(planCode: string) {
+  if (planCode === "CORTE") {
+    return "Corte";
+  }
+
+  if (planCode === "CORTE_SOBRANCELHA") {
+    return "Corte e sobrancelha";
+  }
+
+  if (planCode === "CORTE_BARBA_SOBRANCELHA") {
+    return "Corte, sobrancelha e barba";
+  }
+
+  return "Combo mensal";
+}
+
+function getVipPlanDuration(planCode: string) {
+  if (planCode === "CORTE") {
+    return 45;
+  }
+
+  if (planCode === "CORTE_SOBRANCELHA") {
+    return 60;
+  }
+
+  if (planCode === "CORTE_BARBA_SOBRANCELHA") {
+    return 60;
+  }
+
+  return 45;
 }
 
 export default function WalkInAppointmentCard({
@@ -266,18 +270,12 @@ export default function WalkInAppointmentCard({
     ? customerMatchedByPhone
     : selectedCustomerById;
   const vipSubscription = customerMatchedByPhone?.vipSubscription || null;
-  const vipPlanService = vipSubscription
-    ? services.find((service) => serviceMatchesVipPlan(service.name, vipSubscription.plan.code)) ||
-      null
-    : null;
-  const selectedVipCoveredTotal =
-    useVipPlan && vipSubscription
-      ? selectedServices
-          .filter((service) => serviceMatchesVipPlan(service.name, vipSubscription.plan.code))
-          .reduce((sum, service) => sum + service.price, 0)
-      : 0;
+  const vipPlanDuration =
+    useVipPlan && vipSubscription ? getVipPlanDuration(vipSubscription.plan.code) : 0;
+  const selectedItemsCount = selectedServiceIds.length + (useVipPlan ? 1 : 0);
+  const hasBookableItem = selectedItemsCount > 0;
   const selectedGrandTotal =
-    Math.max(0, selectedTotal - selectedVipCoveredTotal) + selectedExtrasTotal;
+    selectedTotal + selectedExtrasTotal;
   const selectedVipWeekAlreadyUsed = Boolean(
     vipSubscription?.weeklyUsedWeekStarts.includes(getWeekStartValue(selectedDate))
   );
@@ -294,9 +292,7 @@ export default function WalkInAppointmentCard({
     ? "Este cliente nao possui atendimentos disponiveis neste ciclo."
     : vipSubscription && !vipPaymentPaid
       ? "O pagamento deste ciclo ainda esta pendente."
-      : !vipPlanService
-        ? "O combo deste plano nao esta ativo para este barbeiro."
-        : null;
+      : null;
   const vipWeekAlreadyUsedMessage =
     "Este cliente ja possui um atendimento do plano mensal nesta semana. Escolha outra semana para usar o plano ou marque como atendimento avulso.";
   const filteredClients = useMemo(() => {
@@ -331,7 +327,9 @@ export default function WalkInAppointmentCard({
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const isDisabled = services.length === 0;
   const activeDuration =
-    fitInMode === "quick" ? Number(quickDurationMinutes) || 0 : selectedDuration;
+    fitInMode === "quick"
+      ? Number(quickDurationMinutes) || 0
+      : selectedDuration + vipPlanDuration;
   const isCreating = isPending || isSubmitLocked;
 
   useEffect(() => {
@@ -411,7 +409,7 @@ export default function WalkInAppointmentCard({
       return;
     }
 
-    if (!selectedDate || selectedServiceIds.length === 0) {
+    if (!selectedDate || !hasBookableItem) {
       setAvailableSlots([]);
       setAvailablePeriodSlots(emptyWalkInPeriodSlots());
       setStartTime("");
@@ -434,6 +432,7 @@ export default function WalkInAppointmentCard({
     getWalkInAvailableSlotsAction({
       date: selectedDate,
       serviceIds: selectedServiceIds,
+      additionalDurationMinutes: vipPlanDuration,
     })
       .then((result) => {
         if (cancelled) {
@@ -491,7 +490,7 @@ export default function WalkInAppointmentCard({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, selectedDate, selectedServiceIds]);
+  }, [hasBookableItem, isOpen, selectedDate, selectedServiceIds, vipPlanDuration]);
 
   function closeModal() {
     if (isCreating) {
@@ -554,24 +553,16 @@ export default function WalkInAppointmentCard({
         ? current.filter((id) => id !== serviceId)
         : [...current, serviceId];
 
-      if (
-        useVipPlan &&
-        vipPlanService?.id === serviceId &&
-        !next.includes(serviceId)
-      ) {
-        setUseVipPlan(false);
-      }
-
       setStartTime("");
       return next;
     });
   }
 
   function useSelectedCustomerVipPlan() {
-    if (!vipSubscription || !vipPlanService) {
+    if (!vipSubscription) {
       showWalkInError(
-        "Combo indisponivel",
-        "O servico correspondente ao plano mensal nao esta ativo para este barbeiro."
+        "Cliente sem assinatura",
+        "Informe o telefone de um cliente assinante para usar o plano mensal."
       );
       return;
     }
@@ -581,11 +572,6 @@ export default function WalkInAppointmentCard({
     }
 
     setUseVipPlan(true);
-    setSelectedServiceIds((current) =>
-      current.includes(vipPlanService.id)
-        ? current
-        : [vipPlanService.id, ...current]
-    );
     setStartTime("");
     setFeedback({ message: null, tone: "success" });
   }
@@ -649,10 +635,10 @@ export default function WalkInAppointmentCard({
   }
 
   function goToScheduleStep() {
-    if (selectedServiceIds.length === 0) {
+    if (!hasBookableItem) {
       showWalkInError(
         "Escolha o servico",
-        "Selecione pelo menos um servico para carregar os horarios disponiveis."
+        "Selecione pelo menos um servico ou use o plano mensal para carregar os horarios disponiveis."
       );
       return;
     }
@@ -886,8 +872,14 @@ export default function WalkInAppointmentCard({
                         const submittedDate = String(formData.get("date") || "").trim();
                         const selectedStartTime = String(formData.get("startTime") || "").trim();
                         const serviceName =
-                          selectedServices.map((service) => service.name).join(" + ") ||
-                          "Servico";
+                          [
+                            useVipPlan && vipSubscription
+                              ? getVipPlanItems(vipSubscription.plan.code)
+                              : "",
+                            selectedServices.map((service) => service.name).join(" + "),
+                          ]
+                            .filter(Boolean)
+                            .join(" + ") || "Servico";
 
                         if (
                           !isValidCustomerFullName(submittedCustomerName) &&
@@ -1070,7 +1062,7 @@ export default function WalkInAppointmentCard({
                                   Usar plano mensal
                                 </p>
                                 <p className="mt-1 text-xs leading-5 text-zinc-300">
-                                  {vipPlanService?.name || "Combo mensal"} incluso no plano. Servicos
+                                  {getVipPlanItems(vipSubscription.plan.code)} incluso no plano. Servicos
                                   adicionais serao cobrados a parte.
                                 </p>
                                 {vipUnavailableMessage ? (
@@ -1080,7 +1072,7 @@ export default function WalkInAppointmentCard({
                                 ) : null}
                                 <button
                                   type="button"
-                                  disabled={!canUseVipPlan || !vipPlanService}
+                                  disabled={!canUseVipPlan}
                                   onClick={useSelectedCustomerVipPlan}
                                   className={`mt-3 min-h-10 w-full rounded-xl px-3 py-2 text-sm font-black transition ${
                                     useVipPlan
@@ -1142,12 +1134,12 @@ export default function WalkInAppointmentCard({
                             backLabel="Voltar"
                           />
 
-                          {selectedServiceIds.length > 0 ? (
+                          {hasBookableItem ? (
                             <div className="sticky bottom-0 -mx-5 -mb-5 border-t border-white/10 bg-[#050505]/95 p-4 backdrop-blur-xl">
                               <div className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--brand)]/45 bg-[linear-gradient(135deg,rgba(184,148,95,0.95),rgba(124,94,50,0.95))] px-4 py-3 text-white shadow-[0_18px_40px_rgba(0,0,0,0.35)]">
                                 <div>
                                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/75">
-                                    {selectedServiceIds.length} item(ns)
+                                    {selectedItemsCount} item(ns)
                                   </p>
                                   <p className="text-lg font-black">
                                     {formatCurrency(selectedGrandTotal)}
@@ -1465,8 +1457,14 @@ export default function WalkInAppointmentCard({
                             <SummaryRow
                               label="Servicos"
                               value={
-                                selectedServices.map((service) => service.name).join(" + ") ||
-                                "Nao informado"
+                                [
+                                  useVipPlan && vipSubscription
+                                    ? getVipPlanItems(vipSubscription.plan.code)
+                                    : "",
+                                  selectedServices.map((service) => service.name).join(" + "),
+                                ]
+                                  .filter(Boolean)
+                                  .join(" + ") || "Nao informado"
                               }
                             />
                             {useVipPlan && vipSubscription ? (
@@ -1522,7 +1520,7 @@ export default function WalkInAppointmentCard({
                             </button>
                             <button
                               type="submit"
-                              disabled={isCreating || selectedServiceIds.length === 0 || !startTime}
+                              disabled={isCreating || !hasBookableItem || !startTime}
                               className="min-h-11 rounded-2xl bg-[var(--brand)] px-4 py-3 text-sm font-bold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                               {isCreating ? "Criando..." : "Confirmar encaixe"}

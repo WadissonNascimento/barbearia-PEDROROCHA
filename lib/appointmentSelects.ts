@@ -64,6 +64,7 @@ export const appointmentForBarberSelect = {
     select: {
       plan: {
         select: {
+          code: true,
           name: true,
         },
       },
@@ -86,6 +87,7 @@ export const appointmentForAdminSelect = {
     select: {
       plan: {
         select: {
+          code: true,
           name: true,
         },
       },
@@ -111,6 +113,7 @@ export const appointmentForFinanceSelect = {
     select: {
       plan: {
         select: {
+          code: true,
           name: true,
         },
       },

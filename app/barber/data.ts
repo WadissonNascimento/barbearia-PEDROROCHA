@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getAppointmentOccupiedDuration } from "@/lib/barberSchedule";
 import {
   getAppointmentDisplayName,
+  getAppointmentDisplayNameWithVipPlan,
   getAppointmentGrandTotal,
   getAppointmentServiceRevenue,
   getAppointmentServiceMetaLine,
@@ -477,7 +478,7 @@ export async function getBarberDashboardData(
   const todayServiceMap = new Map<string, number>();
 
   for (const appointment of activeTodayAppointments) {
-    const serviceName = getAppointmentDisplayName(appointment.services);
+    const serviceName = getAppointmentDisplayNameWithVipPlan(appointment);
     todayServiceMap.set(serviceName, (todayServiceMap.get(serviceName) || 0) + 1);
   }
 
@@ -527,7 +528,7 @@ export async function getBarberDashboardData(
           ? getManualFitInVisibleNotes(appointment.notes) || null
           : appointment.notes,
         customer: getAppointmentCustomerForBarberCard(appointment),
-        serviceName: getAppointmentDisplayName(appointment.services),
+        serviceName: getAppointmentDisplayNameWithVipPlan(appointment),
         serviceMeta: getAppointmentServiceMetaLine(appointment.services),
         services: appointment.services.map((service) => ({
           serviceId: service.serviceId,
@@ -554,7 +555,7 @@ export async function getBarberDashboardData(
           ? getManualFitInVisibleNotes(appointment.notes) || null
           : appointment.notes,
         customer: getAppointmentCustomerForBarberCard(appointment),
-        serviceName: getAppointmentDisplayName(appointment.services),
+        serviceName: getAppointmentDisplayNameWithVipPlan(appointment),
         serviceMeta: getAppointmentServiceMetaLine(appointment.services),
         services: appointment.services.map((service) => ({
           serviceId: service.serviceId,
@@ -1006,7 +1007,7 @@ export async function getBarberTodayDashboardData(barberId: string) {
   const todayServiceMap = new Map<string, number>();
 
   for (const appointment of activeTodayAppointments) {
-    const serviceName = getAppointmentDisplayName(appointment.services);
+    const serviceName = getAppointmentDisplayNameWithVipPlan(appointment);
     todayServiceMap.set(serviceName, (todayServiceMap.get(serviceName) || 0) + 1);
   }
 
@@ -1060,7 +1061,7 @@ export async function getBarberTodayDashboardData(barberId: string) {
           : appointment.notes,
         customer: getAppointmentCustomerForBarberCard(appointment),
 
-        serviceName: getAppointmentDisplayName(appointment.services),
+        serviceName: getAppointmentDisplayNameWithVipPlan(appointment),
         serviceMeta: getAppointmentServiceMetaLine(appointment.services),
         services: appointment.services.map((service) => ({
           serviceId: service.serviceId,
@@ -1277,9 +1278,10 @@ export async function getBarberClientProfile(barberId: string, customerId: strin
   const favoriteServiceMap = new Map<string, number>();
 
   for (const appointment of customer.customerAppointments) {
+    const serviceName = getAppointmentDisplayNameWithVipPlan(appointment);
     favoriteServiceMap.set(
-      getAppointmentDisplayName(appointment.services),
-      (favoriteServiceMap.get(getAppointmentDisplayName(appointment.services)) || 0) + 1
+      serviceName,
+      (favoriteServiceMap.get(serviceName) || 0) + 1
     );
   }
 

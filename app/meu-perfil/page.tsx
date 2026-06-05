@@ -12,7 +12,7 @@ import SectionCard from "@/components/ui/SectionCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { getAppointmentItemsLabel } from "@/lib/appointmentItems";
 import {
-  getAppointmentDisplayName,
+  getAppointmentDisplayNameWithVipPlan,
   getAppointmentGrandTotal,
   getAppointmentServiceMetaLine,
 } from "@/lib/appointmentServices";
@@ -42,6 +42,13 @@ type ProfileAppointment = {
   status: string;
   paymentMethod: string | null;
   notes: string | null;
+  isVipPlanUse: boolean;
+  vipSubscription: {
+    plan: {
+      code: string;
+      name: string;
+    };
+  } | null;
   barber: {
     name: string | null;
     phone: string | null;
@@ -80,6 +87,17 @@ export default async function MeuPerfilPage() {
       select: {
         id: true,
         status: true,
+        isVipPlanUse: true,
+        vipSubscription: {
+          select: {
+            plan: {
+              select: {
+                code: true,
+                name: true,
+              },
+            },
+          },
+        },
         services: {
           select: {
             nameSnapshot: true,
@@ -102,7 +120,18 @@ export default async function MeuPerfilPage() {
         date: true,
         status: true,
         paymentMethod: true,
+        isVipPlanUse: true,
         notes: true,
+        vipSubscription: {
+          select: {
+            plan: {
+              select: {
+                code: true,
+                name: true,
+              },
+            },
+          },
+        },
         barber: {
           select: {
             name: true,
@@ -150,7 +179,7 @@ export default async function MeuPerfilPage() {
   const favoriteServiceMap = new Map<string, number>();
 
   for (const appointment of appointmentStats) {
-    const serviceName = getAppointmentDisplayName(appointment.services);
+    const serviceName = getAppointmentDisplayNameWithVipPlan(appointment);
     favoriteServiceMap.set(
       serviceName,
       (favoriteServiceMap.get(serviceName) || 0) + 1
@@ -304,7 +333,7 @@ function AppointmentHistoryCard({
     day: "2-digit",
     month: "2-digit",
   });
-  const serviceLabel = getAppointmentDisplayName(appointment.services);
+  const serviceLabel = getAppointmentDisplayNameWithVipPlan(appointment);
   const serviceMetaLine = getAppointmentServiceMetaLine(appointment.services);
   const whatsappMessage =
     `Ola! Quero falar sobre meu agendamento de ${dateLabel} as ${time} com ${appointment.barber.name || "o barbeiro"} para ${serviceLabel}.`;

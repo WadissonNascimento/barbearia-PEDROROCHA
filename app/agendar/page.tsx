@@ -168,6 +168,7 @@ export default async function AgendarPage({
     appointmentCode: string;
     barberId: string;
     serviceIds: string[];
+    isVipPlanUse: boolean;
     date: string;
     time: string;
     extras: Array<{ extraProductId: string; quantity: number }>;
@@ -227,6 +228,7 @@ export default async function AgendarPage({
       appointmentCode: formatAppointmentPublicId(appointment.publicId),
       barberId: activeBarberId,
       serviceIds: appointment.services.map((service) => service.serviceId),
+      isVipPlanUse: appointment.isVipPlanUse,
       date: getScheduleDateValue(appointment.date),
       time: formatScheduleTime(appointment.date),
       extras: appointment.items.map((item) => ({

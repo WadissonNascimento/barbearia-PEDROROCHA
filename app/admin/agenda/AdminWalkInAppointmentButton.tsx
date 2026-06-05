@@ -130,6 +130,52 @@ function formatDateValue(value: string) {
   });
 }
 
+function getWeekStartValue(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  const weekDay = date.getDay();
+  const diffToMonday = weekDay === 0 ? -6 : 1 - weekDay;
+  date.setDate(date.getDate() + diffToMonday);
+
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+function getVipPlanItems(planCode: string) {
+  if (planCode === "CORTE") {
+    return "Corte";
+  }
+
+  if (planCode === "CORTE_SOBRANCELHA") {
+    return "Corte e sobrancelha";
+  }
+
+  if (planCode === "CORTE_BARBA_SOBRANCELHA") {
+    return "Corte, sobrancelha e barba";
+  }
+
+  return "Combo mensal";
+}
+
+function getVipPlanDuration(planCode: string) {
+  if (planCode === "CORTE") {
+    return 45;
+  }
+
+  if (planCode === "CORTE_SOBRANCELHA") {
+    return 60;
+  }
+
+  if (planCode === "CORTE_BARBA_SOBRANCELHA") {
+    return 60;
+  }
+
+  return 45;
+}
+
 export default function AdminWalkInAppointmentButton({
   barbers,
   services,
@@ -156,6 +202,7 @@ export default function AdminWalkInAppointmentButton({
   const [clientSearch, setClientSearch] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [useVipPlan, setUseVipPlan] = useState(false);
   const [date, setDate] = useState(selectedDate || getCurrentScheduleDateValue());
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [fitInMode, setFitInMode] = useState<FitInMode>("standard");
@@ -226,9 +273,6 @@ export default function AdminWalkInAppointmentButton({
     (total, extra) => total + extra.price,
     0
   );
-  const selectedGrandTotal = selectedTotal + selectedExtrasTotal;
-  const activeDuration =
-    fitInMode === "quick" ? Number(quickDurationMinutes) || 0 : selectedDuration;
   const selectedCustomerById =
     customers.find((customer) => customer.id === selectedCustomerId) || null;
   const customerPhoneDigits = stripPhoneDigits(customerPhone);
@@ -241,6 +285,34 @@ export default function AdminWalkInAppointmentButton({
   const selectedCustomer = customerPhone.trim()
     ? customerMatchedByPhone
     : selectedCustomerById;
+  const vipSubscription = customerMatchedByPhone?.vipSubscription || null;
+  const currentVipCycleMonth = getCurrentScheduleDateValue().slice(0, 7);
+  const vipPaymentPaid = Boolean(
+    vipSubscription?.payments.some(
+      (payment) => payment.cycleMonth === currentVipCycleMonth && payment.status === "PAID"
+    )
+  );
+  const selectedVipWeekAlreadyUsed = Boolean(
+    vipSubscription?.weeklyUsedWeekStarts.includes(getWeekStartValue(date))
+  );
+  const canUseVipPlan =
+    Boolean(vipSubscription && vipSubscription.tokensRemaining > 0) && vipPaymentPaid;
+  const vipPlanDuration =
+    useVipPlan && vipSubscription ? getVipPlanDuration(vipSubscription.plan.code) : 0;
+  const selectedGrandTotal = selectedTotal + selectedExtrasTotal;
+  const selectedItemsCount = selectedServiceIds.length + (useVipPlan ? 1 : 0);
+  const hasBookableItem = selectedItemsCount > 0;
+  const activeDuration =
+    fitInMode === "quick"
+      ? Number(quickDurationMinutes) || 0
+      : selectedDuration + vipPlanDuration;
+  const vipUnavailableMessage = vipSubscription && vipSubscription.tokensRemaining < 1
+    ? "Este cliente nao possui atendimentos disponiveis neste ciclo."
+    : vipSubscription && !vipPaymentPaid
+      ? "O pagamento deste ciclo ainda esta pendente."
+      : null;
+  const vipWeekAlreadyUsedMessage =
+    "Este cliente ja possui um atendimento do plano mensal nesta semana. Escolha outra semana para usar o plano ou marque como atendimento avulso.";
   const filteredCustomers = useMemo(() => {
     const search = clientSearch.trim().toLowerCase();
 
@@ -311,7 +383,7 @@ export default function AdminWalkInAppointmentButton({
       return;
     }
 
-    if (!selectedBarberId || !date || selectedServiceIds.length === 0) {
+    if (!selectedBarberId || !date || !hasBookableItem) {
       setAvailableSlots([]);
       setPeriodSlots(emptyPeriodSlots());
       setStartTime("");
@@ -334,6 +406,7 @@ export default function AdminWalkInAppointmentButton({
       barberId: selectedBarberId,
       date,
       serviceIds: selectedServiceIds,
+      additionalDurationMinutes: vipPlanDuration,
     })
       .then((result) => {
         if (cancelled) {
@@ -391,7 +464,7 @@ export default function AdminWalkInAppointmentButton({
     return () => {
       cancelled = true;
     };
-  }, [date, isOpen, selectedBarberId, selectedServiceIds, step]);
+  }, [date, hasBookableItem, isOpen, selectedBarberId, selectedServiceIds, step, vipPlanDuration]);
 
   function resetForm() {
     setSelectedCustomerId("");
@@ -399,6 +472,7 @@ export default function AdminWalkInAppointmentButton({
     setIsClientPickerOpen(false);
     setCustomerName("");
     setCustomerPhone("");
+    setUseVipPlan(false);
     setSelectedServiceIds([]);
     setFitInMode("standard");
     setQuickDurationMinutes("20");
@@ -445,6 +519,7 @@ export default function AdminWalkInAppointmentButton({
 
   function selectExistingCustomer(customerId: string) {
     setSelectedCustomerId(customerId);
+    setUseVipPlan(false);
 
     const customer = customers.find((item) => item.id === customerId);
     if (!customer) {
@@ -459,6 +534,7 @@ export default function AdminWalkInAppointmentButton({
 
   function clearSelectedCustomer() {
     setSelectedCustomerId("");
+    setUseVipPlan(false);
     setClientSearch("");
     setIsClientPickerOpen(false);
   }
@@ -490,10 +566,10 @@ export default function AdminWalkInAppointmentButton({
   }
 
   function goToScheduleStep() {
-    if (selectedServiceIds.length === 0) {
+    if (!hasBookableItem) {
       showWalkInError(
         "Escolha o servico",
-        "Selecione pelo menos um servico para carregar os horarios disponiveis."
+        "Selecione pelo menos um servico ou use o plano mensal para carregar os horarios disponiveis."
       );
       return;
     }
@@ -578,6 +654,26 @@ export default function AdminWalkInAppointmentButton({
     });
   }
 
+  function useSelectedCustomerVipPlan() {
+    if (!vipSubscription) {
+      showWalkInError(
+        "Cliente sem assinatura",
+        "Informe o telefone de um cliente assinante para usar o plano mensal."
+      );
+      return;
+    }
+
+    if (!canUseVipPlan) {
+      return;
+    }
+
+    setUseVipPlan(true);
+    setStartTime("");
+    setAvailableSlots([]);
+    setPeriodSlots(emptyPeriodSlots());
+    setFeedback({ message: null, tone: "success" });
+  }
+
   function toggleExtra(extraId: string) {
     setSelectedExtraIds((currentIds) =>
       currentIds.includes(extraId)
@@ -587,6 +683,15 @@ export default function AdminWalkInAppointmentButton({
   }
 
   function selectWalkInSlot(slot: string) {
+    if (useVipPlan && selectedVipWeekAlreadyUsed) {
+      setActionFeedback({
+        title: "Plano mensal ja usado nesta semana",
+        message: vipWeekAlreadyUsedMessage,
+        tone: "error",
+      });
+      return;
+    }
+
     setStartTime(slot);
     setFeedback({ message: null, tone: "success" });
     setStep("extras");
@@ -597,7 +702,12 @@ export default function AdminWalkInAppointmentButton({
     const submittedCustomerName = normalizeCustomerName(customerName);
     const submittedCustomerPhone = formatBrazilianPhone(customerPhone);
     const serviceName =
-      selectedServices.map((service) => service.name).join(" + ") || "Servico";
+      [
+        useVipPlan && vipSubscription ? getVipPlanItems(vipSubscription.plan.code) : "",
+        selectedServices.map((service) => service.name).join(" + "),
+      ]
+        .filter(Boolean)
+        .join(" + ") || "Servico";
     const extrasLabel =
       hasExtras && selectedExtras.length > 0
         ? selectedExtras.map((extra) => extra.name).join(" + ")
@@ -619,6 +729,15 @@ export default function AdminWalkInAppointmentButton({
       return;
     }
 
+    if (useVipPlan && selectedVipWeekAlreadyUsed) {
+      setActionFeedback({
+        title: "Plano mensal ja usado nesta semana",
+        message: vipWeekAlreadyUsedMessage,
+        tone: "error",
+      });
+      return;
+    }
+
     if (fitInMode === "standard" && !availableSlots.includes(startTime)) {
       showWalkInError(
         "Escolha o horario",
@@ -635,6 +754,7 @@ export default function AdminWalkInAppointmentButton({
     formData.set("startTime", startTime);
     formData.set("notes", notes);
     formData.set("fitInMode", fitInMode);
+    formData.set("useVipPlan", String(useVipPlan));
     formData.set("manualDurationMinutes", quickDurationMinutes);
     selectedServiceIds.forEach((serviceId) => formData.append("serviceIds", serviceId));
     if (hasExtras) {
@@ -790,6 +910,7 @@ export default function AdminWalkInAppointmentButton({
                                 value={customerName}
                                 onChange={(event) => {
                                   setSelectedCustomerId("");
+                                  setUseVipPlan(false);
                                   setCustomerName(event.target.value);
                                 }}
                                 onBlur={() =>
@@ -813,6 +934,7 @@ export default function AdminWalkInAppointmentButton({
                                 value={customerPhone}
                                 onChange={(event) => {
                                   setSelectedCustomerId("");
+                                  setUseVipPlan(false);
                                   setCustomerPhone(maskBrazilianPhone(event.target.value));
                                 }}
                                 type="tel"
@@ -824,7 +946,9 @@ export default function AdminWalkInAppointmentButton({
                               />
                               {customerMatchedByPhone ? (
                                 <span className="mt-2 block text-xs font-bold text-emerald-300">
-                                  Cliente cadastrado identificado pelo telefone.
+                                  {customerMatchedByPhone.vipSubscription
+                                    ? `Assinante ${customerMatchedByPhone.vipSubscription.plan.name} identificado pelo telefone.`
+                                    : "Cliente cadastrado identificado pelo telefone."}
                                 </span>
                               ) : null}
                             </label>
@@ -844,6 +968,38 @@ export default function AdminWalkInAppointmentButton({
                       {step === "services" ? (
                         <div className="space-y-4">
                           <StepTitle title="Servicos" />
+
+                          {vipSubscription ? (
+                            <div className="relative overflow-hidden rounded-2xl border border-amber-300/35 bg-amber-300/[0.08] p-3">
+                              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-amber-200">
+                                Cliente assinante: {vipSubscription.plan.name}
+                              </p>
+                              <p className="mt-1 text-sm font-black text-white">
+                                Usar plano mensal
+                              </p>
+                              <p className="mt-1 text-xs leading-5 text-zinc-300">
+                                {getVipPlanItems(vipSubscription.plan.code)} incluso no plano.
+                                Servicos adicionais serao cobrados a parte.
+                              </p>
+                              {vipUnavailableMessage ? (
+                                <p className="mt-2 rounded-xl border border-amber-300/20 bg-black/25 px-3 py-2 text-xs font-bold leading-5 text-amber-100">
+                                  {vipUnavailableMessage}
+                                </p>
+                              ) : null}
+                              <button
+                                type="button"
+                                disabled={!canUseVipPlan}
+                                onClick={useSelectedCustomerVipPlan}
+                                className={`mt-3 min-h-10 w-full rounded-xl px-3 py-2 text-sm font-black transition ${
+                                  useVipPlan
+                                    ? "bg-emerald-400 text-emerald-950"
+                                    : "bg-amber-100 text-zinc-950 hover:bg-white"
+                                } disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-zinc-500`}
+                              >
+                                {useVipPlan ? "Plano mensal selecionado" : "Usar plano mensal"}
+                              </button>
+                            </div>
+                          ) : null}
 
                           <div className="space-y-2">
                             {availableServices.map((service) => {
@@ -890,12 +1046,12 @@ export default function AdminWalkInAppointmentButton({
 
                           <StepActions onBack={() => setStep("customer")} />
 
-                          {selectedServiceIds.length > 0 ? (
+                          {hasBookableItem ? (
                             <div className="sticky bottom-0 -mx-5 -mb-5 border-t border-white/10 bg-[#050b16]/95 p-4 backdrop-blur-xl">
                               <div className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--brand)]/45 bg-[linear-gradient(135deg,rgba(184,148,95,0.95),rgba(124,94,50,0.95))] px-4 py-3 text-white shadow-[0_18px_40px_rgba(0,0,0,0.35)]">
                                 <div>
                                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-white/75">
-                                    {selectedServiceIds.length} item(ns)
+                                    {selectedItemsCount} item(ns)
                                   </p>
                                   <p className="text-lg font-black">
                                     {formatCurrency(selectedGrandTotal)}
@@ -1262,7 +1418,7 @@ export default function AdminWalkInAppointmentButton({
                             <button
                               type="button"
                               onClick={submitSummary}
-                              disabled={isCreating || selectedServiceIds.length === 0 || !startTime}
+                              disabled={isCreating || !hasBookableItem || !startTime}
                               className="min-h-11 rounded-2xl bg-[var(--brand)] px-4 py-3 text-sm font-bold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                               {isCreating ? "Criando..." : "Confirmar encaixe"}

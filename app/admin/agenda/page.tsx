@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireTenantSession, SHOP_ADMIN_ROLES } from "@/lib/tenantSession";
 import {
   getCurrentScheduleDateValue,
+  getScheduleDateValue,
   getScheduleDayRange,
 } from "@/lib/scheduleTime";
 import {
@@ -50,6 +51,20 @@ function getInitialAgendaFilters(searchParams: SearchParams) {
     dateTo,
     barberId,
   };
+}
+
+function getWeekStartValue(dateValue: string) {
+  const [year, month, day] = dateValue.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  const weekDay = date.getDay();
+  const diffToMonday = weekDay === 0 ? -6 : 1 - weekDay;
+  date.setDate(date.getDate() + diffToMonday);
+
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
 }
 
 export default async function AdminAgendaPage({
@@ -137,6 +152,32 @@ export default async function AdminAgendaPage({
           name: true,
           email: true,
           phone: true,
+          vipSubscriptions: {
+            where: {
+              status: "ACTIVE",
+            },
+            include: {
+              plan: true,
+              payments: {
+                orderBy: {
+                  cycleMonth: "desc",
+                },
+                take: 3,
+              },
+              appointments: {
+                where: {
+                  isVipPlanUse: true,
+                  status: {
+                    in: ["PENDING", "CONFIRMED", "COMPLETED", "DONE"],
+                  },
+                },
+                select: {
+                  date: true,
+                },
+              },
+            },
+            take: 1,
+          },
         },
         orderBy: [
           {
@@ -265,8 +306,21 @@ export default async function AdminAgendaPage({
         price: toMoneyNumber(extra.price),
       }))}
       customers={customers.map((customer) => ({
-        ...customer,
+        id: customer.id,
         name: customer.name || "Cliente",
+        email: customer.email,
+        phone: customer.phone,
+        vipSubscription: customer.vipSubscriptions[0]
+          ? {
+              id: customer.vipSubscriptions[0].id,
+              tokensRemaining: customer.vipSubscriptions[0].tokensRemaining,
+              plan: customer.vipSubscriptions[0].plan,
+              payments: customer.vipSubscriptions[0].payments,
+              weeklyUsedWeekStarts: customer.vipSubscriptions[0].appointments.map((appointment) =>
+                getWeekStartValue(getScheduleDateValue(appointment.date))
+              ),
+            }
+          : null,
       }))}
       initialFilters={initialFilters}
       isTruncated={report.isTruncated}

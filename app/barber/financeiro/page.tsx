@@ -7,7 +7,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import PageHeader from "@/components/ui/PageHeader";
 import { normalizeAppointmentStatus } from "@/lib/appointmentStatus";
 import {
-  getAppointmentDisplayName,
+  getAppointmentDisplayNameWithVipPlan,
   getAppointmentGrandTotal,
   getAppointmentTotalBarberPayout,
 } from "@/lib/appointmentServices";
@@ -344,7 +344,7 @@ async function getBarberFinanceData(
           }).name
         : appointment.customer.name || "Cliente",
       barberId: appointment.barberId,
-      serviceName: getAppointmentDisplayName(appointment.services),
+      serviceName: getAppointmentDisplayNameWithVipPlan(appointment),
       notes: appointment.isManualFitIn
         ? getManualFitInVisibleNotes(appointment.notes) || null
         : appointment.notes,

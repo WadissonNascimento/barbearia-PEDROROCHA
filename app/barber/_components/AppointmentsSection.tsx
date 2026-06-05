@@ -8,7 +8,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import { PremiumDatePicker, PremiumSelect } from "@/components/ui/PremiumFilters";
 import SectionCard from "@/components/ui/SectionCard";
 import {
-  getAppointmentDisplayName,
+  getAppointmentDisplayNameWithVipPlan,
   getAppointmentServiceMetaLine,
 } from "@/lib/appointmentServices";
 import { toMoneyNumber } from "@/lib/money";
@@ -340,7 +340,7 @@ export function AppointmentsSection({
             }
 
             const appointment = item.appointment;
-            const serviceName = getAppointmentDisplayName(appointment.services);
+            const serviceName = getAppointmentDisplayNameWithVipPlan(appointment);
             const serviceMeta = getAppointmentServiceMetaLine(appointment.services);
             const appointmentCustomer = appointment.isManualFitIn
               ? getManualFitInCustomerDisplay({

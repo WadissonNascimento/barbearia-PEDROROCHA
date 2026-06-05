@@ -43,6 +43,7 @@ export async function POST(request: Request) {
     const body = (await readJsonWithLimit(request, 8 * 1024)) as {
       barberId?: string;
       serviceIds?: string[];
+      additionalDurationMinutes?: number;
       date?: string;
       rescheduleAppointmentId?: string;
     };
@@ -53,6 +54,7 @@ export async function POST(request: Request) {
       : [];
     const date = String(body.date || "").trim();
     const rescheduleAppointmentId = String(body.rescheduleAppointmentId || "").trim();
+    const additionalDurationMinutes = Number(body.additionalDurationMinutes || 0);
 
     if (rescheduleAppointmentId) {
       const appointment = await prisma.appointment.findUnique({
@@ -101,6 +103,7 @@ export async function POST(request: Request) {
       serviceIds,
       date,
       excludeAppointmentId: rescheduleAppointmentId || undefined,
+      additionalDurationMinutes,
     });
 
     return NextResponse.json(availability);

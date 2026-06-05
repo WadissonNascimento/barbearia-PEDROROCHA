@@ -52,17 +52,24 @@ export async function getBookingAvailability(
     serviceIds,
     date,
     excludeAppointmentId,
+    additionalDurationMinutes = 0,
     now = new Date(),
   }: {
     barberId: string;
     serviceIds: string[];
     date: string;
     excludeAppointmentId?: string | null;
+    additionalDurationMinutes?: number;
     now?: Date;
   },
   db: BookingPrismaClient = prisma
 ) {
-  if (!barberId || serviceIds.length === 0 || !date) {
+  const normalizedAdditionalDuration =
+    Number.isInteger(additionalDurationMinutes) && additionalDurationMinutes > 0
+      ? additionalDurationMinutes
+      : 0;
+
+  if (!barberId || (serviceIds.length === 0 && normalizedAdditionalDuration === 0) || !date) {
     return {
       isDayAvailable: false,
       periodSlots: {
@@ -179,7 +186,7 @@ export async function getBookingAvailability(
       durationSnapshot: service.duration,
       bufferAfter: service.bufferAfter,
     }))
-  );
+  ) + normalizedAdditionalDuration;
 
   const generatedSlots = generateSlots(availability.startTime, availability.endTime);
   const dayEndMinutes = toMinutes(availability.endTime);

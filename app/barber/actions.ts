@@ -59,6 +59,7 @@ import {
   getScheduleDayRange,
   getScheduleMinutes,
 } from "@/lib/scheduleTime";
+import { getVipPlanDurationMinutes } from "@/lib/vip";
 import { enforceRateLimit } from "@/lib/security";
 import {
   BARBER_ROLES,
@@ -725,7 +726,7 @@ export async function createWalkInAppointmentAction(
     (hasRawCustomerPhone && !customerPhone) ||
     customerName.length > 80 ||
     (useVipPlan && !customerPhone) ||
-    selectedServiceIds.length === 0 ||
+    (!useVipPlan && selectedServiceIds.length === 0) ||
     selectedServiceIds.length > 8 ||
     selectedExtras.length > 12 ||
     !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
@@ -755,29 +756,6 @@ export async function createWalkInAppointmentAction(
     return mutationError(
       "Um ou mais servicos estao indisponiveis para encaixe.",
     );
-  }
-
-  try {
-    if (fitInMode === "standard") {
-      const availability = await getBookingAvailability({
-        barberId: barber.id,
-        serviceIds: selectedServiceIds,
-        date,
-      });
-      const availableSlots = flattenAvailableSlots(availability.periodSlots);
-
-      if (!availableSlots.includes(startTime)) {
-        return mutationError(
-          "Escolha um dos horarios disponiveis para esse encaixe.",
-        );
-      }
-    }
-  } catch (error) {
-    if (error instanceof BookingAvailabilityError) {
-      return mutationError(error.message);
-    }
-
-    throw error;
   }
 
   const [selectedCustomerById, customersWithPhone] = await Promise.all([
@@ -810,6 +788,15 @@ export async function createWalkInAppointmentAction(
           id: true,
           name: true,
           phone: true,
+          vipSubscriptions: {
+            where: {
+              status: "ACTIVE",
+            },
+            include: {
+              plan: true,
+            },
+            take: 1,
+          },
         },
       })
       : [],
@@ -819,16 +806,44 @@ export async function createWalkInAppointmentAction(
     customersWithPhone.find(
       (customer) => stripPhoneDigits(customer.phone) === customerPhoneDigits,
     ) || null;
+  const customerVipSubscription = customerMatchedByPhone?.vipSubscriptions[0] || null;
   const selectedCustomer = customerMatchedByPhone || selectedCustomerById;
 
   if (customerId && !selectedCustomer) {
     return mutationError("Cliente selecionado nao pertence a sua base.");
   }
 
-  if (useVipPlan && !customerMatchedByPhone) {
+  if (useVipPlan && !customerVipSubscription) {
     return mutationError(
       "Informe o telefone cadastrado do cliente assinante para usar o plano mensal.",
     );
+  }
+
+  try {
+    if (fitInMode === "standard") {
+      const availability = await getBookingAvailability({
+        barberId: barber.id,
+        serviceIds: selectedServiceIds,
+        date,
+        additionalDurationMinutes:
+          useVipPlan && customerVipSubscription
+            ? getVipPlanDurationMinutes(customerVipSubscription.plan.code)
+            : 0,
+      });
+      const availableSlots = flattenAvailableSlots(availability.periodSlots);
+
+      if (!availableSlots.includes(startTime)) {
+        return mutationError(
+          "Escolha um dos horarios disponiveis para esse encaixe.",
+        );
+      }
+    }
+  } catch (error) {
+    if (error instanceof BookingAvailabilityError) {
+      return mutationError(error.message);
+    }
+
+    throw error;
   }
 
   const walkInCustomer = await getOrCreateWalkInCustomer(barber.shopId);
@@ -916,9 +931,11 @@ export async function getQuickFitInPreviewAction({
 export async function getWalkInAvailableSlotsAction({
   date,
   serviceIds,
+  additionalDurationMinutes = 0,
 }: {
   date: string;
   serviceIds: string[];
+  additionalDurationMinutes?: number;
 }): Promise<MutationResult<WalkInSlotsPayload>> {
   const barber = await requireBarber();
   const selectedDate = String(date || "").trim();
@@ -928,7 +945,7 @@ export async function getWalkInAvailableSlotsAction({
 
   if (
     !/^\d{4}-\d{2}-\d{2}$/.test(selectedDate) ||
-    selectedServiceIds.length === 0 ||
+    (selectedServiceIds.length === 0 && additionalDurationMinutes <= 0) ||
     selectedServiceIds.length > 8
   ) {
     return walkInSlotsError(
@@ -961,6 +978,7 @@ export async function getWalkInAvailableSlotsAction({
       barberId: barber.id,
       serviceIds: selectedServiceIds,
       date: selectedDate,
+      additionalDurationMinutes,
     });
 
     return mutationSuccess("Horarios carregados.", {

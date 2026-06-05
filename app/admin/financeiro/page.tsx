@@ -6,7 +6,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import ExclusiveDetails from "@/components/ui/ExclusiveDetails";
 import StatusBadge from "@/components/ui/StatusBadge";
 import {
-  getAppointmentDisplayName,
+  getAppointmentDisplayNameWithVipPlan,
   getAppointmentGrandTotal,
   getAppointmentTotalBarberPayout,
 } from "@/lib/appointmentServices";
@@ -202,7 +202,7 @@ async function getAdminFinanceAppointments({
           : appointment.customer.name || "Cliente",
         barberId: appointment.barberId,
         barberName: appointment.barber.name || "Barbeiro",
-        serviceName: getAppointmentDisplayName(appointment.services),
+        serviceName: getAppointmentDisplayNameWithVipPlan(appointment),
         notes: appointment.isManualFitIn
           ? getManualFitInVisibleNotes(appointment.notes) || null
           : appointment.notes,

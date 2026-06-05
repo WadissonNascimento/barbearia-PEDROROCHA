@@ -57,6 +57,38 @@ export function getVipPlanDefinition(code: string) {
   return VIP_PLAN_DEFINITIONS.find((plan) => plan.code === code) || null;
 }
 
+export function getVipPlanItemsLabel(code: string) {
+  if (code === "CORTE") {
+    return "Corte";
+  }
+
+  if (code === "CORTE_SOBRANCELHA") {
+    return "Corte e sobrancelha";
+  }
+
+  if (code === "CORTE_BARBA_SOBRANCELHA") {
+    return "Corte, sobrancelha e barba";
+  }
+
+  return "Combo mensal";
+}
+
+export function getVipPlanDurationMinutes(code: string) {
+  if (code === "CORTE") {
+    return 45;
+  }
+
+  if (code === "CORTE_SOBRANCELHA") {
+    return 60;
+  }
+
+  if (code === "CORTE_BARBA_SOBRANCELHA") {
+    return 60;
+  }
+
+  return 45;
+}
+
 export async function ensureVipPlansForShop(db: VipDb, shopId: string) {
   await Promise.all(
     VIP_PLAN_DEFINITIONS.map((plan) =>

@@ -29,6 +29,8 @@ import {
   assertCanScheduleVipAppointment,
   consumeVipTokenForCompletedAppointment,
   getActiveVipSubscriptionForCustomer,
+  getVipPlanDurationMinutes,
+  getVipPlanItemsLabel,
   hasPaidCurrentVipCycle,
 } from "@/lib/vip";
 import {
@@ -192,44 +194,6 @@ function getAppointmentDurationFromServices(
       bufferAfter: service.bufferAfter,
     }))
   );
-}
-
-function normalizeVipServiceText(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
-function isServiceCoveredByVipPlan(
-  planCode: string,
-  service: { name: string }
-) {
-  const text = normalizeVipServiceText(service.name);
-  const hasCorte = text.includes("corte");
-  const hasBarba = text.includes("barba");
-  const hasSobrancelha = text.includes("sobrancelha");
-
-  if (planCode === "CORTE") {
-    return hasCorte && !hasBarba && !hasSobrancelha;
-  }
-
-  if (planCode === "CORTE_SOBRANCELHA") {
-    return hasCorte && hasSobrancelha && !hasBarba;
-  }
-
-  if (planCode === "CORTE_BARBA_SOBRANCELHA") {
-    return hasCorte && hasBarba && hasSobrancelha;
-  }
-
-  return false;
-}
-
-function hasVipPlanServiceSelection(
-  planCode: string,
-  services: Array<{ name: string }>
-) {
-  return services.some((service) => isServiceCoveredByVipPlan(planCode, service));
 }
 
 async function getNextAppointmentPublicId(
@@ -499,8 +463,15 @@ async function createCustomerAppointmentInTransaction(
   const time = input.time.trim();
   const notes = input.notes?.trim() || null;
   const conflictMode = input.conflictMode || "OVERLAP";
+  const requestedVipPlanUse = Boolean(input.useVipPlan);
 
-  if (!customerId || !barberId || serviceIds.length === 0 || !date || !time) {
+  if (
+    !customerId ||
+    !barberId ||
+    (!requestedVipPlanUse && serviceIds.length === 0) ||
+    !date ||
+    !time
+  ) {
     throw new AppointmentMutationError(
       "Selecione barbeiro, servicos, data e horario para continuar."
     );
@@ -652,7 +623,7 @@ async function createCustomerAppointmentInTransaction(
     ReturnType<typeof getActiveVipSubscriptionForCustomer>
   > | null = null;
 
-  if (input.useVipPlan) {
+  if (requestedVipPlanUse) {
     vipSubscription = await getActiveVipSubscriptionForCustomer(db, {
       shopId,
       customerId,
@@ -670,12 +641,6 @@ async function createCustomerAppointmentInTransaction(
 
     if (!isPaid) {
       throw new AppointmentMutationError("Seu plano VIP ainda esta com pagamento pendente.");
-    }
-
-    if (!hasVipPlanServiceSelection(vipSubscription.plan.code, orderedServices)) {
-      throw new AppointmentMutationError(
-        "Selecione o combo do seu plano VIP para usar o atendimento mensal."
-      );
     }
 
     await assertCanScheduleVipAppointment(db, {
@@ -747,8 +712,12 @@ async function createCustomerAppointmentInTransaction(
       throw new AppointmentMutationError("Este barbeiro nao atende nesse dia.");
     }
 
+    const vipPlanDuration = vipSubscription
+      ? getVipPlanDurationMinutes(vipSubscription.plan.code)
+      : 0;
     const occupiedDuration =
-      normalizedManualDurationMinutes || getAppointmentDurationFromServices(orderedServices);
+      normalizedManualDurationMinutes ||
+      getAppointmentDurationFromServices(orderedServices) + vipPlanDuration;
     const selectedStartMinutes = toMinutes(time);
     const selectedEndMinutes = selectedStartMinutes + occupiedDuration;
     const availabilityStart = toMinutes(availability.startTime);
@@ -773,8 +742,12 @@ async function createCustomerAppointmentInTransaction(
     }
   }
 
+  const vipPlanDuration = vipSubscription
+    ? getVipPlanDurationMinutes(vipSubscription.plan.code)
+    : 0;
   const occupiedDuration =
-    normalizedManualDurationMinutes || getAppointmentDurationFromServices(orderedServices);
+    normalizedManualDurationMinutes ||
+    getAppointmentDurationFromServices(orderedServices) + vipPlanDuration;
   const selectedStartMinutes = toMinutes(time);
   const selectedEndMinutes = selectedStartMinutes + occupiedDuration;
 
@@ -812,17 +785,15 @@ async function createCustomerAppointmentInTransaction(
       date: appointmentDate,
       notes,
       isManualFitIn: manualFitIn,
-      manualDurationMinutes: normalizedManualDurationMinutes,
+      manualDurationMinutes:
+        normalizedManualDurationMinutes || (vipSubscription ? occupiedDuration : null),
       isVipPlanUse: Boolean(vipSubscription),
       vipSubscriptionId: vipSubscription?.id || null,
       status: "CONFIRMED",
       services: {
         create: orderedServices.map((service, index) => {
           const barberCommission = commissionByServiceId.get(service.id);
-          const servicePrice =
-            vipSubscription && isServiceCoveredByVipPlan(vipSubscription.plan.code, service)
-              ? new Prisma.Decimal(0)
-              : service.price;
+          const servicePrice = service.price;
           const financials = calculateServiceFinancials({
             price: servicePrice,
             commissionType: barberCommission?.commissionType || service.commissionType,
@@ -957,7 +928,7 @@ async function rescheduleCustomerAppointmentInTransaction(
   const notes = input.notes?.trim() || null;
   const conflictMode = input.conflictMode || "OVERLAP";
 
-  if (!appointmentId || !customerId || !barberId || serviceIds.length === 0 || !date || !time) {
+  if (!appointmentId || !customerId || !barberId || !date || !time) {
     throw new AppointmentMutationError(
       "Selecione barbeiro, servicos, data e horario para remarcar."
     );
@@ -998,6 +969,12 @@ async function rescheduleCustomerAppointmentInTransaction(
         : actor === "BARBER"
         ? "Esse atendimento ja foi finalizado e nao permite edicao pelo barbeiro."
         : "Esse agendamento nao pode mais ser remarcado."
+    );
+  }
+
+  if (!currentAppointment.isVipPlanUse && serviceIds.length === 0) {
+    throw new AppointmentMutationError(
+      "Selecione pelo menos um servico para remarcar."
     );
   }
 
@@ -1176,12 +1153,6 @@ async function rescheduleCustomerAppointmentInTransaction(
       throw new AppointmentMutationError("Seu plano VIP ainda esta com pagamento pendente.");
     }
 
-    if (!hasVipPlanServiceSelection(vipSubscription.plan.code, orderedServices)) {
-      throw new AppointmentMutationError(
-        "Selecione o combo do seu plano VIP para usar o atendimento mensal."
-      );
-    }
-
     await assertCanScheduleVipAppointment(db, {
       shopId,
       customerId,
@@ -1272,7 +1243,12 @@ async function rescheduleCustomerAppointmentInTransaction(
       throw new AppointmentMutationError("Este barbeiro nao atende nesse dia.");
     }
 
-    const selectedOccupiedDuration = getAppointmentDurationFromServices(orderedServices);
+    const vipPlanDuration =
+      shouldUseVipPlan && currentAppointment.vipSubscription?.plan
+        ? getVipPlanDurationMinutes(currentAppointment.vipSubscription.plan.code)
+        : 0;
+    const selectedOccupiedDuration =
+      getAppointmentDurationFromServices(orderedServices) + vipPlanDuration;
     const selectedStartMinutes = toMinutes(time);
     const selectedEndMinutes = selectedStartMinutes + selectedOccupiedDuration;
     const availabilityStart = toMinutes(availability.startTime);
@@ -1357,6 +1333,12 @@ async function rescheduleCustomerAppointmentInTransaction(
     },
   });
 
+  const nextManualDurationMinutes =
+    shouldUseVipPlan && currentAppointment.vipSubscription?.plan
+      ? getAppointmentDurationFromServices(orderedServices) +
+        getVipPlanDurationMinutes(currentAppointment.vipSubscription.plan.code)
+      : currentAppointment.manualDurationMinutes;
+
   await db.appointment.update({
     where: { id: appointmentId },
     data: {
@@ -1368,6 +1350,7 @@ async function rescheduleCustomerAppointmentInTransaction(
             nextVisibleNotes: notes,
           })
         : notes ?? currentAppointment.notes,
+      manualDurationMinutes: nextManualDurationMinutes,
       status: "CONFIRMED",
       reminderSentAt: null,
     },
@@ -1376,12 +1359,7 @@ async function rescheduleCustomerAppointmentInTransaction(
   await db.appointmentService.createMany({
     data: orderedServices.map((service, index) => {
       const barberCommission = commissionByServiceId.get(service.id);
-      const servicePrice =
-        shouldUseVipPlan && currentAppointment.vipSubscription?.plan
-          ? isServiceCoveredByVipPlan(currentAppointment.vipSubscription.plan.code, service)
-            ? new Prisma.Decimal(0)
-            : service.price
-          : service.price;
+      const servicePrice = service.price;
       const financials = calculateServiceFinancials({
         price: servicePrice,
         commissionType: barberCommission?.commissionType || service.commissionType,
@@ -1741,12 +1719,7 @@ async function editCompletedAppointmentFinancialItemsInTransaction(
   await db.appointmentService.createMany({
     data: orderedServices.map((service, index) => {
       const barberCommission = commissionByServiceId.get(service.id);
-      const servicePrice =
-        currentAppointment.isVipPlanUse && currentAppointment.vipSubscription?.plan
-          ? isServiceCoveredByVipPlan(currentAppointment.vipSubscription.plan.code, service)
-            ? new Prisma.Decimal(0)
-            : service.price
-          : service.price;
+      const servicePrice = service.price;
       const financials = calculateServiceFinancials({
         price: servicePrice,
         commissionType: barberCommission?.commissionType || service.commissionType,
@@ -2150,6 +2123,11 @@ async function updateAppointmentStatusWithSideEffects(
           orderIndex: "asc",
         },
       },
+      vipSubscription: {
+        include: {
+          plan: true,
+        },
+      },
     },
   });
 
@@ -2369,8 +2347,10 @@ async function updateAppointmentStatusWithSideEffects(
         appointment,
         createdById: completedByUserId || null,
         serviceLabel:
-          appointment.services.map((service) => service.nameSnapshot).join(", ") ||
-          "Combo VIP",
+          appointment.isVipPlanUse && appointment.vipSubscription?.plan
+            ? getVipPlanItemsLabel(appointment.vipSubscription.plan.code)
+            : appointment.services.map((service) => service.nameSnapshot).join(", ") ||
+              "Atendimento",
       });
     } catch (error) {
       throw new AppointmentMutationError(

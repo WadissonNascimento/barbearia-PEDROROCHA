@@ -5,6 +5,7 @@ import {
   getAppointmentItemsShopRevenueTotal,
   getAppointmentItemsTotal,
 } from "@/lib/appointmentItems";
+import { getVipPlanItemsLabel } from "@/lib/vip";
 
 export type AppointmentServiceSummary = {
   id: string;
@@ -48,6 +49,29 @@ export function getAppointmentDisplayName(
 ) {
   const sorted = [...services].sort((a, b) => a.orderIndex - b.orderIndex);
   return sorted.map((service) => service.nameSnapshot).join(" + ");
+}
+
+export function getAppointmentDisplayNameWithVipPlan(
+  appointment: {
+    isVipPlanUse?: boolean | null;
+    vipSubscription?: {
+      plan?: {
+        code?: string | null;
+      } | null;
+    } | null;
+    services: Array<{
+      nameSnapshot: string;
+      orderIndex: number;
+    }>;
+  }
+) {
+  const serviceLabel = getAppointmentDisplayName(appointment.services);
+  const vipPlanLabel =
+    appointment.isVipPlanUse && appointment.vipSubscription?.plan?.code
+      ? getVipPlanItemsLabel(appointment.vipSubscription.plan.code)
+      : "";
+
+  return [vipPlanLabel, serviceLabel].filter(Boolean).join(" + ");
 }
 
 export function getAppointmentTotalPrice(

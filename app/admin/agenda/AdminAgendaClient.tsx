@@ -31,7 +31,7 @@ import { getAppointmentItemsLabel } from "@/lib/appointmentItems";
 import StatusBadge from "@/components/ui/StatusBadge";
 import AdminWalkInAppointmentButton from "./AdminWalkInAppointmentButton";
 import {
-  getAppointmentDisplayName,
+  getAppointmentDisplayNameWithVipPlan,
   getAppointmentGrandTotal,
 } from "@/lib/appointmentServices";
 import {
@@ -74,6 +74,7 @@ export type AdminAgendaAppointment = {
   notes: string | null;
   vipSubscription?: {
     plan: {
+      code?: string;
       name: string;
     };
   } | null;
@@ -126,6 +127,19 @@ export type AdminAgendaCustomer = {
   name: string;
   email: string | null;
   phone: string | null;
+  vipSubscription?: {
+    id: string;
+    tokensRemaining: number;
+    plan: {
+      code: string;
+      name: string;
+    };
+    payments: Array<{
+      cycleMonth: string;
+      status: string;
+    }>;
+    weeklyUsedWeekStarts: string[];
+  } | null;
 };
 
 export type AdminAgendaBlock = AgendaBlockItem;
@@ -510,7 +524,7 @@ export default function AdminAgendaClient({
                             </span>
                           ) : null}
                         </td>
-                        <td>{getAppointmentDisplayName(appointment.services)}</td>
+                        <td>{getAppointmentDisplayNameWithVipPlan(appointment)}</td>
                         <td className="text-zinc-300">
                           {getAppointmentItemsLabel(appointment.items)}
                         </td>
@@ -982,7 +996,7 @@ function AppointmentMobileCard({
   const notes = appointment.notes?.trim();
   const [isExpanded, setIsExpanded] = useState(false);
   const status = normalizeAppointmentStatus(appointment.status);
-  const serviceName = getAppointmentDisplayName(appointment.services);
+  const serviceName = getAppointmentDisplayNameWithVipPlan(appointment);
   const vipPlanName = appointment.isVipPlanUse
     ? appointment.vipSubscription?.plan.name || "VIP"
     : null;

@@ -9,7 +9,7 @@ import { getAppointmentItemsLabel } from "@/lib/appointmentItems";
 import SectionCard from "@/components/ui/SectionCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 import {
-  getAppointmentDisplayName,
+  getAppointmentDisplayNameWithVipPlan,
   getAppointmentGrandTotal,
   getAppointmentServiceMetaLine,
 } from "@/lib/appointmentServices";
@@ -46,7 +46,18 @@ export default async function CustomerAppointmentsPage() {
         date: true,
         status: true,
         paymentMethod: true,
+        isVipPlanUse: true,
         notes: true,
+        vipSubscription: {
+          select: {
+            plan: {
+              select: {
+                code: true,
+                name: true,
+              },
+            },
+          },
+        },
         barber: {
           select: {
             name: true,
@@ -119,7 +130,7 @@ export default async function CustomerAppointmentsPage() {
               day: "2-digit",
               month: "2-digit",
             });
-            const serviceLabel = getAppointmentDisplayName(appointment.services);
+            const serviceLabel = getAppointmentDisplayNameWithVipPlan(appointment);
             const serviceMetaLine = getAppointmentServiceMetaLine(
               appointment.services
             );
