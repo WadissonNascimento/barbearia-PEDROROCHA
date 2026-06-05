@@ -22,6 +22,7 @@ export const VIP_PLAN_DEFINITIONS = [
 ] as const;
 
 export type VipPlanCode = (typeof VIP_PLAN_DEFINITIONS)[number]["code"];
+export const DEFAULT_VIP_DUE_DAY = 5;
 
 const ACTIVE_APPOINTMENT_STATUSES_FOR_WEEKLY_LIMIT = [
   "PENDING",
@@ -51,6 +52,27 @@ export function getVipCycle(date = new Date()) {
     end,
     cycleMonth: getCycleMonth(date),
   };
+}
+
+export function normalizeVipDueDay(value: unknown) {
+  const parsedValue =
+    typeof value === "number" ? value : Number(String(value || "").trim());
+
+  if (!Number.isInteger(parsedValue) || parsedValue < 1 || parsedValue > 31) {
+    throw new Error("Informe um dia de vencimento entre 1 e 31.");
+  }
+
+  return parsedValue;
+}
+
+export function getVipDueDateForMonth(date = new Date(), dueDay = DEFAULT_VIP_DUE_DAY) {
+  const normalizedDueDay = normalizeVipDueDay(dueDay);
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+  const day = Math.min(normalizedDueDay, lastDayOfMonth);
+
+  return new Date(Date.UTC(year, month, day, 12, 0, 0, 0));
 }
 
 export function getVipPlanDefinition(code: string) {
@@ -239,24 +261,11 @@ export async function assertCanScheduleVipAppointment(
   }
 }
 
-export function getVipPaymentDueDate(date = new Date()) {
-  const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-  let businessDays = 0;
-  const current = new Date(firstDay);
-
-  while (businessDays < 5) {
-    const day = current.getDay();
-
-    if (day !== 0 && day !== 6) {
-      businessDays += 1;
-    }
-
-    if (businessDays < 5) {
-      current.setDate(current.getDate() + 1);
-    }
-  }
-
-  return current;
+export function getVipPaymentDueDate(
+  date = new Date(),
+  dueDay = DEFAULT_VIP_DUE_DAY
+) {
+  return getVipDueDateForMonth(date, dueDay);
 }
 
 export async function consumeVipTokenForCompletedAppointment(

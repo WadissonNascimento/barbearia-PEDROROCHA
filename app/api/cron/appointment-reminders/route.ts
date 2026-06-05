@@ -4,6 +4,7 @@ import {
   sendDueAppointmentReminderEmails,
 } from "@/lib/appointmentEmails";
 import { logSecurityEvent } from "@/lib/security";
+import { sendVipPaymentDueNotifications } from "@/lib/vipBillingNotifications";
 
 export const dynamic = "force-dynamic";
 
@@ -40,9 +41,10 @@ async function handleAppointmentRemindersCron(request: Request) {
     return NextResponse.json({ message: "Nao autorizado." }, { status: 401 });
   }
 
-  const [dayResult, result] = await Promise.all([
+  const [dayResult, result, vipPaymentResult] = await Promise.all([
     sendCustomerAppointmentDayReminderNotifications(),
     sendDueAppointmentReminderEmails(),
+    sendVipPaymentDueNotifications(),
   ]);
 
   return NextResponse.json({
@@ -57,6 +59,7 @@ async function handleAppointmentRemindersCron(request: Request) {
     sent: result.sent,
     failed: result.failed,
     skipped: result.skipped,
+    vipPayment: vipPaymentResult,
     windowStart: result.windowStart.toISOString(),
     windowEnd: result.windowEnd.toISOString(),
   });

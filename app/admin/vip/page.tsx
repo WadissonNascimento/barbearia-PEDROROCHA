@@ -14,24 +14,12 @@ export const metadata = {
   description: "Gerenciamento de assinaturas mensais VIP.",
 };
 
-function formatDate(date: Date) {
-  return date.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-}
-
 function formatLongDate(date: Date) {
   return date.toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "long",
     year: "numeric",
   });
-}
-
-function formatDateInput(date: Date) {
-  return date.toISOString().slice(0, 10);
 }
 
 function getPlanCombo(code: string) {
@@ -142,8 +130,8 @@ export default async function AdminVipPage() {
     price: Number(plan.price),
   }));
   const subscriptionItems = subscriptions.map((subscription) => ({
-    dueDateLabel: formatLongDate(subscription.payments[0]?.dueDate || dueDate),
-    dueDateInput: formatDateInput(subscription.payments[0]?.dueDate || dueDate),
+    dueDay: subscription.dueDay,
+    dueDateLabel: formatLongDate(getVipPaymentDueDate(new Date(), subscription.dueDay)),
     id: subscription.id,
     planId: subscription.planId,
     plan: {
@@ -205,7 +193,7 @@ export default async function AdminVipPage() {
               </p>
             </div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-zinc-500">
-              Ciclo {cycleMonth} - vence {formatDate(dueDate)}
+              Ciclo {cycleMonth} - padrao todo dia {dueDate.getUTCDate()}
             </p>
           </div>
 

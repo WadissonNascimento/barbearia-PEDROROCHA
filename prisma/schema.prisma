@@ -475,6 +475,7 @@ model VipSubscription {
   planId          String
   status          String    @default("ACTIVE")
   tokensRemaining Int       @default(4)
+  dueDay          Int       @default(5)
   cycleStart      DateTime
   cycleEnd        DateTime
   startedAt       DateTime  @default(now())
@@ -493,6 +494,7 @@ model VipSubscription {
   @@unique([id, shopId])
   @@index([shopId, customerId, status])
   @@index([shopId, planId])
+  @@index([shopId, dueDay])
   @@index([shopId, cycleStart, cycleEnd])
 }
 

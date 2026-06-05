@@ -15,11 +15,10 @@ import { useMemo, useState } from "react";
 import { formatCurrency } from "@/lib/utils";
 import {
   cancelVipSubscriptionAction,
-  changeVipPlanAction,
   markVipPaymentPaidAction,
   pauseVipSubscriptionAction,
   reopenVipPaymentAction,
-  updateVipPaymentDueDateAction,
+  updateVipSubscriptionSettingsAction,
 } from "./actions";
 
 type PlanOption = {
@@ -44,8 +43,8 @@ type SubscriptionItem = {
     status: string;
     dueDate: string | null;
   } | null;
+  dueDay: number;
   dueDateLabel: string;
-  dueDateInput: string;
   usageCount: number;
   usages: Array<{
     id: string;
@@ -230,9 +229,14 @@ export default function VipSubscriptionsList({
 
                 <div className="border-t border-white/10 p-4 pt-3">
                   <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
-                    <p className="min-w-0 text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
-                      Vence {subscription.dueDateLabel}
-                    </p>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
+                        Vence todo dia {subscription.dueDay}
+                      </p>
+                      <p className="mt-1 text-xs text-zinc-500">
+                        Neste ciclo: {subscription.dueDateLabel}
+                      </p>
+                    </div>
                     <strong className="shrink-0 text-sm font-black text-white">
                       {formatCurrency(subscription.plan.price)}
                     </strong>
@@ -295,32 +299,7 @@ export default function VipSubscriptionsList({
                   {editingPlanIds.includes(subscription.id) ? (
                     <div className="mt-3 border-t border-white/10 pt-3">
                       <form
-                        action={updateVipPaymentDueDateAction}
-                        className="mb-3 grid min-w-0 gap-2"
-                      >
-                        <input type="hidden" name="subscriptionId" value={subscription.id} />
-                        <label className="grid min-w-0 gap-1.5">
-                          <span className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">
-                            <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
-                            Vencimento
-                          </span>
-                          <input
-                            type="date"
-                            name="dueDate"
-                            defaultValue={subscription.dueDateInput}
-                            className="min-h-12 w-full rounded-xl border border-white/10 bg-[#090909] px-3 text-sm font-bold text-white outline-none [color-scheme:dark] focus:border-[var(--brand)]"
-                          />
-                        </label>
-                        <button
-                          type="submit"
-                          className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] px-3 text-sm font-black text-white transition hover:border-white/20 hover:bg-white/[0.08]"
-                        >
-                          Salvar vencimento
-                        </button>
-                      </form>
-
-                      <form
-                        action={changeVipPlanAction}
+                        action={updateVipSubscriptionSettingsAction}
                         onSubmit={() =>
                           setEditingPlanIds((current) =>
                             current.filter((id) => id !== subscription.id)
@@ -345,11 +324,29 @@ export default function VipSubscriptionsList({
                             ))}
                           </select>
                         </label>
+                        <label className="grid min-w-0 gap-1.5">
+                          <span className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-zinc-500">
+                            <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
+                            Dia de vencimento
+                          </span>
+                          <input
+                            type="number"
+                            name="dueDay"
+                            min={1}
+                            max={31}
+                            inputMode="numeric"
+                            defaultValue={subscription.dueDay}
+                            className="min-h-12 w-full rounded-xl border border-white/10 bg-[#090909] px-3 text-sm font-bold text-white outline-none focus:border-[var(--brand)]"
+                          />
+                          <span className="text-xs text-zinc-500">
+                            O vencimento sera aplicado todos os meses nesse dia.
+                          </span>
+                        </label>
                         <button
                           type="submit"
                           className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-[#d9ae55]/35 bg-[#d9ae55]/10 px-3 text-sm font-black text-[#f5efe3] transition hover:bg-[#d9ae55]/20"
                         >
-                          Salvar plano
+                          Salvar modificacoes
                         </button>
                       </form>
                     </div>

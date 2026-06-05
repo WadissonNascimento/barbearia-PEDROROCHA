@@ -45,7 +45,7 @@ const plans = [
 ];
 
 const rules = [
-  "Pagamento no 5 dia util",
+  "Pagamento conforme o dia de vencimento da assinatura",
   "Assinar o plano apenas se for mante-lo",
   "Direito a um atendimento por semana",
 ];
@@ -142,6 +142,7 @@ export default async function PlanosPage() {
     const planLevel = getPlanCombo(activeSubscription.plan.code);
     const planCombo = getPlanComboDescription(activeSubscription.plan.code);
     const planItems = getPlanItems(activeSubscription.plan.code);
+    const dueDay = activeSubscription.dueDay;
     const { start: weekStart, end: weekEnd } = getWeekRange(new Date());
     const weeklyUsage = await prisma.vipUsage.findFirst({
       where: {
@@ -156,9 +157,10 @@ export default async function PlanosPage() {
         usedAt: true,
       },
     });
-    const nextPaymentDate = getVipPaymentDueDate(
-      new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
-    );
+    const nextPaymentBaseDate = paymentPaid
+      ? new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
+      : new Date();
+    const nextPaymentDate = getVipPaymentDueDate(nextPaymentBaseDate, dueDay);
     const currentMonthName = formatMonthName(new Date());
     const usages = await prisma.vipUsage.findMany({
       where: {
@@ -223,6 +225,7 @@ export default async function PlanosPage() {
                     : `${currentMonthName} está pendente`
                 }
                 helper={`Próximo pagamento: ${formatLongDate(nextPaymentDate)}`}
+                extra={`Vencimento mensal: todo dia ${dueDay}`}
                 tone={paymentPaid ? "success" : "warning"}
               />
             </div>
@@ -408,11 +411,13 @@ function VipInfoCard({
   label,
   value,
   helper,
+  extra,
   tone,
 }: {
   label: string;
   value: string;
   helper?: string;
+  extra?: string;
   tone?: "success" | "warning";
 }) {
   const toneClass =
@@ -433,6 +438,11 @@ function VipInfoCard({
       {helper ? (
         <p className="mt-1 truncate text-[11px] font-bold text-[#a89f91] sm:text-xs">
           {helper}
+        </p>
+      ) : null}
+      {extra ? (
+        <p className="mt-1 truncate text-[11px] font-bold text-[#d6c6a7] sm:text-xs">
+          {extra}
         </p>
       ) : null}
     </div>
