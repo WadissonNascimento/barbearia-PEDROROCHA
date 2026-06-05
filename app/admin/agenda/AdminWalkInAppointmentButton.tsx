@@ -203,7 +203,7 @@ export default function AdminWalkInAppointmentButton({
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [useVipPlan, setUseVipPlan] = useState(false);
-  const [date, setDate] = useState(selectedDate || getCurrentScheduleDateValue());
+  const [date, setDate] = useState("");
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [fitInMode, setFitInMode] = useState<FitInMode>("standard");
   const [quickDurationMinutes, setQuickDurationMinutes] = useState("20");
@@ -293,7 +293,7 @@ export default function AdminWalkInAppointmentButton({
     )
   );
   const selectedVipWeekAlreadyUsed = Boolean(
-    vipSubscription?.weeklyUsedWeekStarts.includes(getWeekStartValue(date))
+    date && vipSubscription?.weeklyUsedWeekStarts.includes(getWeekStartValue(date))
   );
   const canUseVipPlan =
     Boolean(vipSubscription && vipSubscription.tokensRemaining > 0) && vipPaymentPaid;
@@ -337,8 +337,10 @@ export default function AdminWalkInAppointmentButton({
   }, []);
 
   useEffect(() => {
-    setDate(selectedDate || getCurrentScheduleDateValue());
-  }, [selectedDate]);
+    if (!isOpen) {
+      setDate("");
+    }
+  }, [isOpen, selectedDate]);
 
   useEffect(() => {
     setSelectedServiceIds((currentIds) =>
@@ -495,7 +497,7 @@ export default function AdminWalkInAppointmentButton({
     }
 
     resetForm();
-    setDate(selectedDate || getCurrentScheduleDateValue());
+    setDate("");
     setIsOpen(true);
   }
 
@@ -618,6 +620,18 @@ export default function AdminWalkInAppointmentButton({
           "Nao foi possivel calcular",
           result.message || "Tente novamente em instantes."
         );
+        return;
+      }
+
+      if (
+        useVipPlan &&
+        vipSubscription?.weeklyUsedWeekStarts.includes(getWeekStartValue(result.data.date))
+      ) {
+        setActionFeedback({
+          title: "Plano mensal ja usado nesta semana",
+          message: vipWeekAlreadyUsedMessage,
+          tone: "error",
+        });
         return;
       }
 

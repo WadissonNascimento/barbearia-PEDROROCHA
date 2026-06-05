@@ -244,7 +244,7 @@ export default function WalkInAppointmentCard({
   const [selectedExtraIds, setSelectedExtraIds] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
   const [startTime, setStartTime] = useState("");
-  const [selectedDate, setSelectedDate] = useState(() => getCurrentScheduleDateValue());
+  const [selectedDate, setSelectedDate] = useState("");
   const selectedServices = useMemo(
     () => services.filter((service) => selectedServiceIds.includes(service.id)),
     [selectedServiceIds, services]
@@ -277,7 +277,8 @@ export default function WalkInAppointmentCard({
   const selectedGrandTotal =
     selectedTotal + selectedExtrasTotal;
   const selectedVipWeekAlreadyUsed = Boolean(
-    vipSubscription?.weeklyUsedWeekStarts.includes(getWeekStartValue(selectedDate))
+    selectedDate &&
+      vipSubscription?.weeklyUsedWeekStarts.includes(getWeekStartValue(selectedDate))
   );
   const currentVipCycleMonth = getCurrentScheduleDateValue().slice(0, 7);
   const vipPaymentPaid = Boolean(
@@ -538,7 +539,7 @@ export default function WalkInAppointmentCard({
     setIsQuickConflictOpen(false);
     setHasExtras(draft ? draft.hasExtras : false);
     setSelectedExtraIds(draft ? draft.selectedExtraIds : []);
-    setSelectedDate(draft ? draft.selectedDate : getCurrentScheduleDateValue());
+    setSelectedDate(draft ? draft.selectedDate : "");
     setStartTime(draft ? draft.startTime : "");
     setNotes(draft ? draft.notes : "");
     setFeedback({ message: null, tone: "success" });
@@ -700,6 +701,18 @@ export default function WalkInAppointmentCard({
           "Nao foi possivel calcular",
           result.message || "Tente novamente em instantes."
         );
+        return;
+      }
+
+      if (
+        useVipPlan &&
+        vipSubscription?.weeklyUsedWeekStarts.includes(getWeekStartValue(result.data.date))
+      ) {
+        setActionFeedback({
+          title: "Plano mensal ja usado nesta semana",
+          message: vipWeekAlreadyUsedMessage,
+          tone: "error",
+        });
         return;
       }
 

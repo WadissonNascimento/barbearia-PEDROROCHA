@@ -321,17 +321,6 @@ export default function BookingClient({
     setBookingDetails(null);
   }, [visibleServices]);
 
-  useEffect(() => {
-    if (!useVipPlan || !selectedVipWeekAlreadyUsed) {
-      return;
-    }
-
-    setUseVipPlan(false);
-    setVipPlanWarning(
-      "Voce ja possui um atendimento do plano mensal nesta semana. Para usar o plano, escolha uma semana sem atendimento do plano agendado ou concluido."
-    );
-  }, [selectedVipWeekAlreadyUsed, useVipPlan]);
-
   const loadAvailability = useCallback(
     async (signal?: AbortSignal, options: { force?: boolean } = {}) => {
       if (!availabilityKey || !selectedBarberId || !hasBookableItem || !selectedDate) {
@@ -485,13 +474,6 @@ export default function BookingClient({
 
   function selectVipPlanServices() {
     if (!vipPlan || !canUseVipPlan) {
-      return;
-    }
-
-    if (selectedVipWeekAlreadyUsed) {
-      setVipPlanWarning(
-        "Voce ja possui um atendimento do plano mensal nesta semana. Para usar o plano, escolha uma semana sem atendimento do plano agendado ou concluido."
-      );
       return;
     }
 
