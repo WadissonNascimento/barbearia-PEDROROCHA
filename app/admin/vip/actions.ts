@@ -28,6 +28,25 @@ async function requireAdminShop() {
   return shopId;
 }
 
+function parseDateInput(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+
+  if (
+    !Number.isInteger(year) ||
+    !Number.isInteger(month) ||
+    !Number.isInteger(day) ||
+    year < 2020 ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > 31
+  ) {
+    throw new Error("Informe uma data de vencimento valida.");
+  }
+
+  return new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0));
+}
+
 export async function createVipSubscriptionAction(formData: FormData) {
   const shopId = await requireAdminShop();
   const customerId = getRequiredString(formData, "customerId");
@@ -35,6 +54,7 @@ export async function createVipSubscriptionAction(formData: FormData) {
   const notes = String(formData.get("notes") || "").trim() || null;
   const now = new Date();
   const { start, end, cycleMonth } = getVipCycle(now);
+  const dueDate = getVipPaymentDueDate(now);
 
   await ensureVipPlansForShop(prisma, shopId);
 
@@ -96,7 +116,8 @@ export async function createVipSubscriptionAction(formData: FormData) {
         cycleMonth,
         amount: plan.price,
         status: "PENDING",
-        notes: `Vence em ${getVipPaymentDueDate(now).toLocaleDateString("pt-BR")}`,
+        dueDate,
+        notes: `Vence em ${dueDate.toLocaleDateString("pt-BR")}`,
       },
     });
   });
@@ -146,6 +167,7 @@ export async function markVipPaymentPaidAction(formData: FormData) {
       cycleMonth,
       amount: subscription.plan.price,
       status: "PAID",
+      dueDate: getVipPaymentDueDate(now),
       paidAt: now,
     },
   });
@@ -184,6 +206,7 @@ export async function renewVipCycleAction(formData: FormData) {
   const subscriptionId = getRequiredString(formData, "subscriptionId");
   const now = new Date();
   const { start, end, cycleMonth } = getVipCycle(now);
+  const dueDate = getVipPaymentDueDate(now);
 
   const subscription = await prisma.vipSubscription.findFirst({
     where: {
@@ -225,6 +248,7 @@ export async function renewVipCycleAction(formData: FormData) {
       update: {
         amount: subscription.plan.price,
         status: "PENDING",
+        dueDate,
         paidAt: null,
       },
       create: {
@@ -233,7 +257,8 @@ export async function renewVipCycleAction(formData: FormData) {
         cycleMonth,
         amount: subscription.plan.price,
         status: "PENDING",
-        notes: `Vence em ${getVipPaymentDueDate(now).toLocaleDateString("pt-BR")}`,
+        dueDate,
+        notes: `Vence em ${dueDate.toLocaleDateString("pt-BR")}`,
       },
     }),
   ]);
@@ -277,6 +302,58 @@ export async function pauseVipSubscriptionAction(formData: FormData) {
     },
     data: {
       status: "PAUSED",
+    },
+  });
+
+  revalidatePath("/admin/vip");
+  revalidatePath("/planos");
+  revalidatePath("/agendar");
+}
+
+export async function updateVipPaymentDueDateAction(formData: FormData) {
+  const shopId = await requireAdminShop();
+  const subscriptionId = getRequiredString(formData, "subscriptionId");
+  const dueDateValue = getRequiredString(formData, "dueDate");
+  const dueDate = parseDateInput(dueDateValue);
+  const now = new Date();
+  const { cycleMonth } = getVipCycle(now);
+
+  const subscription = await prisma.vipSubscription.findFirst({
+    where: {
+      id: subscriptionId,
+      shopId,
+      status: "ACTIVE",
+    },
+    include: {
+      plan: true,
+    },
+  });
+
+  if (!subscription) {
+    throw new Error("Assinatura VIP ativa nao encontrada.");
+  }
+
+  await prisma.vipPayment.upsert({
+    where: {
+      shopId_subscriptionId_cycleMonth: {
+        shopId,
+        subscriptionId: subscription.id,
+        cycleMonth,
+      },
+    },
+    update: {
+      dueDate,
+      amount: subscription.plan.price,
+      notes: `Vence em ${dueDate.toLocaleDateString("pt-BR")}`,
+    },
+    create: {
+      shopId,
+      subscriptionId: subscription.id,
+      cycleMonth,
+      amount: subscription.plan.price,
+      status: "PENDING",
+      dueDate,
+      notes: `Vence em ${dueDate.toLocaleDateString("pt-BR")}`,
     },
   });
 

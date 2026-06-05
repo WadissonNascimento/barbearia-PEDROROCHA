@@ -674,6 +674,14 @@ export default function AdminWalkInAppointmentButton({
     setFeedback({ message: null, tone: "success" });
   }
 
+  function deselectCustomerVipPlan() {
+    setUseVipPlan(false);
+    setStartTime("");
+    setAvailableSlots([]);
+    setPeriodSlots(emptyPeriodSlots());
+    setFeedback({ message: null, tone: "success" });
+  }
+
   function toggleExtra(extraId: string) {
     setSelectedExtraIds((currentIds) =>
       currentIds.includes(extraId)
@@ -970,12 +978,25 @@ export default function AdminWalkInAppointmentButton({
                           <StepTitle title="Servicos" />
 
                           {vipSubscription ? (
-                            <div className="relative overflow-hidden rounded-2xl border border-amber-300/35 bg-amber-300/[0.08] p-3">
-                              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-amber-200">
+                            <div
+                              className={`relative overflow-hidden rounded-2xl border p-3 transition ${
+                                useVipPlan
+                                  ? "border-emerald-300/45 bg-emerald-300/[0.09] shadow-[0_16px_36px_rgba(16,185,129,0.12)]"
+                                  : "border-amber-300/35 bg-amber-300/[0.08]"
+                              }`}
+                            >
+                              <p
+                                className={`inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] ${
+                                  useVipPlan ? "text-emerald-200" : "text-amber-200"
+                                }`}
+                              >
+                                {useVipPlan ? (
+                                  <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                                ) : null}
                                 Cliente assinante: {vipSubscription.plan.name}
                               </p>
                               <p className="mt-1 text-sm font-black text-white">
-                                Usar plano mensal
+                                {useVipPlan ? "Plano mensal selecionado" : "Usar plano mensal"}
                               </p>
                               <p className="mt-1 text-xs leading-5 text-zinc-300">
                                 {getVipPlanItems(vipSubscription.plan.code)} incluso no plano.
@@ -988,15 +1009,26 @@ export default function AdminWalkInAppointmentButton({
                               ) : null}
                               <button
                                 type="button"
-                                disabled={!canUseVipPlan}
-                                onClick={useSelectedCustomerVipPlan}
-                                className={`mt-3 min-h-10 w-full rounded-xl px-3 py-2 text-sm font-black transition ${
+                                disabled={!canUseVipPlan && !useVipPlan}
+                                onClick={
                                   useVipPlan
-                                    ? "bg-emerald-400 text-emerald-950"
+                                    ? deselectCustomerVipPlan
+                                    : useSelectedCustomerVipPlan
+                                }
+                                className={`mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-black transition ${
+                                  useVipPlan
+                                    ? "border border-emerald-300/35 bg-emerald-300/15 text-emerald-100"
                                     : "bg-amber-100 text-zinc-950 hover:bg-white"
                                 } disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-zinc-500`}
                               >
-                                {useVipPlan ? "Plano mensal selecionado" : "Usar plano mensal"}
+                                {useVipPlan ? (
+                                  <>
+                                    <X className="h-4 w-4" aria-hidden="true" />
+                                    Desmarcar plano
+                                  </>
+                                ) : (
+                                  "Usar plano mensal"
+                                )}
                               </button>
                             </div>
                           ) : null}

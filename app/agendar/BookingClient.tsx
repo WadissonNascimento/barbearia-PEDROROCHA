@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { CheckCircle2, XCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import FeedbackMessage from "@/components/FeedbackMessage";
@@ -500,6 +501,15 @@ export default function BookingClient({
     setBookingDetails(null);
   }
 
+  function deselectVipPlan() {
+    setUseVipPlan(false);
+    setBookingError(null);
+    setBookingSuccess(null);
+    setBookingDetails(null);
+    setPeriodSlots(emptyPeriodSlots());
+    setIsDayAvailable(false);
+  }
+
   function openBookingConfirmation(time: string) {
     if (useVipPlan && selectedVipWeekAlreadyUsed) {
       setUseVipPlan(false);
@@ -746,12 +756,23 @@ export default function BookingClient({
               </label>
               {vipPlan ? (
                 <div
-                  className="relative mb-3 overflow-hidden rounded-2xl border border-[#d9ae55]/45 bg-[#d9ae55]/10 p-3 transition"
+                  className={`relative mb-3 overflow-hidden rounded-2xl border p-3 transition ${
+                    useVipPlan
+                      ? "border-emerald-300/45 bg-emerald-300/[0.09] shadow-[0_16px_36px_rgba(16,185,129,0.12)]"
+                      : "border-[#d9ae55]/45 bg-[#d9ae55]/10"
+                  }`}
                 >
                   <div className="flex flex-col gap-3 transition sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
-                      <p className="text-xs font-black uppercase tracking-[0.18em] text-[#e8c57d]">
-                        Use seu plano mensal
+                      <p
+                        className={`inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] ${
+                          useVipPlan ? "text-emerald-200" : "text-[#e8c57d]"
+                        }`}
+                      >
+                        {useVipPlan ? (
+                          <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                        ) : null}
+                        {useVipPlan ? "Plano selecionado" : "Use seu plano mensal"}
                       </p>
                       <p className="mt-1 text-sm font-bold text-white">
                         {getVipPlanItems(vipPlan.code)}
@@ -765,14 +786,27 @@ export default function BookingClient({
                         Servicos fora do seu plano, escolhidos abaixo, serao cobrados a parte.
                       </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={selectVipPlanServices}
-                      disabled={!canUseVipPlan}
-                      className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[#f1e8d8] px-4 text-sm font-black text-[#080807] transition hover:bg-white disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-zinc-500"
-                    >
-                      Usar plano mensal
-                    </button>
+                    <div className="grid gap-2 sm:w-[190px]">
+                      <button
+                        type="button"
+                        onClick={useVipPlan ? deselectVipPlan : selectVipPlanServices}
+                        disabled={!canUseVipPlan && !useVipPlan}
+                        className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-black transition disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-zinc-500 ${
+                          useVipPlan
+                            ? "border border-emerald-300/35 bg-emerald-300/15 text-emerald-100 hover:bg-emerald-300/20"
+                            : "bg-[#f1e8d8] text-[#080807] hover:bg-white"
+                        }`}
+                      >
+                        {useVipPlan ? (
+                          <>
+                            <XCircle className="h-4 w-4" aria-hidden="true" />
+                            Desmarcar plano
+                          </>
+                        ) : (
+                          "Usar plano mensal"
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : null}

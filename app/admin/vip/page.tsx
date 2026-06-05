@@ -30,6 +30,10 @@ function formatLongDate(date: Date) {
   });
 }
 
+function formatDateInput(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
 function getPlanCombo(code: string) {
   if (code === "CORTE") {
     return "Corte";
@@ -138,6 +142,8 @@ export default async function AdminVipPage() {
     price: Number(plan.price),
   }));
   const subscriptionItems = subscriptions.map((subscription) => ({
+    dueDateLabel: formatLongDate(subscription.payments[0]?.dueDate || dueDate),
+    dueDateInput: formatDateInput(subscription.payments[0]?.dueDate || dueDate),
     id: subscription.id,
     planId: subscription.planId,
     plan: {
@@ -152,6 +158,7 @@ export default async function AdminVipPage() {
     payment: subscription.payments[0]
       ? {
           status: subscription.payments[0].status,
+          dueDate: subscription.payments[0].dueDate?.toISOString() || null,
         }
       : null,
     usageCount: subscription._count.usages,
@@ -216,7 +223,6 @@ export default async function AdminVipPage() {
         <VipSubscriptionsList
           subscriptions={subscriptionItems}
           plans={planOptions}
-          dueDateLabel={formatLongDate(dueDate)}
         />
       </section>
     </DashboardShell>

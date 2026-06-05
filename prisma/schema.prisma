@@ -503,6 +503,7 @@ model VipPayment {
   cycleMonth     String
   amount         Decimal   @db.Decimal(12, 2)
   status         String    @default("PENDING")
+  dueDate        DateTime?
   paidAt         DateTime?
   notes          String?
   createdAt      DateTime  @default(now())
@@ -513,6 +514,7 @@ model VipPayment {
 
   @@unique([shopId, subscriptionId, cycleMonth])
   @@index([shopId, status, cycleMonth])
+  @@index([shopId, dueDate])
 }
 
 model VipUsage {
