@@ -49,7 +49,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const appName = PEDRO_ROCHA_APP_NAME;
   const description =
     shop.metadataDescription ||
-    "Agende seu horario e acompanhe seus atendimentos com praticidade.";
+    "Agende seu horário e acompanhe seus atendimentos com praticidade.";
   const title = shop.metadataTitle || brandName;
 
   return {
@@ -231,7 +231,7 @@ export default async function RootLayout({
           instagramUrl={shop.instagramUrl || ""}
           addressLine={shop.addressLine || ""}
           locationUrl=""
-          businessHours={shop.businessHours || "Horario sob consulta"}
+          businessHours={shop.businessHours || "Horário sob consulta"}
         >
           {children}
         </AppChrome>

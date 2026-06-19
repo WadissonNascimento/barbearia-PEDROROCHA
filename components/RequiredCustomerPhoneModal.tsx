@@ -48,7 +48,7 @@ export default function RequiredCustomerPhoneModal() {
             </div>
           </div>
           <p className="mt-3 text-sm leading-6 text-zinc-300">
-            Para concluir seu acesso, salve um telefone de contato. Nao precisa
+            Para concluir seu acesso, salve um telefone de contato. Não precisa
             confirmar por SMS.
           </p>
         </div>

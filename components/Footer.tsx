@@ -79,7 +79,7 @@ export default function Footer({
                 </svg>
               </a>
             ) : (
-              <UnavailableFooterAction label="Instagram ainda nao configurado">
+              <UnavailableFooterAction label="Instagram ainda não configurado">
                 <InstagramIcon />
               </UnavailableFooterAction>
             )}
@@ -103,7 +103,7 @@ export default function Footer({
                 </svg>
               </a>
             ) : (
-              <UnavailableFooterAction label="Localizacao ainda nao configurada">
+              <UnavailableFooterAction label="Localização ainda não configurada">
                 <LocationIcon />
               </UnavailableFooterAction>
             )}
@@ -119,7 +119,7 @@ export default function Footer({
                 <WhatsAppIcon />
               </a>
             ) : (
-              <UnavailableFooterAction label="WhatsApp ainda nao configurado">
+              <UnavailableFooterAction label="WhatsApp ainda não configurado">
                 <WhatsAppIcon />
               </UnavailableFooterAction>
             )}

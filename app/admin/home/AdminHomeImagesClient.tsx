@@ -212,7 +212,7 @@ export default function AdminHomeImagesClient({
                   className="object-cover"
                 />
                 <span className="absolute left-3 top-3 rounded-full border border-white/10 bg-black/55 px-3 py-1 text-xs font-bold text-white backdrop-blur">
-                  PosiÃ§Ã£o {index + 1}
+                  Posição {index + 1}
                 </span>
               </div>
 

@@ -36,7 +36,7 @@ export default function OperationalFeedbackDialog({
   const tone = feedback.tone || "error";
   const toneStyles = {
     error: {
-      eyebrow: "Atencao",
+      eyebrow: "Atenção",
       ring: "border-rose-300/25 bg-rose-500/10 text-rose-100",
       icon: <AlertTriangle className="h-6 w-6" />,
       button:

@@ -80,7 +80,7 @@ export async function createAppointmentAction(
 
   if (!barberId || serviceIds.length === 0 || !date || !time) {
     return {
-      error: "Selecione barbeiro, servicos, data e horario para continuar.",
+      error: "Selecione barbeiro, serviços, data e horário para continuar.",
       success: null,
     };
   }

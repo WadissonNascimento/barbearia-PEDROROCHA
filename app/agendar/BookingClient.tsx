@@ -496,7 +496,7 @@ export default function BookingClient({
     if (useVipPlan && selectedVipWeekAlreadyUsed) {
       setUseVipPlan(false);
       setVipPlanWarning(
-        "Voce ja possui um atendimento do plano mensal nesta semana. Escolha outra semana para usar o plano ou marque este horario como atendimento avulso."
+        "Você já possui um atendimento do plano mensal nesta semana. Escolha outra semana para usar o plano ou marque este horário como atendimento avulso."
       );
       return;
     }
@@ -765,7 +765,7 @@ export default function BookingClient({
                         </p>
                       ) : null}
                       <p className="mt-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs leading-5 text-zinc-300">
-                        Servicos fora do seu plano, escolhidos abaixo, serao cobrados a parte.
+                        Serviços fora do seu plano, escolhidos abaixo, serão cobrados à parte.
                       </p>
                     </div>
                     <div className="grid gap-2 sm:w-[190px]">
@@ -911,7 +911,7 @@ export default function BookingClient({
           ) : (
             <div className="mt-4 grid min-w-0 gap-4 lg:grid-cols-3">
               <TimeSection
-                title="Manha"
+                title="Manhã"
                 slots={periodSlots.morning}
                 bookingSlot={bookingSlot}
                 onBook={openBookingConfirmation}
@@ -981,7 +981,10 @@ export default function BookingClient({
           time={confirmationSlot}
           date={selectedDate}
           barberName={selectedBarber?.name || "Barbeiro"}
-          services={selectedServices.map((service) => service.name)}
+          services={[
+            useVipPlan && vipPlan ? getVipPlanItems(vipPlan.code) : "",
+            ...selectedServices.map((service) => service.name),
+          ].filter(Boolean)}
           extras={selectedExtras.map((product) => ({
             name: product.name,
             quantity: product.quantity,
@@ -1058,7 +1061,7 @@ function BookingLoadingOverlay({ isRescheduling }: { isRescheduling: boolean }) 
           {isRescheduling ? "Remarcando" : "Confirmando"}
         </p>
         <p className="mt-2 text-sm leading-6 text-zinc-300">
-          Aguarde enquanto salvamos seu horario.
+          Aguarde enquanto salvamos seu horário.
         </p>
       </div>
     </div>,
@@ -1165,10 +1168,10 @@ function BookingScheduleModal({
         <div className="flex items-start justify-between gap-3 border-b border-white/10 p-4 sm:p-5">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--brand-strong)]">
-              Proximo passo
+              Próximo passo
             </p>
             <h2 id="booking-schedule-title" className="mt-1 text-xl font-bold sm:text-2xl">
-              Escolha data e horario
+              Escolha data e horário
             </h2>
             <p className="mt-1 text-sm text-zinc-400">
               Total atual - {formatCurrency(selectedTotalPrice)}
@@ -1178,7 +1181,7 @@ function BookingScheduleModal({
             type="button"
             onClick={onClose}
             className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-xl text-zinc-200 transition hover:bg-white/10"
-            aria-label="Fechar escolha de horario"
+            aria-label="Fechar escolha de horário"
           >
             ×
           </button>
@@ -1218,10 +1221,10 @@ function BookingScheduleModal({
           <div className="mt-5">
             <div className="mb-4 flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
-                <h3 className="text-xl font-semibold">Horarios disponiveis</h3>
+                <h3 className="text-xl font-semibold">Horários disponíveis</h3>
                 <p className="mt-1 text-sm text-zinc-400">
                   {selectedDate
-                    ? `Escolha um horario para ${new Date(`${selectedDate}T00:00:00`).toLocaleDateString("pt-BR")}.`
+                    ? `Escolha um horário para ${new Date(`${selectedDate}T00:00:00`).toLocaleDateString("pt-BR")}.`
                     : "Escolha um dia para continuar."}
                 </p>
               </div>
@@ -1234,20 +1237,20 @@ function BookingScheduleModal({
 
             {!selectedBarberId || !hasBookableItem || !selectedDate ? (
               <div className="mt-5 rounded-[22px] border border-dashed border-white/10 px-4 py-5 text-sm text-zinc-400">
-                Escolha barbeiro, servico e data para ver os horarios livres.
+                Escolha barbeiro, serviço e data para ver os horários livres.
               </div>
             ) : availabilityLoading ? (
               <div className="mt-5 rounded-[22px] border border-white/10 bg-black/20 px-4 py-5 text-sm text-zinc-300">
-                Buscando os melhores horarios para esse atendimento...
+                Buscando os melhores horários para esse atendimento...
               </div>
             ) : !isDayAvailable ? (
               <div className="mt-5 rounded-[22px] border border-dashed border-white/10 px-4 py-5 text-sm text-zinc-400">
-                Esse barbeiro nao possui horario ativo nesse dia. Tente outra data.
+                Esse barbeiro não possui horário ativo nesse dia. Tente outra data.
               </div>
             ) : (
               <div className="mt-4 grid min-w-0 gap-4 lg:grid-cols-3">
                 <TimeSection
-                  title="Manha"
+                  title="Manhã"
                   slots={periodSlots.morning}
                   bookingSlot={bookingSlot}
                   onBook={onBook}
@@ -1523,7 +1526,7 @@ function VipPlanWarningDialog({
             Plano mensal
           </p>
           <h2 id="vip-plan-warning-title" className="mt-2 text-2xl font-bold">
-            Semana ja utilizada
+            Semana já utilizada
           </h2>
           <p className="mt-2 text-sm leading-6 text-zinc-300">{message}</p>
         </div>
@@ -1559,7 +1562,7 @@ function BookingSuccessDialog({
   );
   const isRescheduled = details.mode === "reschedule";
   const whatsappMessage =
-    `Ola! Acabei de ${isRescheduled ? "remarcar" : "agendar"} meu horário para ${formattedDate} as ${details.time} com ${details.barberName}.`
+    `Olá! Acabei de ${isRescheduled ? "remarcar" : "agendar"} meu horário para ${formattedDate} às ${details.time} com ${details.barberName}.`
   ;
   const contactNumber = details.barberPhone || whatsappNumber;
   const whatsappHref = buildWhatsAppUrl(contactNumber, whatsappMessage);
@@ -1935,32 +1938,32 @@ function BookingConfirmationDialog({
   return createPortal(
     <>
       <div
-        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 px-4 py-6 backdrop-blur-md"
+        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 px-3 py-2 backdrop-blur-md sm:px-4 sm:py-6"
         role="dialog"
         aria-modal="true"
         aria-labelledby="booking-confirmation-title"
       >
-        <div className="max-h-[calc(100svh-32px)] w-full max-w-md overflow-y-auto rounded-2xl border border-white/10 bg-[#050b16] p-5 text-white shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
-        <p className="text-xs uppercase tracking-[0.24em] text-[var(--brand-strong)]">
+        <div className="max-h-[calc(100svh-16px)] w-full max-w-md overflow-y-auto rounded-2xl border border-white/10 bg-[#050b16] p-4 text-white shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:max-h-[calc(100svh-32px)] sm:p-5">
+        <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--brand-strong)] sm:text-xs">
           {isRescheduling ? "Confirmar remarcação" : "Confirmar agendamento"}
         </p>
-        <h2 id="booking-confirmation-title" className="mt-2 text-2xl font-bold">
-          Esta tudo certo?
+        <h2 id="booking-confirmation-title" className="mt-1.5 text-xl font-bold sm:mt-2 sm:text-2xl">
+          Está tudo certo?
         </h2>
-        <p className="mt-2 text-sm leading-6 text-zinc-400">
+        <p className="mt-1 text-sm leading-5 text-zinc-400 sm:mt-2 sm:leading-6">
           {isRescheduling
             ? "Confira os dados antes de atualizar o horário."
             : "Confira os dados antes de reservar esse horário."}
         </p>
 
-        <div className="mt-5 space-y-3 rounded-3xl border border-white/10 bg-black/20 p-4 text-sm">
-          <p className="text-xs uppercase tracking-[0.22em] text-[var(--brand-strong)]">
+        <div className="mt-3 space-y-1.5 rounded-2xl border border-white/10 bg-black/20 p-3 text-sm sm:mt-5 sm:space-y-2 sm:rounded-3xl sm:p-4">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--brand-strong)] sm:text-xs">
             Resumo
           </p>
           <ConfirmationRow label="Data" value={formattedDate} />
           <ConfirmationRow label="Horário" value={time} />
           <ConfirmationRow label="Barbeiro" value={barberName} />
-          <ConfirmationRow label="Serviços" value={services.join(", ")} />
+          <ConfirmationRow label="Serviços" value={services.join(", ") || "Não informado"} />
           <ConfirmationRow
             label="Extras"
             value={
@@ -1970,12 +1973,16 @@ function BookingConfirmationDialog({
             }
           />
           <ConfirmationRow label="Duração" value={`${duration} min`} />
-          <ConfirmationRow label="Serviços" value={formatCurrency(servicePrice)} />
-          <ConfirmationRow label="Extras" value={formatCurrency(extrasPrice)} />
+          {servicePrice > 0 ? (
+            <ConfirmationRow label="Valor dos serviços" value={formatCurrency(servicePrice)} />
+          ) : null}
+          {extrasPrice > 0 ? (
+            <ConfirmationRow label="Valor dos extras" value={formatCurrency(extrasPrice)} />
+          ) : null}
           <ConfirmationRow label="Total" value={formatCurrency(totalPrice)} />
         </div>
 
-        <label className="mt-5 block">
+        <label className="mt-3 block sm:mt-5">
           <span className="text-sm font-semibold text-white">
             Observação para o barbeiro
           </span>
@@ -1983,22 +1990,22 @@ function BookingConfirmationDialog({
             value={notes}
             onChange={(event) => setNotes(event.target.value.slice(0, 50))}
             disabled={isSubmitting}
-            rows={3}
+            rows={2}
             maxLength={50}
             placeholder="Ex: prefiro acabamento mais baixo, tenho sensibilidade na pele..."
-            className="mt-2 min-h-[96px] w-full resize-none rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-[var(--brand)]/60 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-1.5 min-h-[64px] w-full resize-none rounded-2xl border border-white/10 bg-black/20 px-3 py-2.5 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-[var(--brand)]/60 disabled:cursor-not-allowed disabled:opacity-60 sm:mt-2 sm:min-h-[80px] sm:px-4 sm:py-3"
           />
-          <span className="mt-2 block text-right text-xs text-zinc-500">
+          <span className="mt-1 block text-right text-[11px] text-zinc-500 sm:mt-2 sm:text-xs">
             {notes.length}/50
           </span>
         </label>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3">
           <button
             type="button"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="rounded-2xl border border-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+            className="min-h-11 rounded-2xl border border-white/10 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:py-3"
           >
             Revisar
           </button>
@@ -2006,7 +2013,7 @@ function BookingConfirmationDialog({
             type="button"
             onClick={() => setIsPunctualityDialogOpen(true)}
             disabled={isSubmitting}
-            className="rounded-2xl bg-[var(--brand)] px-4 py-3 text-sm font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+            className="min-h-11 rounded-2xl bg-[var(--brand)] px-3 py-2.5 text-sm font-semibold leading-tight text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 sm:px-4 sm:py-3"
           >
             {isSubmitting
               ? "Confirmando..."

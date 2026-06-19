@@ -22,7 +22,7 @@ export default function SobreNosPage() {
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-zinc-300 sm:text-base">
           Estamos preparando o conteudo oficial com a historia, fotos e detalhes
-          da barbearia. Em breve esta pagina sera atualizada.
+          da barbearia. Em breve esta página será atualizada.
         </p>
 
         <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
@@ -30,7 +30,7 @@ export default function SobreNosPage() {
             href="/agendar"
             className="rounded-lg bg-[var(--brand)] px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110 active:scale-[0.98]"
           >
-            Agendar horario
+            Agendar horário
           </Link>
           <Link
             href="/"

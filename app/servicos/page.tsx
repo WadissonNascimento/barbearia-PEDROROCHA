@@ -9,8 +9,8 @@ export async function generateMetadata() {
   const brandName = shop.name || "Barbearia";
 
   return {
-    title: `Servicos | ${brandName}`,
-    description: `Veja cortes, barba e servicos disponiveis na ${brandName}.`,
+    title: `Serviços | ${brandName}`,
+    description: `Veja cortes, barba e serviços disponíveis na ${brandName}.`,
   };
 }
 

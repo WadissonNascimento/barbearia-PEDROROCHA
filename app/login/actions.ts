@@ -26,7 +26,7 @@ async function getLoginFailureMessage(shopId: string, email: string, password: s
   });
 
   if (!user || !user.isActive || !user.passwordHash) {
-    return "Usuario nao encontrado ou e-mail incorreto.";
+    return "Usuário não encontrado ou e-mail incorreto.";
   }
 
   const passwordMatch = await bcrypt.compare(password, user.passwordHash);
@@ -69,7 +69,7 @@ async function runLogin(formData: FormData): Promise<FormFeedbackState> {
       return {
         error:
           (await getLoginFailureMessage(shopId, email, password)) ||
-          "Nao foi possivel autenticar. Confira e-mail e senha.",
+          "Não foi possível autenticar. Confira e-mail e senha.",
         success: null,
       };
     }
@@ -111,7 +111,7 @@ export async function googleSignInAction(formData: FormData) {
   if (!isGoogleSignInConfigured()) {
     redirect(
       `/login?error=${encodeURIComponent(
-        "Login com Google ainda nao esta configurado."
+        "Login com Google ainda não está configurado."
       )}`
     );
   }

@@ -258,7 +258,7 @@ export default function ProfileForm({
               </p>
               <p className="mt-1 text-xs leading-5 text-zinc-300">
                 Enviamos um codigo para {pendingEmailChange.email}. O telefone
-                nao precisa de verificacao por SMS.
+                não precisa de verificação por SMS.
               </p>
               <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <input

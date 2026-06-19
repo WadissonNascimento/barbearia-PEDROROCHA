@@ -15,7 +15,7 @@ export default function AdminLoginForm({
     >
       <h1 className="text-3xl font-bold">Login do admin</h1>
       <p className="mt-2 text-zinc-400">
-        Entre com um usuario administrador cadastrado no banco.
+        Entre com um usuário administrador cadastrado no banco.
       </p>
 
       <div className="mt-6">

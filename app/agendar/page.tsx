@@ -23,8 +23,8 @@ export async function generateMetadata() {
   const brandName = shop.name || "Barbearia";
 
   return {
-    title: "Agendar horario",
-    description: `Escolha barbeiro, servico, data e horario para agendar na ${brandName}.`,
+    title: "Agendar horário",
+    description: `Escolha barbeiro, serviço, data e horário para agendar na ${brandName}.`,
   };
 }
 

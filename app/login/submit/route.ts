@@ -58,7 +58,7 @@ async function getLoginFailureMessage(shopId: string, email: string, password: s
     !user.passwordHash ||
     !CUSTOMER_LOGIN_ROLES.includes(user.role)
   ) {
-    return "Usuario nao encontrado ou e-mail incorreto.";
+    return "Usuário não encontrado ou e-mail incorreto.";
   }
 
   const passwordMatch = await bcrypt.compare(password, user.passwordHash);
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
       return loginError(
         request,
         (await getLoginFailureMessage(shopId, email, password)) ||
-          "Nao foi possivel autenticar. Confira e-mail e senha."
+          "Não foi possível autenticar. Confira e-mail e senha."
       );
     }
 

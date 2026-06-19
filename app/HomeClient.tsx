@@ -154,13 +154,13 @@ function PedroRochaHome({
                 href="/agendar"
                 className="inline-flex min-h-14 items-center justify-center rounded-lg bg-[#f1e8d8] px-5 text-base font-black text-[#080807] shadow-[0_18px_42px_rgba(0,0,0,0.32)] transition hover:bg-white active:scale-[0.98]"
               >
-                Agendar horario
+                Agendar horário
               </Link>
               <Link
                 href="/servicos"
                 className="inline-flex min-h-14 items-center justify-center rounded-lg border border-[#f1e8d8]/15 bg-white/[0.035] px-5 text-base font-bold text-[#f5efe3] transition hover:bg-white/[0.07] active:scale-[0.98]"
               >
-                Ver servicos
+                Ver serviços
               </Link>
             </div>
 
@@ -186,7 +186,7 @@ function PedroRochaHome({
         <div className="mx-auto grid max-w-6xl gap-5 sm:grid-cols-3">
           {[
             ["01", "Tecnica", "Cortes executados com precisao e acabamento atento."],
-            ["02", "Experiencia", "Um ambiente classico para desacelerar e cuidar de voce."],
+            ["02", "Experiência", "Um ambiente clássico para desacelerar e cuidar de você."],
             ["03", "Praticidade", "Agendamento simples para encaixar o cuidado na sua rotina."],
           ].map(([number, title, description]) => (
             <article key={number} className="border-l border-[#b8945f]/45 pl-4">
@@ -201,20 +201,20 @@ function PedroRochaHome({
       <section className="px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <p className="text-xs font-black uppercase tracking-[0.22em] text-[#b8945f]">
-            Servicos
+            Serviços
           </p>
           <div className="mt-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <h2 className="max-w-xl text-2xl font-black text-[#f8f3e7] sm:text-4xl">
-              Escolha seu proximo cuidado.
+              Escolha seu próximo cuidado.
             </h2>
             <Link href="/servicos" className="text-sm font-bold text-[#ded4c4] hover:text-white">
-              Ver todos os servicos
+              Ver todos os serviços
             </Link>
           </div>
 
           {services.length === 0 ? (
             <div className="mt-6 rounded-lg border border-dashed border-[#f1e8d8]/15 bg-white/[0.035] p-5 text-sm text-[#c9c0b2]">
-              Os servicos da Pedro Rocha Barbearia serao publicados aqui em breve.
+              Os serviços da Pedro Rocha Barbearia serão publicados aqui em breve.
             </div>
           ) : (
             <div className="mt-6 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -322,10 +322,10 @@ function PedroRochaHome({
         <div className="mx-auto max-w-6xl rounded-lg border border-[#b8945f]/35 bg-[linear-gradient(135deg,_rgba(184,148,95,0.16),_rgba(255,255,255,0.025))] p-6 sm:p-9">
           <p className="text-xs font-black uppercase tracking-[0.22em] text-[#ded4c4]">Contato</p>
           <h2 className="mt-3 max-w-2xl text-3xl font-black text-[#f8f3e7] sm:text-5xl">
-            Reserve seu horario.
+            Reserve seu horário.
           </h2>
           <p className="mt-4 max-w-xl text-sm leading-6 text-[#c9c0b2] sm:text-base">
-            Escolha o melhor momento para o seu atendimento e venha viver a experiencia Pedro Rocha Barbearia.
+            Escolha o melhor momento para o seu atendimento e venha viver a experiência Pedro Rocha Barbearia.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/agendar" className="inline-flex min-h-12 items-center justify-center rounded-lg bg-[#f1e8d8] px-5 text-sm font-black text-[#080807] transition hover:bg-white">
@@ -381,7 +381,7 @@ function ThemedDefaultHomeClient({
             </h1>
             <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-300 sm:text-base">
               {heroSubtitle ||
-                `Agende seu horario com praticidade e tenha uma experiencia premium na ${brandName}.`}
+                `Agende seu horário com praticidade e tenha uma experiência premium na ${brandName}.`}
             </p>
           </div>
 
@@ -409,14 +409,14 @@ function ThemedDefaultHomeClient({
                 href="/agendar"
                 className="rounded-lg bg-[var(--brand)] px-6 py-3 text-center font-semibold text-white shadow-[0_12px_30px_rgba(14,165,233,0.35)] transition hover:brightness-110 active:scale-[0.98]"
               >
-                {primaryCtaLabel || "Agendar horario"}
+                {primaryCtaLabel || "Agendar horário"}
               </Link>
 
               <Link
                 href={secondaryCtaHref || "/servicos"}
                 className="rounded-lg border border-white/10 bg-white/[0.04] px-6 py-3 text-center text-white transition hover:bg-white/[0.08] active:scale-[0.98]"
               >
-                {secondaryCtaLabel || "Ver servicos"}
+                {secondaryCtaLabel || "Ver serviços"}
               </Link>
             </div>
 
@@ -427,7 +427,7 @@ function ThemedDefaultHomeClient({
               </div>
 
               <div className="surface-card rounded-lg p-4">
-                <p className="text-xs text-[var(--brand-strong)]">Horario</p>
+                <p className="text-xs text-[var(--brand-strong)]">Horário</p>
                 <p className="mt-2 text-sm text-zinc-200">{businessHours}</p>
               </div>
 
