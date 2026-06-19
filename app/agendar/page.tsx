@@ -73,6 +73,7 @@ export default async function AgendarPage({
   searchParams?: Promise<AgendarPageSearchParams>;
 }) {
   const resolvedSearchParams = (await searchParams) || {};
+  const rescheduleAppointmentId = getSearchParam(resolvedSearchParams.remarcar).trim();
   const { session, shop } = await requireTenantSession({
     roles: CUSTOMER_ROLES,
   });
@@ -143,6 +144,11 @@ export default async function AgendarPage({
           customerId: session.user.id,
           vipSubscriptionId: activeVipSubscription.id,
           isVipPlanUse: true,
+          id: rescheduleAppointmentId
+            ? {
+                not: rescheduleAppointmentId,
+              }
+            : undefined,
           status: {
             in: ["PENDING", "CONFIRMED", "COMPLETED", "DONE"],
           },
@@ -162,7 +168,6 @@ export default async function AgendarPage({
     new Set(vipWeeklyUsedAppointments.map((appointment) => getWeekStartValue(appointment.date)))
   );
   let extras = initialExtras;
-  const rescheduleAppointmentId = getSearchParam(resolvedSearchParams.remarcar).trim();
   let rescheduleAppointment: {
     id: string;
     appointmentCode: string;

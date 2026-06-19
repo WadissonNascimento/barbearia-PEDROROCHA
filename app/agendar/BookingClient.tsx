@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import FeedbackMessage from "@/components/FeedbackMessage";
@@ -1916,6 +1916,7 @@ function BookingConfirmationDialog({
 }) {
   const [isMounted, setIsMounted] = useState(false);
   const [notes, setNotes] = useState("");
+  const [isPunctualityDialogOpen, setIsPunctualityDialogOpen] = useState(false);
   const formattedDate = new Date(`${date}T00:00:00`).toLocaleDateString("pt-BR", {
     weekday: "long",
     day: "2-digit",
@@ -1932,13 +1933,14 @@ function BookingConfirmationDialog({
   }
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 px-4 py-6 backdrop-blur-md"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="booking-confirmation-title"
-    >
-      <div className="max-h-[calc(100svh-32px)] w-full max-w-md overflow-y-auto rounded-2xl border border-white/10 bg-[#050b16] p-5 text-white shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
+    <>
+      <div
+        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 px-4 py-6 backdrop-blur-md"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="booking-confirmation-title"
+      >
+        <div className="max-h-[calc(100svh-32px)] w-full max-w-md overflow-y-auto rounded-2xl border border-white/10 bg-[#050b16] p-5 text-white shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
         <p className="text-xs uppercase tracking-[0.24em] text-[var(--brand-strong)]">
           {isRescheduling ? "Confirmar remarcação" : "Confirmar agendamento"}
         </p>
@@ -2002,7 +2004,7 @@ function BookingConfirmationDialog({
           </button>
           <button
             type="button"
-            onClick={() => onConfirm(notes)}
+            onClick={() => setIsPunctualityDialogOpen(true)}
             disabled={isSubmitting}
             className="rounded-2xl bg-[var(--brand)] px-4 py-3 text-sm font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
           >
@@ -2013,8 +2015,61 @@ function BookingConfirmationDialog({
               : "Confirmar agendamento"}
           </button>
         </div>
+        </div>
       </div>
-    </div>,
+
+      {isPunctualityDialogOpen ? (
+        <div
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 px-4 py-6 backdrop-blur-md"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="punctuality-dialog-title"
+          aria-describedby="punctuality-dialog-description"
+        >
+          <div className="w-full max-w-sm rounded-3xl border border-amber-300/25 bg-[#0b0906] p-5 text-white shadow-[0_28px_90px_rgba(0,0,0,0.68)]">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-300/25 bg-amber-300/10 text-amber-200">
+              <AlertTriangle className="h-6 w-6" aria-hidden="true" />
+            </span>
+            <p className="mt-5 text-[11px] font-black uppercase tracking-[0.22em] text-amber-200">
+              Atenção ao horário
+            </p>
+            <h2 id="punctuality-dialog-title" className="mt-2 text-2xl font-black">
+              Tolerância de 5 minutos
+            </h2>
+            <p
+              id="punctuality-dialog-description"
+              className="mt-3 text-sm leading-6 text-zinc-300"
+            >
+              Pedimos que chegue no horário agendado. A tolerância máxima é de 5
+              minutos. Caso não consiga chegar a tempo, remarque seu atendimento para
+              não comprometer os horários dos próximos clientes.
+            </p>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setIsPunctualityDialogOpen(false)}
+                disabled={isSubmitting}
+                className="min-h-12 rounded-2xl border border-white/12 px-4 py-3 text-sm font-bold text-white transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Voltar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPunctualityDialogOpen(false);
+                  onConfirm(notes);
+                }}
+                disabled={isSubmitting}
+                className="min-h-12 rounded-2xl border border-amber-200/30 bg-[var(--brand)] px-4 py-3 text-sm font-black text-white shadow-[0_14px_34px_rgba(184,148,95,0.22)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Entendi e confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>,
     document.body
   );
 }
