@@ -93,7 +93,7 @@ export default function SystemBillingPaymentModal({
 
       {!isDismissed ? (
         <div
-          className="fixed inset-0 z-[13000] flex items-center justify-center bg-black/80 px-4 py-6 backdrop-blur-md"
+          className="fixed inset-0 z-[13000] flex items-center justify-center bg-black/80 px-3 py-3 backdrop-blur-md sm:px-4 sm:py-6"
           role="presentation"
         >
           <div
@@ -101,7 +101,7 @@ export default function SystemBillingPaymentModal({
             aria-modal="true"
             aria-labelledby="system-billing-title"
             aria-describedby="system-billing-description"
-            className="relative w-full max-w-md overflow-hidden rounded-[30px] border border-amber-300/35 bg-[linear-gradient(145deg,rgba(28,20,12,0.98),rgba(5,5,5,0.98))] p-5 text-white shadow-[0_30px_100px_rgba(0,0,0,0.72)]"
+            className="relative max-h-[calc(100dvh-1.5rem)] w-full max-w-md overflow-y-auto rounded-[24px] border border-amber-300/35 bg-[linear-gradient(145deg,rgba(28,20,12,0.98),rgba(5,5,5,0.98))] p-4 text-white shadow-[0_30px_100px_rgba(0,0,0,0.72)] sm:rounded-[30px] sm:p-5"
           >
             <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-amber-300 to-transparent" />
 
@@ -109,63 +109,60 @@ export default function SystemBillingPaymentModal({
               type="button"
               aria-label="Fechar aviso"
               onClick={() => setIsDismissed(true)}
-              className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-zinc-200 transition hover:bg-white/[0.1]"
+              className="sticky left-full top-0 z-10 -mb-10 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.08] text-zinc-200 backdrop-blur transition hover:bg-white/[0.12]"
             >
               <X className="h-4 w-4" />
             </button>
 
-            <div className="flex items-start gap-4 pr-10">
-              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-amber-300/30 bg-amber-400/12 text-amber-200">
-                <AlertTriangle className="h-7 w-7" />
+            <div className="flex items-start gap-3 pr-11 sm:gap-4">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-amber-300/30 bg-amber-400/12 text-amber-200 sm:h-14 sm:w-14">
+                <AlertTriangle className="h-5 w-5 sm:h-7 sm:w-7" />
               </span>
 
               <div className="min-w-0">
-                <p className="text-[11px] font-black uppercase tracking-[0.26em] text-amber-200">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-200 sm:text-[11px] sm:tracking-[0.26em]">
                   Pagamento da plataforma
                 </p>
                 <h2
                   id="system-billing-title"
-                  className="mt-2 text-2xl font-black leading-tight text-white"
+                  className="mt-1 text-xl font-black leading-tight text-white sm:mt-2 sm:text-2xl"
                 >
                   Hoje é dia de pagar o plano do sistema
                 </h2>
                 <p
                   id="system-billing-description"
-                  className="mt-3 text-sm leading-6 text-zinc-300"
+                  className="mt-2 text-sm leading-5 text-zinc-300 sm:mt-3 sm:leading-6"
                 >
-                  A mensalidade da barbearia venceu em {alert.dueDateLabel}.
-                  Para manter o site, os agendamentos, o painel administrativo e
-                  as notificações funcionando normalmente, confirme o Pix de{" "}
+                  Mensalidade vencida em {alert.dueDateLabel}. Confirme o Pix de{" "}
                   <strong className="text-white">{alert.amountLabel}</strong>.
                 </p>
               </div>
             </div>
 
-            <div className="mt-5 rounded-2xl border border-red-300/25 bg-red-500/10 p-4">
-              <p className="text-sm font-black text-red-100">
-                Se o pagamento não for confirmado até {alert.graceDateLabel}, o
-                site poderá ser suspenso automaticamente.
+            <div className="mt-4 rounded-2xl border border-red-300/25 bg-red-500/10 p-3 sm:mt-5 sm:p-4">
+              <p className="text-sm font-black leading-5 text-red-100">
+                Sem confirmação até {alert.graceDateLabel}, o site poderá ser
+                suspenso automaticamente.
               </p>
-              <p className="mt-2 text-xs leading-5 text-red-100/80">
-                Este aviso volta a aparecer sempre que o painel for aberto e só
-                sai definitivamente quando a conta responsável confirmar o
-                pagamento.
+              <p className="mt-1 text-xs leading-4 text-red-100/80 sm:mt-2 sm:leading-5">
+                O popup volta ao abrir o painel. O aviso só sai definitivamente
+                após a baixa da conta responsável.
               </p>
             </div>
 
-            <div className="mt-4 grid gap-3 rounded-2xl border border-white/10 bg-black/30 p-4">
+            <div className="mt-3 grid gap-2 rounded-2xl border border-white/10 bg-black/30 p-3 sm:mt-4 sm:gap-3 sm:p-4">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-xs font-bold uppercase tracking-[0.18em] text-zinc-500">
+                <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500 sm:text-xs">
                   Chave Pix
                 </span>
-                <strong className="text-right text-lg text-white tabular-nums">
+                <strong className="text-right text-base font-black text-white tabular-nums sm:text-lg">
                   {alert.pixKey}
                 </strong>
               </div>
               <button
                 type="button"
                 onClick={copyPixKey}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-black text-white transition hover:bg-white/[0.1]"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-2.5 text-sm font-black text-white transition hover:bg-white/[0.1] sm:min-h-11 sm:py-3"
               >
                 <Clipboard className="h-4 w-4" />
                 {copyLabel}
@@ -174,7 +171,7 @@ export default function SystemBillingPaymentModal({
 
             {state.message ? (
               <p
-                className={`mt-4 rounded-2xl border px-4 py-3 text-sm font-semibold ${
+                className={`mt-3 rounded-2xl border px-3 py-2.5 text-sm font-semibold sm:mt-4 sm:px-4 sm:py-3 ${
                   state.ok
                     ? "border-emerald-300/30 bg-emerald-500/10 text-emerald-100"
                     : "border-red-300/30 bg-red-500/10 text-red-100"
@@ -186,18 +183,17 @@ export default function SystemBillingPaymentModal({
             ) : null}
 
             {alert.canMarkPaid ? (
-              <form action={action} className="mt-5">
+              <form action={action} className="mt-3 sm:mt-5">
                 <input type="hidden" name="paymentId" value={alert.paymentId} />
                 <ConfirmPaymentButton />
               </form>
             ) : (
-              <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+              <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3 sm:mt-5 sm:p-4">
                 <div className="flex items-start gap-3">
-                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-amber-200" />
-                  <p className="text-sm leading-6 text-zinc-300">
-                    Seu usuário pode ver o aviso, mas não pode dar baixa. A
-                    baixa só é liberada para a conta responsável pela
-                    plataforma.
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-200 sm:h-5 sm:w-5" />
+                  <p className="text-xs leading-5 text-zinc-300 sm:text-sm sm:leading-6">
+                    Você pode fechar este popup, mas a baixa só é liberada para
+                    a conta responsável pela plataforma.
                   </p>
                 </div>
               </div>
