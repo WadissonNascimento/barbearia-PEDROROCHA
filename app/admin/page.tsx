@@ -28,6 +28,8 @@ import {
   type PaymentBreakdown,
 } from "@/lib/paymentMethods";
 import { requireTenantSession, SHOP_ADMIN_ROLES } from "@/lib/tenantSession";
+import { getSystemBillingAlert } from "@/lib/systemBilling";
+import SystemBillingPaymentModal from "./SystemBillingPaymentModal";
 
 function getTodayRange() {
   return getScheduleDayRange(getCurrentScheduleDateValue())!;
@@ -81,6 +83,7 @@ export default async function AdminPage() {
     canceledTodayAppointments,
     completedTodayAppointments,
     appNotifications,
+    systemBillingAlert,
   ] = await Promise.all([
     prisma.user.count({
       where: {
@@ -179,6 +182,10 @@ export default async function AdminPage() {
         createdAt: "desc",
       },
       take: 20,
+    }),
+    getSystemBillingAlert({
+      shopId,
+      userEmail: session.user.email,
     }),
   ]);
   const todayPaymentBreakdown = createEmptyPaymentBreakdown();
@@ -286,6 +293,9 @@ export default async function AdminPage() {
 
   return (
     <div className="min-h-screen">
+      {systemBillingAlert ? (
+        <SystemBillingPaymentModal alert={systemBillingAlert} />
+      ) : null}
       <div className="mx-auto max-w-6xl px-4 py-5 text-white sm:px-6 sm:py-8">
         <section className="rounded-[28px] border border-white/10 bg-white/[0.04] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.28)] backdrop-blur sm:p-6">
           <div className="flex items-start justify-between gap-4">

@@ -93,6 +93,7 @@ model Shop {
   vipSubscriptions         VipSubscription[]
   vipPayments              VipPayment[]
   vipUsages                VipUsage[]
+  systemBillingPayments    SystemBillingPayment[]
 
   @@index([isActive, isDefault])
 }
@@ -196,6 +197,7 @@ model User {
   emailChangeRequests      EmailChangeRequest[]
   vipSubscriptions         VipSubscription[]         @relation("VipSubscriptionCustomer")
   vipUsagesCreated         VipUsage[]                @relation("VipUsageCreatedBy")
+  systemBillingPaymentsPaid SystemBillingPayment[]   @relation("SystemBillingPaymentPaidBy")
 
   @@unique([id, shopId])
   @@unique([shopId, email])
@@ -539,6 +541,29 @@ model VipUsage {
   @@unique([id, shopId])
   @@index([shopId, subscriptionId, usedAt])
   @@index([shopId, customerId, usedAt])
+}
+
+model SystemBillingPayment {
+  id           String    @id @default(cuid())
+  shopId       String    @default("shop_pedro_rocha_barbearia")
+  cycleMonth   String
+  amount       Decimal   @db.Decimal(10, 2)
+  status       String    @default("PENDING")
+  dueDate      DateTime
+  graceEndsAt  DateTime?
+  paidAt       DateTime?
+  paidByUserId String?
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  shop   Shop  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  paidBy User? @relation("SystemBillingPaymentPaidBy", fields: [paidByUserId], references: [id], onDelete: SetNull)
+
+  @@unique([id, shopId])
+  @@unique([shopId, cycleMonth])
+  @@index([shopId, status, dueDate])
+  @@index([shopId, paidByUserId])
 }
 
 model AppointmentService {

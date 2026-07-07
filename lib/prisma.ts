@@ -35,6 +35,7 @@ const SHOP_SCOPED_MODELS = new Set([
   "EmailDeliveryLog",
   "AppNotification",
   "PushSubscription",
+  "SystemBillingPayment",
 ]);
 
 const ID_SCOPED_MODELS = new Set([
@@ -65,6 +66,7 @@ const ID_SCOPED_MODELS = new Set([
   "EmailDeliveryLog",
   "AppNotification",
   "PushSubscription",
+  "SystemBillingPayment",
 ]);
 
 function mergeWhereWithShop(
