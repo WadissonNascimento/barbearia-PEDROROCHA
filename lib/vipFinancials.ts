@@ -1,4 +1,4 @@
-import { getVipCycle } from "@/lib/vip";
+import { getVipCycle, isVipPaymentPastDue } from "@/lib/vip";
 import { toMoneyNumber } from "@/lib/money";
 import type { Prisma } from "@prisma/client";
 
@@ -8,9 +8,11 @@ export type VipMonthlyFinancialSummary = {
   cycleMonth: string;
   activeCount: number;
   paidCount: number;
+  openCount: number;
   pendingCount: number;
   expectedRevenue: number;
   paidRevenue: number;
+  openRevenue: number;
   pendingRevenue: number;
   planBreakdown: Array<{
     planId: string;
@@ -18,6 +20,7 @@ export type VipMonthlyFinancialSummary = {
     count: number;
     expectedRevenue: number;
     paidRevenue: number;
+    openRevenue: number;
     pendingRevenue: number;
   }>;
 };
@@ -59,8 +62,11 @@ export async function getVipMonthlyFinancialSummary(
   >();
 
   let paidCount = 0;
+  let openCount = 0;
   let expectedRevenue = 0;
   let paidRevenue = 0;
+  let openRevenue = 0;
+  const hasPastDue = isVipPaymentPastDue(date);
 
   for (const subscription of subscriptions) {
     const price = toMoneyNumber(subscription.plan.price);
@@ -81,6 +87,7 @@ export async function getVipMonthlyFinancialSummary(
         count: 0,
         expectedRevenue: 0,
         paidRevenue: 0,
+        openRevenue: 0,
         pendingRevenue: 0,
       };
 
@@ -89,23 +96,29 @@ export async function getVipMonthlyFinancialSummary(
 
     if (isPaid) {
       planSummary.paidRevenue += price;
-    } else {
+    } else if (hasPastDue) {
       planSummary.pendingRevenue += price;
+    } else {
+      openCount += 1;
+      openRevenue += price;
+      planSummary.openRevenue += price;
     }
 
     planBreakdownMap.set(subscription.planId, planSummary);
   }
 
-  const pendingCount = subscriptions.length - paidCount;
-  const pendingRevenue = expectedRevenue - paidRevenue;
+  const pendingCount = hasPastDue ? subscriptions.length - paidCount : 0;
+  const pendingRevenue = hasPastDue ? expectedRevenue - paidRevenue : 0;
 
   return {
     cycleMonth,
     activeCount: subscriptions.length,
     paidCount,
+    openCount,
     pendingCount,
     expectedRevenue,
     paidRevenue,
+    openRevenue,
     pendingRevenue,
     planBreakdown: Array.from(planBreakdownMap.values()).sort(
       (a, b) => b.expectedRevenue - a.expectedRevenue

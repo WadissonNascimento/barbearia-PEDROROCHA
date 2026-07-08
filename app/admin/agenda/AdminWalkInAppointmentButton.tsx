@@ -286,17 +286,12 @@ export default function AdminWalkInAppointmentButton({
     ? customerMatchedByPhone
     : selectedCustomerById;
   const vipSubscription = customerMatchedByPhone?.vipSubscription || null;
-  const currentVipCycleMonth = getCurrentScheduleDateValue().slice(0, 7);
-  const vipPaymentPaid = Boolean(
-    vipSubscription?.payments.some(
-      (payment) => payment.cycleMonth === currentVipCycleMonth && payment.status === "PAID"
-    )
-  );
+  const vipPaymentCovered = Boolean(vipSubscription?.paymentCovered);
   const selectedVipWeekAlreadyUsed = Boolean(
     date && vipSubscription?.weeklyUsedWeekStarts.includes(getWeekStartValue(date))
   );
   const canUseVipPlan =
-    Boolean(vipSubscription && vipSubscription.tokensRemaining > 0) && vipPaymentPaid;
+    Boolean(vipSubscription && vipSubscription.tokensRemaining > 0) && vipPaymentCovered;
   const vipPlanDuration =
     useVipPlan && vipSubscription ? getVipPlanDuration(vipSubscription.plan.code) : 0;
   const selectedGrandTotal = selectedTotal + selectedExtrasTotal;
@@ -308,8 +303,8 @@ export default function AdminWalkInAppointmentButton({
       : selectedDuration + vipPlanDuration;
   const vipUnavailableMessage = vipSubscription && vipSubscription.tokensRemaining < 1
     ? "Este cliente nao possui atendimentos disponiveis neste ciclo."
-    : vipSubscription && !vipPaymentPaid
-      ? "O pagamento deste ciclo ainda esta pendente."
+    : vipSubscription && !vipPaymentCovered
+      ? "O pagamento deste ciclo venceu e ainda esta pendente."
       : null;
   const vipWeekAlreadyUsedMessage =
     "Este cliente ja possui um atendimento do plano mensal nesta semana. Escolha outra semana para usar o plano ou marque como atendimento avulso.";

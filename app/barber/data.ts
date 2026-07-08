@@ -27,7 +27,11 @@ import {
 } from "@/lib/scheduleTime";
 import { toMoneyNumber, type MoneyValue } from "@/lib/money";
 import { buildAgendaBlockItems } from "@/lib/agendaBlocks";
-import { getWeekRange } from "@/lib/vip";
+import {
+  ACTIVE_VIP_APPOINTMENT_STATUSES_FOR_WEEKLY_LIMIT,
+  getWeekRange,
+  isCurrentVipCyclePaymentCoveredByRecords,
+} from "@/lib/vip";
 
 export type BarberDashboardFilters = {
   view?: "day" | "today" | "upcoming" | "all";
@@ -116,6 +120,7 @@ function buildShopClientsDirectory(
     vipSubscriptions?: Array<{
       id: string;
       tokensRemaining: number;
+      dueDay: number;
       plan: {
         code: string;
         name: string;
@@ -149,8 +154,13 @@ function buildShopClientsDirectory(
         ? {
             id: vipSubscription.id,
             tokensRemaining: vipSubscription.tokensRemaining,
+            dueDay: vipSubscription.dueDay,
             plan: vipSubscription.plan,
             payments: vipSubscription.payments,
+            paymentCovered: isCurrentVipCyclePaymentCoveredByRecords(
+              vipSubscription.payments,
+              vipSubscription.dueDay
+            ),
             weeklyUsedWeekStarts: Array.from(
               new Set(
                 vipSubscription.appointments.map((appointment) =>
@@ -385,6 +395,7 @@ export async function getBarberDashboardData(
             select: {
               id: true,
               tokensRemaining: true,
+              dueDay: true,
               plan: {
                 select: {
                   code: true,
@@ -401,7 +412,7 @@ export async function getBarberDashboardData(
                 where: {
                   isVipPlanUse: true,
                   status: {
-                    in: ["PENDING", "CONFIRMED", "COMPLETED", "DONE"],
+                    in: ACTIVE_VIP_APPOINTMENT_STATUSES_FOR_WEEKLY_LIMIT,
                   },
                 },
                 select: {
@@ -926,6 +937,7 @@ export async function getBarberTodayDashboardData(barberId: string) {
             select: {
               id: true,
               tokensRemaining: true,
+              dueDay: true,
               plan: {
                 select: {
                   code: true,
@@ -942,7 +954,7 @@ export async function getBarberTodayDashboardData(barberId: string) {
                 where: {
                   isVipPlanUse: true,
                   status: {
-                    in: ["PENDING", "CONFIRMED", "COMPLETED", "DONE"],
+                    in: ACTIVE_VIP_APPOINTMENT_STATUSES_FOR_WEEKLY_LIMIT,
                   },
                 },
                 select: {

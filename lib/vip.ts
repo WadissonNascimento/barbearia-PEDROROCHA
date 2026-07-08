@@ -1,4 +1,8 @@
 import { Prisma } from "@prisma/client";
+import {
+  getCurrentScheduleDateValue,
+  getScheduleDateValue,
+} from "@/lib/scheduleTime";
 
 export const VIP_PLAN_DEFINITIONS = [
   {
@@ -24,7 +28,7 @@ export const VIP_PLAN_DEFINITIONS = [
 export type VipPlanCode = (typeof VIP_PLAN_DEFINITIONS)[number]["code"];
 export const DEFAULT_VIP_DUE_DAY = 5;
 
-const ACTIVE_APPOINTMENT_STATUSES_FOR_WEEKLY_LIMIT = [
+export const ACTIVE_VIP_APPOINTMENT_STATUSES_FOR_WEEKLY_LIMIT = [
   "PENDING",
   "CONFIRMED",
   "COMPLETED",
@@ -201,6 +205,40 @@ export async function hasPaidCurrentVipCycle(
   return Boolean(payment);
 }
 
+export function isVipPaymentPastDue(date = new Date(), dueDay = DEFAULT_VIP_DUE_DAY) {
+  const dueDate = getVipPaymentDueDate(date, dueDay);
+
+  return getCurrentScheduleDateValue(date) > getScheduleDateValue(dueDate);
+}
+
+export async function isCurrentVipCyclePaymentCovered(
+  db: VipDb,
+  subscriptionId: string,
+  dueDay = DEFAULT_VIP_DUE_DAY,
+  date = new Date()
+) {
+  const isPaid = await hasPaidCurrentVipCycle(db, subscriptionId, date);
+
+  if (isPaid) {
+    return true;
+  }
+
+  return !isVipPaymentPastDue(date, dueDay);
+}
+
+export function isCurrentVipCyclePaymentCoveredByRecords(
+  payments: Array<{ cycleMonth: string; status: string }>,
+  dueDay = DEFAULT_VIP_DUE_DAY,
+  date = new Date()
+) {
+  const { cycleMonth } = getVipCycle(date);
+  const isPaid = payments.some(
+    (payment) => payment.cycleMonth === cycleMonth && payment.status === "PAID"
+  );
+
+  return isPaid || !isVipPaymentPastDue(date, dueDay);
+}
+
 export function getWeekRange(date: Date) {
   const base = new Date(date);
   base.setHours(0, 0, 0, 0);
@@ -238,7 +276,7 @@ export async function assertCanScheduleVipAppointment(
       isVipPlanUse: true,
       vipSubscriptionId: subscriptionId,
       status: {
-        in: ACTIVE_APPOINTMENT_STATUSES_FOR_WEEKLY_LIMIT,
+        in: ACTIVE_VIP_APPOINTMENT_STATUSES_FOR_WEEKLY_LIMIT,
       },
       id: excludeAppointmentId
         ? {

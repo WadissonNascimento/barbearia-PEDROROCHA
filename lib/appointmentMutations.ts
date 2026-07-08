@@ -31,7 +31,7 @@ import {
   getActiveVipSubscriptionForCustomer,
   getVipPlanDurationMinutes,
   getVipPlanItemsLabel,
-  hasPaidCurrentVipCycle,
+  isCurrentVipCyclePaymentCovered,
 } from "@/lib/vip";
 import {
   createScheduleDate,
@@ -637,7 +637,11 @@ async function createCustomerAppointmentInTransaction(
       throw new AppointmentMutationError("Seu plano VIP nao possui tokens disponiveis.");
     }
 
-    const isPaid = await hasPaidCurrentVipCycle(db, vipSubscription.id);
+    const isPaid = await isCurrentVipCyclePaymentCovered(
+      db,
+      vipSubscription.id,
+      vipSubscription.dueDay
+    );
 
     if (!isPaid) {
       throw new AppointmentMutationError("Seu plano VIP ainda esta com pagamento pendente.");
@@ -1147,7 +1151,11 @@ async function rescheduleCustomerAppointmentInTransaction(
       throw new AppointmentMutationError("Nenhuma assinatura VIP ativa foi encontrada.");
     }
 
-    const isPaid = await hasPaidCurrentVipCycle(db, vipSubscription.id);
+    const isPaid = await isCurrentVipCyclePaymentCovered(
+      db,
+      vipSubscription.id,
+      vipSubscription.dueDay
+    );
 
     if (!isPaid) {
       throw new AppointmentMutationError("Seu plano VIP ainda esta com pagamento pendente.");

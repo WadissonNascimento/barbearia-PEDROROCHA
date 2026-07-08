@@ -7,9 +7,10 @@ import { logSecurityEvent } from "@/lib/security";
 import { getCurrentShop } from "@/lib/shop";
 import { CUSTOMER_ROLES, requireTenantSession } from "@/lib/tenantSession";
 import {
+  ACTIVE_VIP_APPOINTMENT_STATUSES_FOR_WEEKLY_LIMIT,
   getActiveVipSubscriptionForCustomer,
   getWeekRange,
-  hasPaidCurrentVipCycle,
+  isCurrentVipCyclePaymentCovered,
 } from "@/lib/vip";
 import {
   formatScheduleTime,
@@ -135,7 +136,11 @@ export default async function AgendarPage({
     }),
   ]);
   const vipPaymentPaid = activeVipSubscription
-    ? await hasPaidCurrentVipCycle(prisma, activeVipSubscription.id)
+    ? await isCurrentVipCyclePaymentCovered(
+        prisma,
+        activeVipSubscription.id,
+        activeVipSubscription.dueDay
+      )
     : false;
   const vipWeeklyUsedAppointments = activeVipSubscription
     ? await prisma.appointment.findMany({
@@ -150,7 +155,7 @@ export default async function AgendarPage({
               }
             : undefined,
           status: {
-            in: ["PENDING", "CONFIRMED", "COMPLETED", "DONE"],
+            in: ACTIVE_VIP_APPOINTMENT_STATUSES_FOR_WEEKLY_LIMIT,
           },
           date: {
             gte: getWeekRange(new Date(`${bookingDays[0]}T00:00:00`)).start,

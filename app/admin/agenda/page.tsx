@@ -12,6 +12,10 @@ import {
   getManualFitInCustomerDisplay,
   getManualFitInVisibleNotes,
 } from "@/lib/manualFitIn";
+import {
+  ACTIVE_VIP_APPOINTMENT_STATUSES_FOR_WEEKLY_LIMIT,
+  isCurrentVipCyclePaymentCoveredByRecords,
+} from "@/lib/vip";
 import AdminAgendaClient from "./AdminAgendaClient";
 
 const ADMIN_AGENDA_PAGE_LIMIT = 250;
@@ -168,7 +172,7 @@ export default async function AdminAgendaPage({
                 where: {
                   isVipPlanUse: true,
                   status: {
-                    in: ["PENDING", "CONFIRMED", "COMPLETED", "DONE"],
+                    in: ACTIVE_VIP_APPOINTMENT_STATUSES_FOR_WEEKLY_LIMIT,
                   },
                 },
                 select: {
@@ -314,8 +318,13 @@ export default async function AdminAgendaPage({
           ? {
               id: customer.vipSubscriptions[0].id,
               tokensRemaining: customer.vipSubscriptions[0].tokensRemaining,
+              dueDay: customer.vipSubscriptions[0].dueDay,
               plan: customer.vipSubscriptions[0].plan,
               payments: customer.vipSubscriptions[0].payments,
+              paymentCovered: isCurrentVipCyclePaymentCoveredByRecords(
+                customer.vipSubscriptions[0].payments,
+                customer.vipSubscriptions[0].dueDay
+              ),
               weeklyUsedWeekStarts: customer.vipSubscriptions[0].appointments.map((appointment) =>
                 getWeekStartValue(getScheduleDateValue(appointment.date))
               ),

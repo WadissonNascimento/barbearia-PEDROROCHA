@@ -18,14 +18,12 @@ import OperationalFeedbackDialog, {
   type OperationalFeedbackState,
 } from "@/components/ui/OperationalFeedbackDialog";
 import {
-  getCurrentScheduleDateValue,
-} from "@/lib/scheduleTime";
-import {
   formatBrazilianPhone,
   isValidBrazilianPhone,
   maskBrazilianPhone,
   stripPhoneDigits,
 } from "@/lib/phone";
+import { getCurrentScheduleDateValue } from "@/lib/scheduleTime";
 import {
   isValidCustomerFullName,
   normalizeCustomerName,
@@ -280,19 +278,14 @@ export default function WalkInAppointmentCard({
     selectedDate &&
       vipSubscription?.weeklyUsedWeekStarts.includes(getWeekStartValue(selectedDate))
   );
-  const currentVipCycleMonth = getCurrentScheduleDateValue().slice(0, 7);
-  const vipPaymentPaid = Boolean(
-    vipSubscription?.payments.some(
-      (payment) => payment.cycleMonth === currentVipCycleMonth && payment.status === "PAID"
-    )
-  );
+  const vipPaymentCovered = Boolean(vipSubscription?.paymentCovered);
   const canUseVipPlan =
     Boolean(vipSubscription && vipSubscription.tokensRemaining > 0) &&
-    vipPaymentPaid;
+    vipPaymentCovered;
   const vipUnavailableMessage = vipSubscription && vipSubscription.tokensRemaining < 1
     ? "Este cliente nao possui atendimentos disponiveis neste ciclo."
-    : vipSubscription && !vipPaymentPaid
-      ? "O pagamento deste ciclo ainda esta pendente."
+    : vipSubscription && !vipPaymentCovered
+      ? "O pagamento deste ciclo venceu e ainda esta pendente."
       : null;
   const vipWeekAlreadyUsedMessage =
     "Este cliente ja possui um atendimento do plano mensal nesta semana. Escolha outra semana para usar o plano ou marque como atendimento avulso.";

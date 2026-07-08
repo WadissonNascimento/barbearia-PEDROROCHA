@@ -43,6 +43,7 @@ type SubscriptionItem = {
     status: string;
     dueDate: string | null;
   } | null;
+  paymentStatus: "PAID" | "OPEN" | "OVERDUE";
   dueDay: number;
   dueDateLabel: string;
   usageCount: number;
@@ -90,7 +91,7 @@ export default function VipSubscriptionsList({
     const normalizedQuery = normalizeSearch(query);
 
     return subscriptions.filter((subscription) => {
-      const isPaid = subscription.payment?.status === "PAID";
+      const isPaid = subscription.paymentStatus === "PAID";
       const searchableText = normalizeSearch(
         [
           subscription.customer.name,
@@ -107,11 +108,15 @@ export default function VipSubscriptionsList({
         return false;
       }
 
-      if (statusFilter === "paid" && !isPaid) {
+      if (statusFilter === "paid" && subscription.paymentStatus !== "PAID") {
         return false;
       }
 
-      if (statusFilter === "pending" && isPaid) {
+      if (statusFilter === "open" && subscription.paymentStatus !== "OPEN") {
+        return false;
+      }
+
+      if (statusFilter === "pending" && subscription.paymentStatus !== "OVERDUE") {
         return false;
       }
 
@@ -156,6 +161,7 @@ export default function VipSubscriptionsList({
           >
             <option value="all">Todos</option>
             <option value="paid">Pagos</option>
+            <option value="open">Em aberto</option>
             <option value="pending">Pendentes</option>
           </select>
 
@@ -181,7 +187,7 @@ export default function VipSubscriptionsList({
           </div>
         ) : (
           filteredSubscriptions.map((subscription) => {
-            const isPaid = subscription.payment?.status === "PAID";
+            const isPaid = subscription.paymentStatus === "PAID";
             const historyExpanded = expandedHistoryIds.includes(subscription.id);
             const visibleUsages = historyExpanded
               ? subscription.usages
@@ -195,7 +201,7 @@ export default function VipSubscriptionsList({
               >
                 <summary className="grid cursor-pointer list-none gap-3 p-4 pt-10 [&::-webkit-details-marker]:hidden">
                   <div className="absolute right-4 top-4">
-                    <StatusBadge paid={isPaid} />
+                    <StatusBadge status={subscription.paymentStatus} />
                   </div>
                   <div className="min-w-0">
                     <h3 className="break-words text-xl font-black leading-tight text-white">
@@ -404,21 +410,26 @@ export default function VipSubscriptionsList({
   );
 }
 
-function StatusBadge({ paid }: { paid: boolean }) {
+function StatusBadge({ status }: { status: "PAID" | "OPEN" | "OVERDUE" }) {
+  const isPaid = status === "PAID";
+  const isOpen = status === "OPEN";
+
   return (
     <span
       className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] ${
-        paid
+        isPaid
           ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-300"
-          : "border-amber-400/25 bg-amber-400/10 text-amber-300"
+          : isOpen
+            ? "border-sky-400/25 bg-sky-400/10 text-sky-300"
+            : "border-amber-400/25 bg-amber-400/10 text-amber-300"
       }`}
     >
-      {paid ? (
+      {isPaid ? (
         <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
       ) : (
         <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
       )}
-      {paid ? "Pago" : "Pendente"}
+      {isPaid ? "Pago" : isOpen ? "Em aberto" : "Pendente"}
     </span>
   );
 }

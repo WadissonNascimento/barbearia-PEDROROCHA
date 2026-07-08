@@ -24,7 +24,7 @@ export default function VipMonthlyFinancialPanel({
 
       <div
         className={`grid min-w-0 gap-2 ${
-          compact ? "sm:grid-cols-3" : "sm:grid-cols-2 xl:grid-cols-4"
+          compact ? "sm:grid-cols-2" : "sm:grid-cols-2 xl:grid-cols-5"
         }`}
       >
         <VipFinanceTile
@@ -40,9 +40,15 @@ export default function VipMonthlyFinancialPanel({
           tone="success"
         />
         <VipFinanceTile
-          label="Pendente"
+          label="Em aberto"
+          value={formatCurrency(summary.openRevenue)}
+          helper={`${summary.openCount} dentro do prazo`}
+          tone="info"
+        />
+        <VipFinanceTile
+          label="Pendente vencido"
           value={formatCurrency(summary.pendingRevenue)}
-          helper={`${summary.pendingCount} em aberto`}
+          helper={`${summary.pendingCount} fora do prazo`}
           tone="warning"
         />
         {!compact ? (
@@ -69,6 +75,7 @@ export default function VipMonthlyFinancialPanel({
               </div>
               <div className="grid gap-1 text-xs sm:min-w-[160px]">
                 <PlanMoneyRow label="Pago" value={plan.paidRevenue} tone="success" />
+                <PlanMoneyRow label="Aberto" value={plan.openRevenue} tone="info" />
                 <PlanMoneyRow
                   label="Pendente"
                   value={plan.pendingRevenue}
@@ -97,12 +104,14 @@ function VipFinanceTile({
   label: string;
   value: string;
   helper: string;
-  tone?: "neutral" | "success" | "warning";
+  tone?: "neutral" | "success" | "warning" | "info";
   featured?: boolean;
 }) {
   const valueClass =
     tone === "success"
       ? "text-emerald-300"
+      : tone === "info"
+        ? "text-sky-300"
       : tone === "warning"
         ? "text-amber-300"
         : "text-white";
@@ -133,9 +142,14 @@ function PlanMoneyRow({
 }: {
   label: string;
   value: number;
-  tone: "success" | "warning";
+  tone: "success" | "warning" | "info";
 }) {
-  const toneClass = tone === "success" ? "text-emerald-300" : "text-amber-300";
+  const toneClass =
+    tone === "success"
+      ? "text-emerald-300"
+      : tone === "info"
+        ? "text-sky-300"
+        : "text-amber-300";
 
   return (
     <p className="flex min-w-0 items-center justify-between gap-3">

@@ -130,6 +130,8 @@ export type AdminAgendaCustomer = {
   vipSubscription?: {
     id: string;
     tokensRemaining: number;
+    dueDay: number;
+    paymentCovered: boolean;
     plan: {
       code: string;
       name: string;

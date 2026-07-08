@@ -4,7 +4,12 @@ import BackLink from "@/components/ui/BackLink";
 import DashboardShell from "@/components/ui/DashboardShell";
 import { prisma } from "@/lib/prisma";
 import { requireTenantSession, SHOP_ADMIN_ROLES } from "@/lib/tenantSession";
-import { ensureVipPlansForShop, getVipCycle, getVipPaymentDueDate } from "@/lib/vip";
+import {
+  ensureVipPlansForShop,
+  getVipCycle,
+  getVipPaymentDueDate,
+  isVipPaymentPastDue,
+} from "@/lib/vip";
 import { getVipMonthlyFinancialSummary } from "@/lib/vipFinancials";
 import VipCreateForm from "./VipCreateForm";
 import VipSubscriptionsList from "./VipSubscriptionsList";
@@ -149,6 +154,12 @@ export default async function AdminVipPage() {
           dueDate: subscription.payments[0].dueDate?.toISOString() || null,
         }
       : null,
+    paymentStatus:
+      subscription.payments[0]?.status === "PAID"
+        ? ("PAID" as const)
+        : isVipPaymentPastDue(new Date(), subscription.dueDay)
+          ? ("OVERDUE" as const)
+          : ("OPEN" as const),
     usageCount: subscription._count.usages,
     usages: subscription.usages.map((usage) => ({
       id: usage.id,
@@ -216,4 +227,3 @@ export default async function AdminVipPage() {
     </DashboardShell>
   );
 }
-

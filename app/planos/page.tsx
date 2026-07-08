@@ -10,6 +10,7 @@ import {
   getVipPaymentDueDate,
   getWeekRange,
   hasPaidCurrentVipCycle,
+  isCurrentVipCyclePaymentCovered,
 } from "@/lib/vip";
 
 export const metadata = {
@@ -135,6 +136,11 @@ export default async function PlanosPage() {
 
   if (activeSubscription) {
     const paymentPaid = await hasPaidCurrentVipCycle(prisma, activeSubscription.id);
+    const paymentCovered = await isCurrentVipCyclePaymentCovered(
+      prisma,
+      activeSubscription.id,
+      activeSubscription.dueDay
+    );
     const customerName =
       tenantSession?.session.user.name?.split(" ")[0] ||
       tenantSession?.session.user.email?.split("@")[0] ||
@@ -143,6 +149,7 @@ export default async function PlanosPage() {
     const planCombo = getPlanComboDescription(activeSubscription.plan.code);
     const planItems = getPlanItems(activeSubscription.plan.code);
     const dueDay = activeSubscription.dueDay;
+    const currentMonthName = formatMonthName(new Date());
     const { start: weekStart, end: weekEnd } = getWeekRange(new Date());
     const weeklyUsage = await prisma.vipUsage.findFirst({
       where: {
@@ -161,7 +168,16 @@ export default async function PlanosPage() {
       ? new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
       : new Date();
     const nextPaymentDate = getVipPaymentDueDate(nextPaymentBaseDate, dueDay);
-    const currentMonthName = formatMonthName(new Date());
+    const paymentStatusLabel = paymentPaid
+      ? `${currentMonthName} está pago`
+      : paymentCovered
+        ? `${currentMonthName} em aberto`
+        : `${currentMonthName} está pendente`;
+    const paymentStatusHelper = paymentPaid
+      ? `Próximo pagamento: ${formatLongDate(nextPaymentDate)}`
+      : paymentCovered
+        ? `Vence em ${formatLongDate(nextPaymentDate)}`
+        : `Venceu em ${formatLongDate(nextPaymentDate)}`;
     const usages = await prisma.vipUsage.findMany({
       where: {
         subscriptionId: activeSubscription.id,
@@ -219,14 +235,10 @@ export default async function PlanosPage() {
               />
               <VipInfoCard
                 label="Pagamento"
-                value={
-                  paymentPaid
-                    ? `${currentMonthName} está pago`
-                    : `${currentMonthName} está pendente`
-                }
-                helper={`Próximo pagamento: ${formatLongDate(nextPaymentDate)}`}
+                value={paymentStatusLabel}
+                helper={paymentStatusHelper}
                 extra={`Vencimento mensal: todo dia ${dueDay}`}
-                tone={paymentPaid ? "success" : "warning"}
+                tone={paymentPaid ? "success" : paymentCovered ? undefined : "warning"}
               />
             </div>
           </div>
