@@ -24,7 +24,7 @@ async function handleBarberOpenAppointmentsCron(request: Request) {
     });
 
     return NextResponse.json(
-      { message: "CRON_SECRET nao configurado." },
+      { message: "CRON_SECRET não configurado." },
       { status: 503 }
     );
   }
@@ -34,7 +34,7 @@ async function handleBarberOpenAppointmentsCron(request: Request) {
       route: "/api/cron/barber-open-appointments",
     });
 
-    return NextResponse.json({ message: "Nao autorizado." }, { status: 401 });
+    return NextResponse.json({ message: "Não autorizado." }, { status: 401 });
   }
 
   const result = await sendOpenAppointmentShiftEndNotifications();

@@ -247,7 +247,7 @@ export default async function PlanosPage() {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.22em] text-[#e8c57d]">
-                  Historico
+                  Histórico
                 </p>
                 <h2 className="mt-2 text-2xl font-black text-[#f8f3e7]">
                   Usos do plano

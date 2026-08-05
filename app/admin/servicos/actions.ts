@@ -39,7 +39,7 @@ export async function createAdminServiceAction(
   const commissionValue = Number(formData.get("commissionValue") || 0);
 
   if (!name || price <= 0 || duration <= 0 || commissionValue < 0 || commissionValue > 100) {
-    return mutationError("Preencha nome, preco, duracao e comissao corretamente.");
+    return mutationError("Preencha nome, preco, duração e comissao corretamente.");
   }
 
   const isExclusive = serviceScope === "EXCLUSIVE";
@@ -47,7 +47,7 @@ export async function createAdminServiceAction(
 
   if (isExclusive) {
     if (!barberIdRaw) {
-      return mutationError("Escolha o barbeiro que vai atender esse servico exclusivo.");
+      return mutationError("Escolha o barbeiro que vai atender esse serviço exclusivo.");
     }
 
     const barber = await prisma.user.findFirst({
@@ -62,7 +62,7 @@ export async function createAdminServiceAction(
     });
 
     if (!barber) {
-      return mutationError("Barbeiro invalido para esse servico exclusivo.");
+      return mutationError("Barbeiro inválido para esse serviço exclusivo.");
     }
 
     barberId = barber.id;
@@ -85,8 +85,8 @@ export async function createAdminServiceAction(
   revalidateServiceViews();
   return mutationSuccess(
     isExclusive
-      ? "Servico exclusivo criado com sucesso."
-      : "Servico geral criado com sucesso."
+      ? "Serviço exclusivo criado com sucesso."
+      : "Serviço geral criado com sucesso."
   );
 }
 
@@ -110,7 +110,7 @@ export async function updateGlobalServiceAction(
     commissionValue < 0 ||
     commissionValue > 100
   ) {
-    return mutationError("Preencha nome, preco, duracao e comissao corretamente.");
+    return mutationError("Preencha nome, preco, duração e comissao corretamente.");
   }
 
   const service = await prisma.service.findUnique({
@@ -118,7 +118,7 @@ export async function updateGlobalServiceAction(
   });
 
   if (!service) {
-    return mutationError("Servico nao encontrado.");
+    return mutationError("Serviço não encontrado.");
   }
 
   await prisma.service.update({
@@ -134,7 +134,7 @@ export async function updateGlobalServiceAction(
   });
 
   revalidateServiceViews();
-  return mutationSuccess("Servico atualizado com sucesso.");
+  return mutationSuccess("Serviço atualizado com sucesso.");
 }
 
 export async function toggleGlobalServiceAction(
@@ -148,7 +148,7 @@ export async function toggleGlobalServiceAction(
   });
 
   if (!service) {
-    return mutationError("Servico nao encontrado.");
+    return mutationError("Serviço não encontrado.");
   }
 
   await prisma.service.update({
@@ -159,7 +159,7 @@ export async function toggleGlobalServiceAction(
   });
 
   revalidateServiceViews();
-  return mutationSuccess(service.isActive ? "Servico desativado." : "Servico ativado.");
+  return mutationSuccess(service.isActive ? "Serviço desativado." : "Serviço ativado.");
 }
 
 export async function deleteGlobalServiceAction(
@@ -173,7 +173,7 @@ export async function deleteGlobalServiceAction(
   });
 
   if (!service) {
-    return mutationError("Servico nao encontrado.");
+    return mutationError("Serviço não encontrado.");
   }
 
   const appointmentUses = await prisma.appointmentService.count({
@@ -188,7 +188,7 @@ export async function deleteGlobalServiceAction(
 
     revalidateServiceViews();
     return mutationSuccess(
-      "Servico desativado para preservar o historico de agendamentos.",
+      "Serviço desativado para preservar o histórico de agendamentos.",
       undefined,
       "info"
     );
@@ -199,5 +199,5 @@ export async function deleteGlobalServiceAction(
   });
 
   revalidateServiceViews();
-  return mutationSuccess("Servico excluido com sucesso.");
+  return mutationSuccess("Serviço excluido com sucesso.");
 }

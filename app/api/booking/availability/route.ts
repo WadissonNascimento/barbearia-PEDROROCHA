@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       route: "/api/booking/availability",
       role: "anonymous",
     });
-    return NextResponse.json({ message: "Nao autorizado." }, { status: 401 });
+    return NextResponse.json({ message: "Não autorizado." }, { status: 401 });
   }
   const { session } = tenantSession;
 
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   });
 
   if (!rateLimit.allowed) {
-    return rateLimitResponse("Muitas consultas de horarios. Aguarde e tente novamente.");
+    return rateLimitResponse("Muitas consultas de horários. Aguarde e tente novamente.");
   }
 
   try {
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
           appointmentId: rescheduleAppointmentId,
         });
         return NextResponse.json(
-          { message: "Agendamento nao encontrado para sua conta." },
+          { message: "Agendamento não encontrado para sua conta." },
           { status: 404 }
         );
       }
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
         isScheduleDateTimePast(appointment.date)
       ) {
         return NextResponse.json(
-          { message: "Esse agendamento nao pode mais ser remarcado." },
+          { message: "Esse agendamento não pode mais ser remarcado." },
           { status: 400 }
         );
       }
@@ -130,7 +130,7 @@ export async function POST(request: Request) {
 
     console.error("Erro ao carregar disponibilidade:", error);
     return NextResponse.json(
-      { message: "Nao foi possivel carregar os horarios." },
+      { message: "Não foi possível carregar os horários." },
       { status: 500 }
     );
   }

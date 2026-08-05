@@ -257,7 +257,7 @@ export async function getAdminBarberTipsAction({
   if (!barber) {
     return {
       ok: false,
-      message: "Barbeiro nao encontrado.",
+      message: "Barbeiro não encontrado.",
       items: [],
       page: safePage,
       hasNextPage: false,

@@ -161,7 +161,7 @@ function buildAppointmentEmailPayload(
   }
 
   const serviceName =
-    getAppointmentDisplayName(appointment.services) || "Servico agendado";
+    getAppointmentDisplayName(appointment.services) || "Serviço agendado";
   const extrasLabel =
     appointment.items.length > 0
       ? getAppointmentItemsLabel(appointment.items)
@@ -268,18 +268,18 @@ async function sendCustomerAppointmentEmailSafely(
 
 function getCustomerNotificationTitle(kind: string) {
   switch (kind) {
-    case "confirmacao":
+    case "confirmação":
       return "Agendamento confirmado";
-    case "conclusao":
-      return "Atendimento concluido";
+    case "conclusão":
+      return "Atendimento concluído";
     case "cancelamento":
       return "Agendamento cancelado";
     case "reagendamento":
       return "Agendamento reagendado";
     case "lembrete":
-      return "Seu horario esta chegando";
+      return "Seu horário está chegando";
     default:
-      return "Atualizacao do atendimento";
+      return "Atualização do atendimento";
   }
 }
 
@@ -288,10 +288,10 @@ function getCustomerNotificationBody(
   payload: AppointmentCustomerEmailPayload
 ) {
   switch (kind) {
-    case "confirmacao":
+    case "confirmação":
       return `${payload.serviceName} com ${payload.barberName} foi confirmado para ${payload.timeLabel}.`;
-    case "conclusao":
-      return `Seu atendimento de ${payload.serviceName} foi concluido. Avalie sua experiencia.`;
+    case "conclusão":
+      return `Seu atendimento de ${payload.serviceName} foi concluído. Avalie sua experiência.`;
     case "cancelamento":
       return `Seu agendamento de ${payload.serviceName} foi cancelado.`;
     case "reagendamento":
@@ -299,7 +299,7 @@ function getCustomerNotificationBody(
     case "lembrete":
       return `Lembrete: ${payload.serviceName} com ${payload.barberName} as ${payload.timeLabel}.`;
     default:
-      return `Houve uma atualizacao no seu atendimento de ${payload.serviceName}.`;
+      return `Houve uma atualização no seu atendimento de ${payload.serviceName}.`;
   }
 }
 
@@ -307,7 +307,7 @@ function getCustomerNotificationStatus(kind: string) {
   switch (kind) {
     case "cancelamento":
       return "CANCELLED";
-    case "conclusao":
+    case "conclusão":
       return "COMPLETED";
     case "lembrete":
       return "LEMBRETE";
@@ -318,7 +318,7 @@ function getCustomerNotificationStatus(kind: string) {
 
 export async function notifyCustomerAppointmentConfirmed(appointmentId: string) {
   return sendCustomerAppointmentEmailSafely(
-    "confirmacao",
+    "confirmação",
     appointmentId,
     sendAppointmentConfirmationEmail
   );
@@ -326,7 +326,7 @@ export async function notifyCustomerAppointmentConfirmed(appointmentId: string) 
 
 export async function notifyCustomerAppointmentCompleted(appointmentId: string) {
   return sendCustomerAppointmentEmailSafely(
-    "conclusao",
+    "conclusão",
     appointmentId,
     sendAppointmentCompletedEmail
   );
@@ -544,7 +544,7 @@ export async function sendCustomerAppointmentDayReminderNotifications({
       type: "customer.lembrete_dia",
       eventKey: `customer:lembrete_dia:${appointment.id}:${dateValue}`,
       eyebrow: "Lembrete",
-      title: "Voce tem horario hoje",
+      title: "Você tem horário hoje",
       body: `Hoje as ${payload.timeLabel}: ${payload.serviceName} com ${payload.barberName}.`,
       actionUrl: payload.actionUrl,
       metadata: {

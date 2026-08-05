@@ -329,14 +329,14 @@ function formatNotificationText(value: string) {
     .replaceAll("Notificacoes", "Notificações")
     .replaceAll("notificacao", "notificação")
     .replaceAll("notificacoes", "notificações")
-    .replaceAll("Atendimento concluido", "Atendimento concluído")
-    .replaceAll("concluido", "concluído")
+    .replaceAll("Atendimento concluído", "Atendimento concluído")
+    .replaceAll("concluído", "concluído")
     .replaceAll("avaliacoes", "avaliações")
-    .replaceAll("experiencia", "experiência")
-    .replaceAll("horario", "horário")
-    .replaceAll("Horario", "Horário")
+    .replaceAll("experiência", "experiência")
+    .replaceAll("horário", "horário")
+    .replaceAll("Horário", "Horário")
     .replaceAll("esta", "está")
-    .replaceAll("Servico", "Serviço")
-    .replaceAll("servico", "serviço")
-    .replaceAll("Voce", "Você");
+    .replaceAll("Serviço", "Serviço")
+    .replaceAll("serviço", "serviço")
+    .replaceAll("Você", "Você");
 }

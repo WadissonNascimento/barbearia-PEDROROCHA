@@ -89,7 +89,7 @@ export default function PayoutAppointmentCard({
       <div className="mt-3 grid grid-cols-3 gap-1.5">
         <BreakdownPill
           icon={<Scissors />}
-          label="Servicos"
+          label="Serviços"
           value={formatCurrency(appointment.servicesPayout)}
         />
         <BreakdownPill

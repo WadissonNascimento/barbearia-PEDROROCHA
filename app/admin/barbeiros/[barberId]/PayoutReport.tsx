@@ -231,13 +231,13 @@ export default async function PayoutReport({
         <SummaryCard
           label="Total vendido"
           value={formatCurrency(totalGross)}
-          helper="Valor bruto do periodo"
+          helper="Valor bruto do período"
         />
         <SummaryCard
           label="Repasse do barbeiro"
           value={formatCurrency(totalPayout)}
           details={[
-            { label: "Servicos", value: formatCurrency(totalServicesPayout) },
+            { label: "Serviços", value: formatCurrency(totalServicesPayout) },
             { label: "Extras", value: formatCurrency(totalExtrasPayout) },
             { label: "Caixinhas", value: formatCurrency(totalTipsPayout) },
           ]}
@@ -310,7 +310,7 @@ function VipPlanSummaryCard({
             Atendimentos de clientes com assinatura
           </h2>
           <p className="mt-1 text-sm leading-5 text-zinc-400">
-            Combos do plano nao entram no repasse.
+            Combos do plano não entram no repasse.
           </p>
         </div>
         <span className="shrink-0 rounded-full border border-white/10 bg-black/25 px-3 py-1 text-xs font-bold text-zinc-300">

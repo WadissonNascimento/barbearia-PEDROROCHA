@@ -177,7 +177,7 @@ async function assertNoLockedPayoutForAppointmentPeriod(
 
   if (lockedPayout) {
     throw new AppointmentMutationError(
-      "Esse periodo ja possui repasse fechado ou pago. Reabra o repasse antes de alterar o atendimento."
+      "Esse período já possui repasse fechado ou pago. Reabra o repasse antes de alterar o atendimento."
     );
   }
 }
@@ -236,7 +236,7 @@ export async function createCustomerAppointment(
       (error.code === "P2034" || error.code === "P2028")
     ) {
       throw new AppointmentMutationError(
-        "Esse horario acabou de ser reservado. Escolha outro horario."
+        "Esse horário acabou de ser reservado. Escolha outro horário."
       );
     }
 
@@ -263,7 +263,7 @@ export async function rescheduleCustomerAppointment(
       (error.code === "P2034" || error.code === "P2028")
     ) {
       throw new AppointmentMutationError(
-        "Esse horario acabou de ser reservado. Escolha outro horario."
+        "Esse horário acabou de ser reservado. Escolha outro horário."
       );
     }
 
@@ -285,7 +285,7 @@ export async function editAppointmentForAdmin(
   });
 
   if (!currentAppointment) {
-    throw new AppointmentMutationError("Agendamento nao encontrado.");
+    throw new AppointmentMutationError("Agendamento não encontrado.");
   }
 
   try {
@@ -318,7 +318,7 @@ export async function editAppointmentForAdmin(
       (error.code === "P2034" || error.code === "P2028")
     ) {
       throw new AppointmentMutationError(
-        "Esse horario acabou de ser reservado. Escolha outro horario."
+        "Esse horário acabou de ser reservado. Escolha outro horário."
       );
     }
 
@@ -343,7 +343,7 @@ export async function editOpenAppointmentForBarber(
 
   if (!currentAppointment || currentAppointment.barberId !== input.barberId) {
     throw new AppointmentMutationError(
-      "Agendamento nao encontrado para este barbeiro."
+      "Agendamento não encontrado para este barbeiro."
     );
   }
 
@@ -377,7 +377,7 @@ export async function editOpenAppointmentForBarber(
       (error.code === "P2034" || error.code === "P2028")
     ) {
       throw new AppointmentMutationError(
-        "Esse horario acabou de ser reservado. Escolha outro horario."
+        "Esse horário acabou de ser reservado. Escolha outro horário."
       );
     }
 
@@ -434,7 +434,7 @@ export async function createManualFitInAppointment(
       (error.code === "P2034" || error.code === "P2028")
     ) {
       throw new AppointmentMutationError(
-        "Esse horario acabou de ser reservado. Escolha outro horario."
+        "Esse horário acabou de ser reservado. Escolha outro horário."
       );
     }
 
@@ -473,7 +473,7 @@ async function createCustomerAppointmentInTransaction(
     !time
   ) {
     throw new AppointmentMutationError(
-      "Selecione barbeiro, servicos, data e horario para continuar."
+      "Selecione barbeiro, serviços, data e horário para continuar."
     );
   }
 
@@ -498,7 +498,7 @@ async function createCustomerAppointmentInTransaction(
   });
 
   if (!barber) {
-    throw new AppointmentMutationError("O barbeiro selecionado nao esta mais disponivel.");
+    throw new AppointmentMutationError("O barbeiro selecionado não esta mais disponível.");
   }
 
   const shopId = barber.shopId;
@@ -516,7 +516,7 @@ async function createCustomerAppointmentInTransaction(
   });
 
   if (!customer) {
-    throw new AppointmentMutationError("Cliente nao autorizado para esta barbearia.");
+    throw new AppointmentMutationError("Cliente não autorizado para esta barbearia.");
   }
 
   const availableServices = await db.service.findMany({
@@ -532,7 +532,7 @@ async function createCustomerAppointmentInTransaction(
 
   if (availableServices.length !== serviceIds.length) {
     throw new AppointmentMutationError(
-      "Um ou mais servicos escolhidos nao estao disponiveis para esse barbeiro."
+      "Um ou mais serviços escolhidos não estão disponíveis para esse barbeiro."
     );
   }
 
@@ -547,7 +547,7 @@ async function createCustomerAppointmentInTransaction(
 
   if (orderedServices.length !== serviceIds.length) {
     throw new AppointmentMutationError(
-      "Nao foi possivel validar a ordem dos servicos selecionados."
+      "Não foi possível validar a ordem dos serviços selecionados."
     );
   }
 
@@ -586,7 +586,7 @@ async function createCustomerAppointmentInTransaction(
 
   if (selectedProducts.length !== extrasByProductId.size) {
     throw new AppointmentMutationError(
-      "Um ou mais extras escolhidos nao estao mais disponiveis."
+      "Um ou mais extras escolhidos não estão mais disponíveis."
     );
   }
 
@@ -595,7 +595,7 @@ async function createCustomerAppointmentInTransaction(
 
     if (selectedQuantity > product.stock) {
       throw new AppointmentMutationError(
-        `${product.name} nao possui estoque suficiente para esse agendamento.`
+        `${product.name} não possui estoque suficiente para esse agendamento.`
       );
     }
   }
@@ -603,7 +603,7 @@ async function createCustomerAppointmentInTransaction(
   const appointmentDate = createScheduleDate(date, time);
 
   if (!appointmentDate) {
-    throw new AppointmentMutationError("Data ou horario invalido.");
+    throw new AppointmentMutationError("Data ou horário inválido.");
   }
 
   const now = input.now ?? new Date();
@@ -616,7 +616,7 @@ async function createCustomerAppointmentInTransaction(
       : null;
 
   if (!manualFitIn && isScheduleDateTimePast(appointmentDate, now)) {
-    throw new AppointmentMutationError("Nao e possivel agendar em um horario que ja passou.");
+    throw new AppointmentMutationError("Não é possível agendar em um horário que já passou.");
   }
 
   let vipSubscription: Awaited<
@@ -634,7 +634,7 @@ async function createCustomerAppointmentInTransaction(
     }
 
     if (vipSubscription.tokensRemaining < 1) {
-      throw new AppointmentMutationError("Seu plano VIP nao possui tokens disponiveis.");
+      throw new AppointmentMutationError("Seu plano VIP não possui tokens disponíveis.");
     }
 
     const isPaid = await isCurrentVipCyclePaymentCovered(
@@ -644,7 +644,7 @@ async function createCustomerAppointmentInTransaction(
     );
 
     if (!isPaid) {
-      throw new AppointmentMutationError("Seu plano VIP ainda esta com pagamento pendente.");
+      throw new AppointmentMutationError("Seu plano VIP ainda está com pagamento pendente.");
     }
 
     await assertCanScheduleVipAppointment(db, {
@@ -659,7 +659,7 @@ async function createCustomerAppointmentInTransaction(
   const dayRange = getScheduleDayRange(date);
 
   if (dayOfWeek === null || !dayRange) {
-    throw new AppointmentMutationError("Data ou horario invalido.");
+    throw new AppointmentMutationError("Data ou horário inválido.");
   }
 
   const { start: dayStart, end: dayEnd } = dayRange;
@@ -713,7 +713,7 @@ async function createCustomerAppointmentInTransaction(
     ]);
 
     if (!availability) {
-      throw new AppointmentMutationError("Este barbeiro nao atende nesse dia.");
+      throw new AppointmentMutationError("Este barbeiro não atende nesse dia.");
     }
 
     const vipPlanDuration = vipSubscription
@@ -729,19 +729,19 @@ async function createCustomerAppointmentInTransaction(
 
     if (selectedStartMinutes < availabilityStart || selectedEndMinutes > availabilityEnd) {
       throw new AppointmentMutationError(
-        "O horario escolhido esta fora da disponibilidade do barbeiro."
+        "O horário escolhido está fora da disponibilidade do barbeiro."
       );
     }
 
     const endDate = new Date(appointmentDate.getTime() + occupiedDuration * 60000);
 
     if (isBlockedPeriod(appointmentDate, endDate, blocks)) {
-      throw new AppointmentMutationError("O horario escolhido esta bloqueado pelo barbeiro.");
+      throw new AppointmentMutationError("O horário escolhido está bloqueado pelo barbeiro.");
     }
 
     if (isBlockedByRecurringBlock(selectedStartMinutes, selectedEndMinutes, recurringBlocks)) {
       throw new AppointmentMutationError(
-        "O horario escolhido entra em um bloqueio recorrente do barbeiro."
+        "O horário escolhido entra em um bloqueio recorrente do barbeiro."
       );
     }
   }
@@ -774,7 +774,7 @@ async function createCustomerAppointmentInTransaction(
 
   if (conflict) {
     throw new AppointmentMutationError(
-      "Esse horario acabou de ser reservado. Escolha outro horario."
+      "Esse horário acabou de ser reservado. Escolha outro horário."
     );
   }
 
@@ -934,7 +934,7 @@ async function rescheduleCustomerAppointmentInTransaction(
 
   if (!appointmentId || !customerId || !barberId || !date || !time) {
     throw new AppointmentMutationError(
-      "Selecione barbeiro, servicos, data e horario para remarcar."
+      "Selecione barbeiro, serviços, data e horário para remarcar."
     );
   }
 
@@ -961,7 +961,7 @@ async function rescheduleCustomerAppointmentInTransaction(
       (currentAppointment.customerId !== customerId ||
         currentAppointment.isManualFitIn))
   ) {
-    throw new AppointmentMutationError("Agendamento nao encontrado para sua conta.");
+    throw new AppointmentMutationError("Agendamento não encontrado para sua conta.");
   }
 
   const currentStatus = normalizeAppointmentStatus(currentAppointment.status);
@@ -969,16 +969,16 @@ async function rescheduleCustomerAppointmentInTransaction(
   if (FINAL_APPOINTMENT_STATUSES.includes(currentStatus)) {
     throw new AppointmentMutationError(
       actor === "ADMIN"
-        ? "Esse atendimento ja foi finalizado e nao permite edicao operacional."
+        ? "Esse atendimento já foi finalizado e não permite edição operacional."
         : actor === "BARBER"
-        ? "Esse atendimento ja foi finalizado e nao permite edicao pelo barbeiro."
-        : "Esse agendamento nao pode mais ser remarcado."
+        ? "Esse atendimento já foi finalizado e não permite edição pelo barbeiro."
+        : "Esse agendamento não pode mais ser remarcado."
     );
   }
 
   if (!currentAppointment.isVipPlanUse && serviceIds.length === 0) {
     throw new AppointmentMutationError(
-      "Selecione pelo menos um servico para remarcar."
+      "Selecione pelo menos um serviço para remarcar."
     );
   }
 
@@ -1009,13 +1009,13 @@ async function rescheduleCustomerAppointmentInTransaction(
   });
 
   if (!barber) {
-    throw new AppointmentMutationError("O barbeiro selecionado nao esta mais disponivel.");
+    throw new AppointmentMutationError("O barbeiro selecionado não esta mais disponível.");
   }
 
   const shopId = barber.shopId;
 
   if (currentAppointment.shopId !== shopId) {
-    throw new AppointmentMutationError("Agendamento nao encontrado para esta barbearia.");
+    throw new AppointmentMutationError("Agendamento não encontrado para esta barbearia.");
   }
 
   const customer = await db.user.findFirst({
@@ -1031,7 +1031,7 @@ async function rescheduleCustomerAppointmentInTransaction(
   });
 
   if (!customer) {
-    throw new AppointmentMutationError("Cliente nao autorizado para esta barbearia.");
+    throw new AppointmentMutationError("Cliente não autorizado para esta barbearia.");
   }
 
   await assertNoLockedPayoutForAppointmentPeriod(db, {
@@ -1053,7 +1053,7 @@ async function rescheduleCustomerAppointmentInTransaction(
 
   if (availableServices.length !== serviceIds.length) {
     throw new AppointmentMutationError(
-      "Um ou mais servicos escolhidos nao estao disponiveis para esse barbeiro."
+      "Um ou mais serviços escolhidos não estão disponíveis para esse barbeiro."
     );
   }
 
@@ -1068,7 +1068,7 @@ async function rescheduleCustomerAppointmentInTransaction(
 
   if (orderedServices.length !== serviceIds.length) {
     throw new AppointmentMutationError(
-      "Nao foi possivel validar a ordem dos servicos selecionados."
+      "Não foi possível validar a ordem dos serviços selecionados."
     );
   }
 
@@ -1107,7 +1107,7 @@ async function rescheduleCustomerAppointmentInTransaction(
 
   if (selectedProducts.length !== extrasByProductId.size) {
     throw new AppointmentMutationError(
-      "Um ou mais extras escolhidos nao estao mais disponiveis."
+      "Um ou mais extras escolhidos não estão mais disponíveis."
     );
   }
 
@@ -1118,7 +1118,7 @@ async function rescheduleCustomerAppointmentInTransaction(
 
     if (selectedQuantity > availableStock) {
       throw new AppointmentMutationError(
-        `${product.name} nao possui estoque suficiente para esse agendamento.`
+        `${product.name} não possui estoque suficiente para esse agendamento.`
       );
     }
   }
@@ -1126,20 +1126,20 @@ async function rescheduleCustomerAppointmentInTransaction(
   const appointmentDate = createScheduleDate(date, time);
 
   if (!appointmentDate) {
-    throw new AppointmentMutationError("Data ou horario invalido.");
+    throw new AppointmentMutationError("Data ou horário inválido.");
   }
 
   const shouldUseVipPlan = currentAppointment.isVipPlanUse;
 
   if (input.useVipPlan && !shouldUseVipPlan) {
     throw new AppointmentMutationError(
-      "Nao e possivel transformar um agendamento comum em VIP pela remarcacao."
+      "Não é possível transformar um agendamento comum em VIP pela remarcação."
     );
   }
 
   if (shouldUseVipPlan) {
     if (!currentAppointment.vipSubscriptionId) {
-      throw new AppointmentMutationError("Assinatura VIP do agendamento nao encontrada.");
+      throw new AppointmentMutationError("Assinatura VIP do agendamento não encontrada.");
     }
 
     const vipSubscription = await getActiveVipSubscriptionForCustomer(db, {
@@ -1158,7 +1158,7 @@ async function rescheduleCustomerAppointmentInTransaction(
     );
 
     if (!isPaid) {
-      throw new AppointmentMutationError("Seu plano VIP ainda esta com pagamento pendente.");
+      throw new AppointmentMutationError("Seu plano VIP ainda está com pagamento pendente.");
     }
 
     await assertCanScheduleVipAppointment(db, {
@@ -1178,7 +1178,7 @@ async function rescheduleCustomerAppointmentInTransaction(
     isScheduleDateTimePast(appointmentDate, now) &&
     (actor === "CUSTOMER" || isChangingSchedule)
   ) {
-    throw new AppointmentMutationError("Nao e possivel remarcar para um horario que ja passou.");
+    throw new AppointmentMutationError("Não é possível remarcar para um horário que já passou.");
   }
 
   if (isChangingSchedule) {
@@ -1195,7 +1195,7 @@ async function rescheduleCustomerAppointmentInTransaction(
   const dayRange = getScheduleDayRange(date);
 
   if (dayOfWeek === null || !dayRange) {
-    throw new AppointmentMutationError("Data ou horario invalido.");
+    throw new AppointmentMutationError("Data ou horário inválido.");
   }
 
   const { start: dayStart, end: dayEnd } = dayRange;
@@ -1248,7 +1248,7 @@ async function rescheduleCustomerAppointmentInTransaction(
 
   if (shouldValidateScheduleCapacity) {
     if (!availability) {
-      throw new AppointmentMutationError("Este barbeiro nao atende nesse dia.");
+      throw new AppointmentMutationError("Este barbeiro não atende nesse dia.");
     }
 
     const vipPlanDuration =
@@ -1264,19 +1264,19 @@ async function rescheduleCustomerAppointmentInTransaction(
 
     if (selectedStartMinutes < availabilityStart || selectedEndMinutes > availabilityEnd) {
       throw new AppointmentMutationError(
-        "O horario escolhido esta fora da disponibilidade do barbeiro."
+        "O horário escolhido está fora da disponibilidade do barbeiro."
       );
     }
 
     const endDate = new Date(appointmentDate.getTime() + selectedOccupiedDuration * 60000);
 
     if (isBlockedPeriod(appointmentDate, endDate, blocks)) {
-      throw new AppointmentMutationError("O horario escolhido esta bloqueado pelo barbeiro.");
+      throw new AppointmentMutationError("O horário escolhido está bloqueado pelo barbeiro.");
     }
 
     if (isBlockedByRecurringBlock(selectedStartMinutes, selectedEndMinutes, recurringBlocks)) {
       throw new AppointmentMutationError(
-        "O horario escolhido entra em um bloqueio recorrente do barbeiro."
+        "O horário escolhido entra em um bloqueio recorrente do barbeiro."
       );
     }
 
@@ -1300,7 +1300,7 @@ async function rescheduleCustomerAppointmentInTransaction(
 
     if (conflict) {
       throw new AppointmentMutationError(
-        "Esse horario acabou de ser reservado. Escolha outro horario."
+        "Esse horário acabou de ser reservado. Escolha outro horário."
       );
     }
   }
@@ -1323,7 +1323,7 @@ async function rescheduleCustomerAppointmentInTransaction(
         shopId,
         type: "RESCHEDULE_RETURN",
         quantity: item.quantity,
-        reason: `Devolucao por remarcacao do agendamento ${appointmentId}`,
+        reason: `Devolução por remarcação do agendamento ${appointmentId}`,
       },
       db
     );
@@ -1452,7 +1452,7 @@ async function rescheduleCustomerAppointmentInTransaction(
           shopId,
           type: "RESCHEDULE_RESERVE_OUT",
           quantity,
-          reason: `Reserva em remarcacao do agendamento ${appointmentId}`,
+          reason: `Reserva em remarcação do agendamento ${appointmentId}`,
         },
         db
       );
@@ -1495,7 +1495,7 @@ async function editCompletedAppointmentFinancialItemsInTransaction(
 
   if (!appointmentId || serviceIds.length === 0) {
     throw new AppointmentMutationError(
-      "Selecione os servicos do atendimento para atualizar o financeiro."
+      "Selecione os serviços do atendimento para atualizar o financeiro."
     );
   }
 
@@ -1519,25 +1519,25 @@ async function editCompletedAppointmentFinancialItemsInTransaction(
   });
 
   if (!currentAppointment) {
-    throw new AppointmentMutationError("Atendimento nao encontrado.");
+    throw new AppointmentMutationError("Atendimento não encontrado.");
   }
 
   const currentStatus = normalizeAppointmentStatus(currentAppointment.status);
 
   if (!["COMPLETED", "DONE"].includes(currentStatus)) {
     throw new AppointmentMutationError(
-      "Esse ajuste financeiro so pode ser feito em atendimentos concluidos."
+      "Esse ajuste financeiro só pode ser feito em atendimentos concluídos."
     );
   }
 
   if (input.actor === "BARBER" && currentAppointment.barberId !== input.barberId) {
     throw new AppointmentMutationError(
-      "Atendimento nao encontrado para este barbeiro."
+      "Atendimento não encontrado para este barbeiro."
     );
   }
 
   if (input.actor === "ADMIN" && input.shopId && currentAppointment.shopId !== input.shopId) {
-    throw new AppointmentMutationError("Atendimento nao encontrado para esta barbearia.");
+    throw new AppointmentMutationError("Atendimento não encontrado para esta barbearia.");
   }
 
   const shopId = currentAppointment.shopId;
@@ -1562,7 +1562,7 @@ async function editCompletedAppointmentFinancialItemsInTransaction(
   });
 
   if (!barber) {
-    throw new AppointmentMutationError("O barbeiro desse atendimento nao esta ativo.");
+    throw new AppointmentMutationError("O barbeiro desse atendimento não está ativo.");
   }
 
   const extrasByProductId = new Map<string, number>();
@@ -1603,7 +1603,7 @@ async function editCompletedAppointmentFinancialItemsInTransaction(
 
   if (availableServices.length !== serviceIds.length) {
     throw new AppointmentMutationError(
-      "Um ou mais servicos escolhidos nao estao disponiveis para esse barbeiro."
+      "Um ou mais serviços escolhidos não estão disponíveis para esse barbeiro."
     );
   }
 
@@ -1618,7 +1618,7 @@ async function editCompletedAppointmentFinancialItemsInTransaction(
 
   if (orderedServices.length !== serviceIds.length) {
     throw new AppointmentMutationError(
-      "Nao foi possivel validar a ordem dos servicos selecionados."
+      "Não foi possível validar a ordem dos serviços selecionados."
     );
   }
 
@@ -1660,7 +1660,7 @@ async function editCompletedAppointmentFinancialItemsInTransaction(
 
   if (selectedProducts.length !== extrasByProductId.size) {
     throw new AppointmentMutationError(
-      "Um ou mais extras escolhidos nao estao mais disponiveis."
+      "Um ou mais extras escolhidos não estão mais disponíveis."
     );
   }
 
@@ -1671,7 +1671,7 @@ async function editCompletedAppointmentFinancialItemsInTransaction(
 
     if (selectedQuantity > availableStock) {
       throw new AppointmentMutationError(
-        `${product.name} nao possui estoque suficiente para esse atendimento.`
+        `${product.name} não possui estoque suficiente para esse atendimento.`
       );
     }
   }
@@ -1861,7 +1861,7 @@ export async function updateAppointmentStatusForBarber(
       : null;
 
   if (!appointmentId || !APPOINTMENT_STATUSES.includes(normalizedStatus)) {
-    throw new AppointmentMutationError("Status de agendamento invalido.");
+    throw new AppointmentMutationError("Status de agendamento inválido.");
   }
 
   if (normalizedStatus === "CANCELLED" && !normalizedCancellationReason) {
@@ -1870,7 +1870,7 @@ export async function updateAppointmentStatusForBarber(
 
   if (normalizedStatus === "COMPLETED" && !normalizedPaymentMethod) {
     throw new AppointmentMutationError(
-      "Escolha Pix, dinheiro ou cartao antes de concluir."
+      "Escolha Pix, dinheiro ou cartão antes de concluir."
     );
   }
 
@@ -1880,7 +1880,7 @@ export async function updateAppointmentStatusForBarber(
 
   if (!appointment || appointment.barberId !== barberId) {
     throw new AppointmentMutationError(
-      "Agendamento nao encontrado para este barbeiro."
+      "Agendamento não encontrado para este barbeiro."
     );
   }
 
@@ -1940,12 +1940,12 @@ export async function updateAppointmentStatusForAdmin(
       : null;
 
   if (!appointmentId || !APPOINTMENT_STATUSES.includes(normalizedStatus)) {
-    throw new AppointmentMutationError("Status de agendamento invalido.");
+    throw new AppointmentMutationError("Status de agendamento inválido.");
   }
 
   if (normalizedStatus === "COMPLETED" && !normalizedPaymentMethod) {
     throw new AppointmentMutationError(
-      "Escolha Pix, dinheiro ou cartao antes de concluir."
+      "Escolha Pix, dinheiro ou cartão antes de concluir."
     );
   }
 
@@ -2011,16 +2011,16 @@ export async function cancelAppointmentByCustomer(
         appointment.customerId !== customerId ||
         appointment.isManualFitIn
       ) {
-        throw new AppointmentMutationError("Agendamento nao encontrado para sua conta.");
+        throw new AppointmentMutationError("Agendamento não encontrado para sua conta.");
       }
 
       if (["CANCELLED", "COMPLETED", "DONE", "NO_SHOW"].includes(appointment.status)) {
-        throw new AppointmentMutationError("Esse agendamento nao pode mais ser cancelado.");
+        throw new AppointmentMutationError("Esse agendamento não pode mais ser cancelado.");
       }
 
       if (isScheduleDateTimePast(appointment.date)) {
         throw new AppointmentMutationError(
-          "Esse horario ja passou. Fale com o barbeiro para ajustar o status."
+          "Esse horário já passou. Fale com o barbeiro para ajustar o status."
         );
       }
 
@@ -2264,7 +2264,7 @@ async function updateAppointmentStatusWithSideEffects(
 
       if (updated.count === 0) {
         throw new AppointmentMutationError(
-          `${item.productNameSnapshot} nao possui estoque suficiente para reabrir esse atendimento.`
+          `${item.productNameSnapshot} não possui estoque suficiente para reabrir esse atendimento.`
         );
       }
 
@@ -2364,7 +2364,7 @@ async function updateAppointmentStatusWithSideEffects(
       throw new AppointmentMutationError(
         error instanceof Error
           ? error.message
-          : "Nao foi possivel consumir o token VIP deste atendimento."
+          : "Não foi possível consumir o token VIP deste atendimento."
       );
     }
   }

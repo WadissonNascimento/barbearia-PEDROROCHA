@@ -84,7 +84,7 @@ export async function getBookingAvailability(
   const dayOfWeek = getScheduleDayOfWeek(date);
 
   if (!dayRange || dayOfWeek === null) {
-    throw new BookingAvailabilityError("Data invalida.");
+    throw new BookingAvailabilityError("Data inválida.");
   }
 
   const { start: dayStart, end: dayEnd } = dayRange;
@@ -166,7 +166,7 @@ export async function getBookingAvailability(
 
   if (services.length !== serviceIds.length) {
     throw new BookingAvailabilityError(
-      "Um ou mais servicos escolhidos nao estao disponiveis para esse barbeiro."
+      "Um ou mais serviços escolhidos não estão disponíveis para esse barbeiro."
     );
   }
 

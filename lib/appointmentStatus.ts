@@ -26,11 +26,11 @@ export function appointmentStatusLabel(status: string) {
     case "CONFIRMED":
       return "Agendado";
     case "COMPLETED":
-      return "Concluido";
+      return "Concluído";
     case "CANCELLED":
       return "Cancelado";
     case "NO_SHOW":
-      return "Nao compareceu";
+      return "Não compareceu";
     default:
       return "Agendado";
   }

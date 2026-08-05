@@ -396,7 +396,7 @@ function TodayAgendaBlockCard({
       <div className="mt-3 space-y-1 text-sm">
         <p className="font-semibold text-white">Motivo: {block.reason}</p>
         <p className="leading-relaxed text-zinc-300">
-          Esse horario so aceita encaixes rapidos pelo admin ou barbeiro.
+          Esse horário só aceita encaixes rápidos pelo admin ou barbeiro.
         </p>
       </div>
     </div>
@@ -653,7 +653,7 @@ function getNotificationStatusLabel(status: string) {
 
   if (normalized === "CONFIRMED") return "Agendado";
   if (normalized === "PENDING") return "Pendente";
-  if (normalized === "COMPLETED" || normalized === "DONE") return "Concluido";
+  if (normalized === "COMPLETED" || normalized === "DONE") return "Concluído";
   if (normalized === "CANCELLED") return "Cancelado";
   if (normalized === "NO_SHOW") return "Faltou";
 
@@ -694,7 +694,7 @@ function NotificationAppointmentCard({
   const displayTime =
     appointment.time ||
     extractTimeFromDateTime(appointment.nextDateTime) ||
-    (hasScheduleChange ? "Reagendado" : "Horario");
+    (hasScheduleChange ? "Reagendado" : "Horário");
   const displayDate =
     appointment.date || extractDateFromDateTime(appointment.nextDateTime);
   const metaParts = [appointment.phone].filter(Boolean);
@@ -741,11 +741,11 @@ function NotificationAppointmentCard({
       {hasScheduleChange ? (
         <div className="mt-3 grid gap-2 text-sm">
           {appointment.previousDateTime ? (
-            <CompactInfo label="Horario antigo" value={appointment.previousDateTime} />
+            <CompactInfo label="Horário antigo" value={appointment.previousDateTime} />
           ) : null}
           {appointment.nextDateTime ? (
             <CompactInfo
-              label="Novo horario"
+              label="Novo horário"
               value={appointment.nextDateTime}
               tone="brand"
             />
@@ -790,9 +790,9 @@ function SingleNotificationCard({ card }: { card: SingleNotificationCardData }) 
           {card.receivedAt ? (
             <CompactInfo label="Recebida" value={card.receivedAt} />
           ) : null}
-          <CompactInfo label="Data" value={card.date || "Nao informado"} />
-          <CompactInfo label="Horario" value={card.time || "Nao informado"} />
-          <CompactInfo label="Telefone" value={card.phone || "Nao informado"} />
+          <CompactInfo label="Data" value={card.date || "Não informado"} />
+          <CompactInfo label="Horário" value={card.time || "Não informado"} />
+          <CompactInfo label="Telefone" value={card.phone || "Não informado"} />
           <CompactInfo label="Coroas" value={`${card.rating}`} />
         </div>
 
@@ -894,7 +894,7 @@ function getSingleNotificationCard(
     appointmentCode: appointmentCode || "Atendimento",
     customerName: customerName || "Cliente",
     phone: asString(record.phone) || null,
-    serviceName: serviceName || "Servico agendado",
+    serviceName: serviceName || "Serviço agendado",
     date: asString(record.date),
     time: asString(record.time),
     status: getStatusFromNotificationType(type),
@@ -928,7 +928,7 @@ function getStatusFromNotificationType(type: string) {
     return "NO_SHOW";
   }
 
-  if (type.includes("completed") || type.includes("conclusao")) {
+  if (type.includes("completed") || type.includes("conclusão")) {
     return "COMPLETED";
   }
 
@@ -999,7 +999,7 @@ function getNotificationAppointmentCards(metadata: unknown) {
         appointmentCode: String(record.appointmentCode || "Atendimento"),
         customerName: String(record.customerName || "Cliente"),
         phone: record.phone ? String(record.phone) : null,
-        serviceName: String(record.serviceName || "Servico agendado"),
+        serviceName: String(record.serviceName || "Serviço agendado"),
         date: String(record.date || ""),
         time: String(record.time || ""),
         status: String(record.status || "Aberto"),
@@ -1037,11 +1037,11 @@ function getNotificationMetadataRows(metadata: unknown) {
     ["appointmentCode", "Atendimento"],
     ["customerName", "Cliente"],
     ["phone", "Telefone"],
-    ["serviceName", "Servico"],
+    ["serviceName", "Serviço"],
     ["date", "Data"],
-    ["time", "Horario"],
-    ["previousDateTime", "Horario antigo"],
-    ["nextDateTime", "Novo horario"],
+    ["time", "Horário"],
+    ["previousDateTime", "Horário antigo"],
+    ["nextDateTime", "Novo horário"],
     ["reason", "Motivo"],
     ["rating", "Nota"],
     ["reviewComment", "Comentario"],

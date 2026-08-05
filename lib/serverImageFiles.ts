@@ -10,9 +10,9 @@ const heicConvert = require("heic-convert") as (options: {
 }) => Promise<ArrayBuffer | Buffer | Uint8Array>;
 
 const VALID_IMAGE_MESSAGE =
-  "O arquivo enviado nao parece ser uma imagem valida. Envie JPG, PNG, WEBP ou HEIC.";
+  "O arquivo enviado não parece ser uma imagem válida. Envie JPG, PNG, WEBP ou HEIC.";
 const INVALID_HEIC_MESSAGE =
-  "Essa foto do iPhone nao chegou como HEIC valido. Envie como JPG/PNG ou tire uma captura e tente novamente.";
+  "Essa foto do iPhone não chegou como HEIC válido. Envie como JPG/PNG ou tire uma captura e tente novamente.";
 const TYPE_MESSAGE = "Envie uma imagem JPG, PNG, WEBP ou HEIC.";
 const HEIC_TYPES = new Set(["image/heic", "image/heif"]);
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);

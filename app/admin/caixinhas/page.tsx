@@ -70,7 +70,7 @@ export default async function AdminTipsPage({ searchParams }: AdminTipsPageProps
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <AdminTipMetric label="Total no periodo" value={formatCurrency(totalAmount)} />
+          <AdminTipMetric label="Total no período" value={formatCurrency(totalAmount)} />
           <AdminTipMetric label="Registros" value={`${tipsCount}`} />
           <AdminTipMetric label="Barbeiros" value={`${data.summaries.length}`} />
         </div>

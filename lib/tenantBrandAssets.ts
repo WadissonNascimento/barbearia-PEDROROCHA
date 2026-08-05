@@ -87,7 +87,7 @@ async function uploadToSupabase(config: StorageConfig, file: File, segment: stri
   });
 
   if (!response.ok) {
-    throw new Error("Nao foi possivel enviar a logo para o Storage.");
+    throw new Error("Não foi possível enviar a logo para o Storage.");
   }
 
   return {
@@ -161,6 +161,6 @@ export async function deleteTenantBrandAsset(assetPath: string | null | undefine
   });
 
   if (!response.ok) {
-    console.warn("[storage] Nao foi possivel excluir asset antigo do tenant.");
+    console.warn("[storage] Não foi possível excluir asset antigo do tenant.");
   }
 }

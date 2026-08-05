@@ -13,7 +13,7 @@ import {
   normalizeIdentityEmail,
 } from "@/lib/userIdentity";
 
-const ADMIN_EMAIL_ERROR = "Usuario nao encontrado ou e-mail incorreto.";
+const ADMIN_EMAIL_ERROR = "Usuario não encontrado ou e-mail incorreto.";
 const ADMIN_PASSWORD_ERROR = "Senha incorreta.";
 const ADMIN_PERMISSION_ERROR = "Usuario sem permissao de administrador.";
 const ADMIN_LOGIN_ROLES = ["ADMIN", "SHOP_ADMIN"];
@@ -73,7 +73,7 @@ async function runAdminLogin(formData: FormData): Promise<FormFeedbackState> {
     });
   } catch (error) {
     if (error instanceof AuthError) {
-      return { error: "Nao foi possivel entrar no painel admin.", success: null };
+      return { error: "Não foi possível entrar no painel admin.", success: null };
     }
 
     throw error;

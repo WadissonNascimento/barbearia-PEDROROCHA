@@ -77,7 +77,7 @@ export async function uploadExtraProductImage({
   });
 
   if (!response.ok) {
-    throw new Error("Nao foi possivel enviar a imagem para o Supabase Storage.");
+    throw new Error("Não foi possível enviar a imagem para o Supabase Storage.");
   }
 
   return {
@@ -105,6 +105,6 @@ export async function deleteExtraProductImage(imagePath: string | null | undefin
   });
 
   if (!response.ok) {
-    console.warn("[storage] Nao foi possivel excluir imagem antiga do extra.");
+    console.warn("[storage] Não foi possível excluir imagem antiga do extra.");
   }
 }

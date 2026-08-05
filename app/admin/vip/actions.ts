@@ -64,7 +64,7 @@ export async function createVipSubscriptionAction(formData: FormData) {
     ]);
 
     if (!customer || !plan) {
-      throw new Error("Cliente ou plano VIP invalido.");
+      throw new Error("Cliente ou plano VIP inválido.");
     }
 
     await tx.vipSubscription.updateMany({
@@ -129,7 +129,7 @@ export async function markVipPaymentPaidAction(formData: FormData) {
   });
 
   if (!subscription) {
-    throw new Error("Assinatura VIP ativa nao encontrada.");
+    throw new Error("Assinatura VIP ativa não encontrada.");
   }
 
   await prisma.vipPayment.upsert({
@@ -204,7 +204,7 @@ export async function renewVipCycleAction(formData: FormData) {
   });
 
   if (!subscription) {
-    throw new Error("Assinatura VIP ativa nao encontrada.");
+    throw new Error("Assinatura VIP ativa não encontrada.");
   }
 
   const dueDate = getVipPaymentDueDate(now, subscription.dueDay);
@@ -325,7 +325,7 @@ export async function updateVipSubscriptionSettingsAction(formData: FormData) {
   ]);
 
   if (!subscription || !plan) {
-    throw new Error("Assinatura ou plano VIP invalido.");
+    throw new Error("Assinatura ou plano VIP inválido.");
   }
 
   const dueDate = getVipPaymentDueDate(now, dueDay);
@@ -380,7 +380,7 @@ export async function adjustVipTokensAction(formData: FormData) {
   const tokens = Number(formData.get("tokens"));
 
   if (!Number.isInteger(tokens) || tokens < 0 || tokens > 31) {
-    throw new Error("Informe uma quantidade de tokens valida.");
+    throw new Error("Informe uma quantidade de tokens válida.");
   }
 
   await prisma.vipSubscription.updateMany({

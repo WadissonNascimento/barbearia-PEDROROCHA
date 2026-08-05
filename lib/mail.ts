@@ -277,7 +277,7 @@ async function getExistingSentEmailLog({
       },
     });
   } catch (error) {
-    console.warn("[email] Nao foi possivel consultar log de envio:", normalizeEmailError(error));
+    console.warn("[email] Não foi possível consultar log de envio:", normalizeEmailError(error));
     return null;
   }
 }
@@ -339,7 +339,7 @@ async function recordEmailDeliveryAttempt({
       },
     });
   } catch (error) {
-    console.warn("[email] Nao foi possivel gravar log de envio:", normalizeEmailError(error));
+    console.warn("[email] Não foi possível gravar log de envio:", normalizeEmailError(error));
   }
 }
 
@@ -448,7 +448,7 @@ async function sendResendMailOnce({
     throw new Error(
       message
         ? `Resend ${response.status}: ${message}`
-        : `Resend ${response.status}: nao foi possivel enviar o e-mail.`
+        : `Resend ${response.status}: não foi possível enviar o e-mail.`
     );
   }
 }
@@ -481,11 +481,11 @@ export async function sendEmailMessage({
       subject,
       status: "FAILED",
       attempts: 0,
-      lastError: "E-mail do destinatario invalido.",
+      lastError: "E-mail do destinatario inválido.",
       metadata,
     });
 
-    console.warn(`[email] Destinatario invalido para ${template}: ${recipientEmail}`);
+    console.warn(`[email] Destinatário inválido para ${template}: ${recipientEmail}`);
     return { sent: false, skipped: true, attempts: 0 };
   }
 
@@ -680,12 +680,12 @@ function buildCustomerAppointmentTemplateData(
     ...theme,
     nomeCliente: payload.customerName?.trim() || "cliente",
     nomeBarbeiro: payload.barberName?.trim() || "barbeiro",
-    servico: payload.serviceName?.trim() || "Servico agendado",
-    detalhesServico: payload.serviceMeta?.trim() || "Detalhes indisponiveis",
-    dataAgendamento: payload.dateLabel?.trim() || "Data indisponivel",
-    horarioAgendamento: payload.timeLabel?.trim() || "Horario indisponivel",
-    codigoAgendamento: payload.appointmentCode?.trim() || "Sem codigo",
-    valorTotal: payload.totalLabel?.trim() || "Valor indisponivel",
+    servico: payload.serviceName?.trim() || "Serviço agendado",
+    detalhesServico: payload.serviceMeta?.trim() || "Detalhes indisponíveis",
+    dataAgendamento: payload.dateLabel?.trim() || "Data indisponível",
+    horarioAgendamento: payload.timeLabel?.trim() || "Horário indisponível",
+    codigoAgendamento: payload.appointmentCode?.trim() || "Sem código",
+    valorTotal: payload.totalLabel?.trim() || "Valor indisponível",
     extras: payload.extrasLabel,
     motivoCancelamento: payload.cancellationReason || null,
     linkPainelCliente: payload.actionUrl,
@@ -820,7 +820,7 @@ export async function sendVerificationCodeEmail({
     nomeCliente: name || "cliente",
     codigoVerificacao: code,
     linkAcao: verifyUrl,
-    rotuloAcao: verifyUrl ? "Abrir verificacao" : undefined,
+    rotuloAcao: verifyUrl ? "Abrir verificação" : undefined,
     contexto: accountLabel,
   });
 
@@ -840,7 +840,7 @@ export async function sendVerificationCodeEmail({
   });
 
   if (!result.sent) {
-    throw new Error("Nao foi possivel enviar o codigo de verificacao.");
+    throw new Error("Não foi possível enviar o código de verificação.");
   }
 }
 
@@ -871,8 +871,8 @@ export async function sendPasswordResetCodeEmail({
     nomeCliente: name || "cliente",
     codigoVerificacao: code,
     linkAcao: resetUrl,
-    rotuloAcao: "Abrir redefinicao",
-    contexto: "a recuperacao de senha",
+    rotuloAcao: "Abrir redefinição",
+    contexto: "a recuperação de senha",
   });
 
   const result = await sendEmailMessage({
@@ -891,6 +891,6 @@ export async function sendPasswordResetCodeEmail({
   });
 
   if (!result.sent) {
-    throw new Error("Nao foi possivel enviar o codigo de recuperacao.");
+    throw new Error("Não foi possível enviar o código de recuperação.");
   }
 }

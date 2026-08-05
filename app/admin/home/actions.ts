@@ -111,7 +111,7 @@ export async function replaceHomeImageAction(formData: FormData) {
   const file = formData.get("image");
 
   if (!imageId) {
-    throw new Error("Foto nao encontrada.");
+    throw new Error("Foto não encontrada.");
   }
 
   if (!(file instanceof File) || file.size === 0) {
@@ -126,7 +126,7 @@ export async function replaceHomeImageAction(formData: FormData) {
   });
 
   if (!currentImage) {
-    throw new Error("Foto nao encontrada.");
+    throw new Error("Foto não encontrada.");
   }
 
   const uploaded = await uploadHomeImage(file, shopId);
@@ -156,7 +156,7 @@ export async function removeHomeImageAction(formData: FormData) {
   const imageId = String(formData.get("imageId") || "").trim();
 
   if (!imageId) {
-    throw new Error("Foto nao encontrada.");
+    throw new Error("Foto não encontrada.");
   }
 
   const currentImage = await prisma.homeImage.findFirst({
@@ -167,7 +167,7 @@ export async function removeHomeImageAction(formData: FormData) {
   });
 
   if (!currentImage) {
-    throw new Error("Foto nao encontrada.");
+    throw new Error("Foto não encontrada.");
   }
 
   await prisma.homeImage.delete({
@@ -189,7 +189,7 @@ export async function reorderHomeImageAction(formData: FormData) {
   const direction = String(formData.get("direction") || "");
 
   if (!imageId || !["up", "down"].includes(direction)) {
-    throw new Error("Ordem invalida.");
+    throw new Error("Ordem inválida.");
   }
 
   const images = await prisma.homeImage.findMany({
@@ -203,7 +203,7 @@ export async function reorderHomeImageAction(formData: FormData) {
   const currentIndex = images.findIndex((image) => image.id === imageId);
 
   if (currentIndex === -1) {
-    throw new Error("Foto nao encontrada.");
+    throw new Error("Foto não encontrada.");
   }
 
   const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;

@@ -61,7 +61,7 @@ export default async function AdminBarberAvailabilityPage({
         <PageHeader
           eyebrow="Equipe"
           title={`Disponibilidade de ${barberName}`}
-          description="Ajuste horarios, dias abertos e bloqueios deste barbeiro."
+          description="Ajuste horários, dias abertos e bloqueios deste barbeiro."
           variant="plain"
         />
 

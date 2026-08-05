@@ -836,7 +836,7 @@ function AgendaBlockMobileCard({ block }: { block: AdminAgendaBlock }) {
       <div className="mt-2 grid gap-1.5 text-sm">
         <p className="font-semibold text-white">Motivo: {block.reason}</p>
         <p className="text-xs leading-5 text-zinc-300">
-          Esse horario so aceita encaixes rapidos pelo admin ou barbeiro.
+          Esse horário só aceita encaixes rápidos pelo admin ou barbeiro.
         </p>
       </div>
 
@@ -974,7 +974,7 @@ function AgendaBlockTableRow({ block }: { block: AdminAgendaBlock }) {
         </span>
       </td>
       <td className="max-w-xs text-zinc-400">
-        Esse horario so aceita encaixes rapidos pelo admin ou barbeiro.
+        Esse horário só aceita encaixes rápidos pelo admin ou barbeiro.
       </td>
       <td className="text-zinc-500">-</td>
     </tr>
@@ -1070,7 +1070,7 @@ function AppointmentMobileCard({
       <div className="mt-2 flex min-w-0 items-center justify-between gap-3 border-t border-white/10 pt-2">
         <div className="flex min-w-0 items-center gap-1.5 text-xs text-zinc-500">
           <UsersRound className="h-3.5 w-3.5 shrink-0 text-[var(--brand-strong)]/80" />
-          <span className="shrink-0 font-semibold">Responsavel</span>
+          <span className="shrink-0 font-semibold">Responsável</span>
           <span className="min-w-0 truncate font-bold text-zinc-300">
             {appointment.barber.name || "Barbeiro"}
           </span>
@@ -1204,8 +1204,8 @@ export function AdminAppointmentActions({
           setActionFeedback({
             title:
               nextStatus === "COMPLETED"
-                ? "Nao foi possivel concluir"
-                : "Nao foi possivel atualizar",
+                ? "Não foi possível concluir"
+                : "Não foi possível atualizar",
             message: result.message,
             tone: "error",
           });
@@ -1214,7 +1214,7 @@ export function AdminAppointmentActions({
         setActionFeedback({
           title: "Erro ao salvar",
           message:
-            "Nao foi possivel atualizar o atendimento agora. Confira sua conexao e tente novamente.",
+            "Não foi possível atualizar o atendimento agora. Confira sua conexão e tente novamente.",
           tone: "error",
         });
       } finally {
@@ -1480,7 +1480,7 @@ function AdminAppointmentEditModal({
           router.refresh();
         } else {
           setDialogFeedback({
-            title: "Nao foi possivel salvar",
+            title: "Não foi possível salvar",
             message: result.message,
             tone: "error",
           });
@@ -1489,7 +1489,7 @@ function AdminAppointmentEditModal({
         setDialogFeedback({
           title: "Erro ao salvar",
           message:
-            "Nao foi possivel salvar as alteracoes agora. Confira sua conexao e tente novamente.",
+            "Não foi possível salvar as alterações agora. Confira sua conexão e tente novamente.",
           tone: "error",
         });
       }
@@ -1519,11 +1519,11 @@ function AdminAppointmentEditModal({
               Admin
             </p>
             <h3 className="mt-2 text-xl font-bold">
-              {isCompletedEdit ? "Editar itens concluidos" : "Editar agendamento"}
+              {isCompletedEdit ? "Editar itens concluídos" : "Editar agendamento"}
             </h3>
             {isCompletedEdit ? (
               <p className="mt-1 text-sm text-zinc-400">
-                Atendimento finalizado: ajuste somente servicos, extras e observacoes.
+                Atendimento finalizado: ajuste somente serviços, extras e observações.
               </p>
             ) : null}
           </div>

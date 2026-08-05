@@ -61,7 +61,7 @@ export async function createBarberTipAction(
   }
 
   if (!amount) {
-    return mutationError("Informe um valor positivo e valido para a caixinha.");
+    return mutationError("Informe um valor positivo e válido para a caixinha.");
   }
 
   await prisma.barberTip.create({

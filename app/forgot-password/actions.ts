@@ -54,7 +54,7 @@ export async function requestPasswordResetAction(
 
   if (!rateLimit.allowed) {
     return {
-      error: "Muitas solicitacoes de recuperacao. Aguarde e tente novamente.",
+      error: "Muitas solicitacoes de recuperação. Aguarde e tente novamente.",
       success: null,
     };
   }
@@ -71,14 +71,14 @@ export async function requestPasswordResetAction(
     if (pendingRegistration) {
       return {
         error:
-          "Esse e-mail ainda esta com cadastro pendente. Volte para a tela de cadastro e finalize a verificacao do codigo.",
+          "Esse e-mail ainda está com cadastro pendente. Volte para a tela de cadastro e finalize a verificação do código.",
         success: null,
       };
     }
 
     return {
       error:
-        "Se existir uma conta ativa com esse e-mail, enviaremos um codigo de recuperacao.",
+        "Se existir uma conta ativa com esse e-mail, enviaremos um código de recuperação.",
       success: null,
     };
   }
@@ -120,13 +120,13 @@ export async function requestPasswordResetAction(
     if (isUniqueConstraintError(error, "email")) {
       return {
         error:
-          "Este e-mail existe em outra barbearia. A recuperacao por loja sera liberada na proxima etapa.",
+          "Este e-mail existe em outra barbearia. A recuperação por loja será liberada na próxima etapa.",
         success: null,
       };
     }
 
     return {
-      error: "Nao foi possivel enviar o codigo de recuperacao.",
+      error: "Não foi possível enviar o código de recuperação.",
       success: null,
     };
   }
@@ -147,7 +147,7 @@ export async function resendPasswordResetCodeAction(
 
   if (!email) {
     return {
-      error: "Informe o e-mail para reenviar o codigo.",
+      error: "Informe o e-mail para reenviar o código.",
       success: null,
     };
   }
@@ -177,7 +177,7 @@ export async function resendPasswordResetCodeAction(
 
   if (!resetRequest || !user) {
     return {
-      error: "Nao encontramos uma solicitacao de recuperacao para esse e-mail.",
+      error: "Não encontramos uma solicitação de recuperação para esse e-mail.",
       success: null,
     };
   }
@@ -201,7 +201,7 @@ export async function resendPasswordResetCodeAction(
     });
   } catch (error) {
     return {
-      error: "Nao foi possivel reenviar o codigo.",
+      error: "Não foi possível reenviar o código.",
       success: null,
     };
   }
@@ -210,7 +210,7 @@ export async function resendPasswordResetCodeAction(
     error: null,
     success: isUsingDevelopmentMailFallback()
       ? `Codigo de recuperacao local: ${code}`
-      : "Enviamos um novo codigo de recuperacao para o seu e-mail.",
+      : "Enviamos um novo código de recuperação para o seu e-mail.",
   };
 }
 
@@ -226,7 +226,7 @@ export async function resetPasswordWithCodeAction(
 
   if (!email || !code || !password || !confirmPassword) {
     return {
-      error: "Preencha e-mail, codigo e nova senha.",
+      error: "Preencha e-mail, código e nova senha.",
       success: null,
     };
   }
@@ -240,7 +240,7 @@ export async function resetPasswordWithCodeAction(
 
   if (!rateLimit.allowed) {
     return {
-      error: "Muitas tentativas de verificacao. Aguarde e tente novamente.",
+      error: "Muitas tentativas de verificação. Aguarde e tente novamente.",
       success: null,
     };
   }
@@ -254,7 +254,7 @@ export async function resetPasswordWithCodeAction(
 
   if (password !== confirmPassword) {
     return {
-      error: "As senhas informadas nao conferem.",
+      error: "As senhas informadas não conferem.",
       success: null,
     };
   }
@@ -265,21 +265,21 @@ export async function resetPasswordWithCodeAction(
 
   if (!resetRequest) {
     return {
-      error: "Nao encontramos uma solicitacao de recuperacao para esse e-mail.",
+      error: "Não encontramos uma solicitação de recuperação para esse e-mail.",
       success: null,
     };
   }
 
   if (resetRequest.expiresAt.getTime() < Date.now()) {
     return {
-      error: "Esse codigo expirou. Solicite um novo envio.",
+      error: "Esse código expirou. Solicite um novo envio.",
       success: null,
     };
   }
 
   if (resetRequest.attempts >= MAX_RESET_ATTEMPTS) {
     return {
-      error: "Muitas tentativas invalidas. Solicite um novo codigo.",
+      error: "Muitas tentativas invalidas. Solicite um novo código.",
       success: null,
     };
   }
@@ -296,7 +296,7 @@ export async function resetPasswordWithCodeAction(
     });
 
     return {
-      error: "Codigo invalido. Confira o e-mail e tente novamente.",
+      error: "Código inválido. Confira o e-mail e tente novamente.",
       success: null,
     };
   }
@@ -311,7 +311,7 @@ export async function resetPasswordWithCodeAction(
     });
 
     return {
-      error: "Nao encontramos uma conta ativa com esse e-mail.",
+      error: "Não encontramos uma conta ativa com esse e-mail.",
       success: null,
     };
   }

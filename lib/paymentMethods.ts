@@ -6,7 +6,7 @@ export type AppointmentPaymentMethod =
 const PAYMENT_METHOD_LABELS: Record<AppointmentPaymentMethod, string> = {
   PIX: "Pix",
   CASH: "Dinheiro",
-  CARD: "Cartao",
+  CARD: "Cartão",
 };
 
 export type PaymentBreakdown = Record<AppointmentPaymentMethod | "UNKNOWN", number>;
@@ -26,7 +26,7 @@ export function normalizePaymentMethod(
 export function paymentMethodLabel(value: string | null | undefined) {
   const normalized = normalizePaymentMethod(value);
 
-  return normalized ? PAYMENT_METHOD_LABELS[normalized] : "Nao informado";
+  return normalized ? PAYMENT_METHOD_LABELS[normalized] : "Não informado";
 }
 
 export function createEmptyPaymentBreakdown(): PaymentBreakdown {

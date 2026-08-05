@@ -218,7 +218,7 @@ export default function AdminWalkInAppointmentButton({
     message: string;
     tone: "info" | "error";
   }>({
-    message: "Selecione os servicos para ver os horarios disponiveis.",
+    message: "Selecione os serviços para ver os horários disponíveis.",
     tone: "info",
   });
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
@@ -302,12 +302,12 @@ export default function AdminWalkInAppointmentButton({
       ? Number(quickDurationMinutes) || 0
       : selectedDuration + vipPlanDuration;
   const vipUnavailableMessage = vipSubscription && vipSubscription.tokensRemaining < 1
-    ? "Este cliente nao possui atendimentos disponiveis neste ciclo."
+    ? "Este cliente não possui atendimentos disponíveis neste ciclo."
     : vipSubscription && !vipPaymentCovered
-      ? "O pagamento deste ciclo venceu e ainda esta pendente."
+      ? "O pagamento deste ciclo venceu e ainda está pendente."
       : null;
   const vipWeekAlreadyUsedMessage =
-    "Este cliente ja possui um atendimento do plano mensal nesta semana. Escolha outra semana para usar o plano ou marque como atendimento avulso.";
+    "Este cliente já possui um atendimento do plano mensal nesta semana. Escolha outra semana para usar o plano ou marque como atendimento avulso.";
   const filteredCustomers = useMemo(() => {
     const search = clientSearch.trim().toLowerCase();
 
@@ -385,7 +385,7 @@ export default function AdminWalkInAppointmentButton({
       setPeriodSlots(emptyPeriodSlots());
       setStartTime("");
       setSlotsFeedback({
-        message: "Selecione os servicos para ver os horarios disponiveis.",
+        message: "Selecione os serviços para ver os horários disponíveis.",
         tone: "info",
       });
       setIsLoadingSlots(false);
@@ -395,7 +395,7 @@ export default function AdminWalkInAppointmentButton({
     let cancelled = false;
     setIsLoadingSlots(true);
     setSlotsFeedback({
-      message: "Carregando horarios disponiveis...",
+      message: "Carregando horários disponíveis...",
       tone: "info",
     });
 
@@ -434,8 +434,8 @@ export default function AdminWalkInAppointmentButton({
         setSlotsFeedback({
           message:
             nextSlots.length > 0
-              ? "Toque em um horario para reservar o encaixe."
-              : "Nenhum horario disponivel para essa data e duracao.",
+              ? "Toque em um horário para reservar o encaixe."
+              : "Nenhum horário disponível para essa data e duração.",
           tone: nextSlots.length > 0 ? "info" : "error",
         });
       })
@@ -448,7 +448,7 @@ export default function AdminWalkInAppointmentButton({
         setPeriodSlots(emptyPeriodSlots());
         setStartTime("");
         setSlotsFeedback({
-          message: "Nao foi possivel carregar os horarios. Tente novamente.",
+          message: "Não foi possível carregar os horários. Tente novamente.",
           tone: "error",
         });
       })
@@ -553,7 +553,7 @@ export default function AdminWalkInAppointmentButton({
     if (hasPhone && !isValidBrazilianPhone(customerPhone)) {
       showWalkInError(
         "Confira o telefone",
-        "O telefone e opcional, mas precisa ser valido quando for informado."
+        "O telefone é opcional, mas precisa ser válido quando for informado."
       );
       return;
     }
@@ -565,8 +565,8 @@ export default function AdminWalkInAppointmentButton({
   function goToScheduleStep() {
     if (!hasBookableItem) {
       showWalkInError(
-        "Escolha o servico",
-        "Selecione pelo menos um servico ou use o plano mensal para carregar os horarios disponiveis."
+        "Escolha o serviço",
+        "Selecione pelo menos um serviço ou use o plano mensal para carregar os horários disponíveis."
       );
       return;
     }
@@ -596,7 +596,7 @@ export default function AdminWalkInAppointmentButton({
     if (!Number.isInteger(duration) || duration < 5 || duration > 240) {
       showWalkInError(
         "Confira o tempo",
-        "Informe uma duracao entre 5 e 240 minutos para o encaixe rapido."
+        "Informe uma duração entre 5 e 240 minutos para o encaixe rápido."
       );
       return;
     }
@@ -612,7 +612,7 @@ export default function AdminWalkInAppointmentButton({
 
       if (!result.ok || !result.data) {
         showWalkInError(
-          "Nao foi possivel calcular",
+          "Não foi possível calcular",
           result.message || "Tente novamente em instantes."
         );
         return;
@@ -623,7 +623,7 @@ export default function AdminWalkInAppointmentButton({
         vipSubscription?.weeklyUsedWeekStarts.includes(getWeekStartValue(result.data.date))
       ) {
         setActionFeedback({
-          title: "Plano mensal ja usado nesta semana",
+          title: "Plano mensal já usado nesta semana",
           message: vipWeekAlreadyUsedMessage,
           tone: "error",
         });
@@ -642,7 +642,7 @@ export default function AdminWalkInAppointmentButton({
       setStep("extras");
     } catch {
       showWalkInError(
-        "Nao foi possivel calcular",
+        "Não foi possível calcular",
         "Tente novamente em instantes."
       );
     } finally {
@@ -702,7 +702,7 @@ export default function AdminWalkInAppointmentButton({
   function selectWalkInSlot(slot: string) {
     if (useVipPlan && selectedVipWeekAlreadyUsed) {
       setActionFeedback({
-        title: "Plano mensal ja usado nesta semana",
+        title: "Plano mensal já usado nesta semana",
         message: vipWeekAlreadyUsedMessage,
         tone: "error",
       });
@@ -724,7 +724,7 @@ export default function AdminWalkInAppointmentButton({
         selectedServices.map((service) => service.name).join(" + "),
       ]
         .filter(Boolean)
-        .join(" + ") || "Servico";
+        .join(" + ") || "Serviço";
     const extrasLabel =
       hasExtras && selectedExtras.length > 0
         ? selectedExtras.map((extra) => extra.name).join(" + ")
@@ -741,14 +741,14 @@ export default function AdminWalkInAppointmentButton({
     if (customerPhone.trim() && !isValidBrazilianPhone(customerPhone)) {
       showWalkInError(
         "Confira o telefone",
-        "O telefone e opcional, mas precisa ser valido quando for informado."
+        "O telefone é opcional, mas precisa ser válido quando for informado."
       );
       return;
     }
 
     if (useVipPlan && selectedVipWeekAlreadyUsed) {
       setActionFeedback({
-        title: "Plano mensal ja usado nesta semana",
+        title: "Plano mensal já usado nesta semana",
         message: vipWeekAlreadyUsedMessage,
         tone: "error",
       });
@@ -757,8 +757,8 @@ export default function AdminWalkInAppointmentButton({
 
     if (fitInMode === "standard" && !availableSlots.includes(startTime)) {
       showWalkInError(
-        "Escolha o horario",
-        "Selecione um horario disponivel na lista antes de criar o encaixe."
+        "Escolha o horário",
+        "Selecione um horário disponível na lista antes de criar o encaixe."
       );
       return;
     }
@@ -809,20 +809,20 @@ export default function AdminWalkInAppointmentButton({
         } else {
           setFeedback({ message: result.message, tone: result.tone });
           setActionFeedback({
-            title: "Nao foi possivel criar o encaixe",
+            title: "Não foi possível criar o encaixe",
             message: result.message,
             tone: "error",
           });
         }
       } catch {
         setFeedback({
-          message: "Nao foi possivel criar o encaixe. Tente novamente.",
+          message: "Não foi possível criar o encaixe. Tente novamente.",
           tone: "error",
         });
         setActionFeedback({
           title: "Erro ao criar encaixe",
           message:
-            "Nao foi possivel salvar o encaixe agora. Os dados ficaram preenchidos para voce tentar novamente.",
+            "Não foi possível salvar o encaixe agora. Os dados ficaram preenchidos para você tentar novamente.",
           tone: "error",
         });
       } finally {
@@ -887,7 +887,7 @@ export default function AdminWalkInAppointmentButton({
 
                   {availableServices.length === 0 ? (
                     <p className="mt-4 rounded-2xl border border-dashed border-white/10 p-4 text-sm text-zinc-400">
-                      Cadastre um servico ativo para esse barbeiro antes de criar encaixes.
+                      Cadastre um serviço ativo para esse barbeiro antes de criar encaixes.
                     </p>
                   ) : (
                     <div className="space-y-4">
@@ -984,7 +984,7 @@ export default function AdminWalkInAppointmentButton({
 
                       {step === "services" ? (
                         <div className="space-y-4">
-                          <StepTitle title="Servicos" />
+                          <StepTitle title="Serviços" />
 
                           {vipSubscription ? (
                             <div
@@ -1009,7 +1009,7 @@ export default function AdminWalkInAppointmentButton({
                               </p>
                               <p className="mt-1 text-xs leading-5 text-zinc-300">
                                 {getVipPlanItems(vipSubscription.plan.code)} incluso no plano.
-                                Servicos adicionais serao cobrados a parte.
+                                Serviços adicionais serão cobrados à parte.
                               </p>
                               {vipUnavailableMessage ? (
                                 <p className="mt-2 rounded-xl border border-amber-300/20 bg-black/25 px-3 py-2 text-xs font-bold leading-5 text-amber-100">
@@ -1127,10 +1127,10 @@ export default function AdminWalkInAppointmentButton({
                               </span>
                               <span className="min-w-0">
                                 <span className="block text-base font-black text-white">
-                                  Agendamento padrao
+                                  Agendamento padrão
                                 </span>
                                 <span className="mt-1 block text-sm leading-5 text-zinc-400">
-                                  Escolhe data e horario livre na agenda.
+                                  Escolhe data e horário livre na agenda.
                                 </span>
                               </span>
                             </button>
@@ -1145,10 +1145,10 @@ export default function AdminWalkInAppointmentButton({
                               </span>
                               <span className="min-w-0">
                                 <span className="block text-base font-black text-white">
-                                  Encaixe rapido
+                                  Encaixe rápido
                                 </span>
                                 <span className="mt-1 block text-sm leading-5 text-zinc-400">
-                                  Usa o horario atual e permite confirmar mesmo encostando em outro atendimento.
+                                  Usa o horário atual e permite confirmar mesmo encostando em outro atendimento.
                                 </span>
                               </span>
                             </button>
@@ -1160,7 +1160,7 @@ export default function AdminWalkInAppointmentButton({
 
                       {step === "schedule" ? (
                         <div className="space-y-4">
-                          <StepTitle title="Data e horario" />
+                          <StepTitle title="Data e horário" />
 
                           <div className="-mx-1 flex max-w-full gap-2 overflow-x-auto px-1 pb-1">
                             {dateOptions.map((option) => {
@@ -1195,7 +1195,7 @@ export default function AdminWalkInAppointmentButton({
                             <div className="flex items-center justify-between gap-3">
                               <div className="min-w-0">
                                 <p className="text-sm font-bold text-white">
-                                  Horarios disponiveis
+                                  Horários disponíveis
                                 </p>
                                 <p
                                   className={`mt-1 text-xs ${
@@ -1239,18 +1239,18 @@ export default function AdminWalkInAppointmentButton({
 
                       {step === "quickDuration" ? (
                         <div className="space-y-4">
-                          <StepTitle title="Tempo do encaixe rapido" />
+                          <StepTitle title="Tempo do encaixe rápido" />
 
                           <div className="rounded-3xl border border-[var(--brand-strong)]/25 bg-[var(--brand)]/10 p-4">
                             <p className="text-sm leading-6 text-zinc-200">
-                              O agendamento sera criado usando a hora atual. Se bater em outro
-                              atendimento, voce confere o aviso antes de continuar.
+                              O agendamento será criado usando a hora atual. Se bater em outro
+                              atendimento, você confere o aviso antes de continuar.
                             </p>
                           </div>
 
                           <label className="block">
                             <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-500">
-                              Duracao em minutos
+                              Duração em minutos
                             </span>
                             <input
                               value={quickDurationMinutes}
@@ -1320,7 +1320,7 @@ export default function AdminWalkInAppointmentButton({
                                   : "border-white/10 text-zinc-300 hover:bg-white/[0.04]"
                               }`}
                             >
-                              Nao
+                              Não
                             </button>
                             <button
                               type="button"
@@ -1339,7 +1339,7 @@ export default function AdminWalkInAppointmentButton({
                           {hasExtras ? (
                             extras.length === 0 ? (
                               <p className="rounded-2xl border border-dashed border-white/10 p-3 text-sm text-zinc-400">
-                                Nenhum extra disponivel no estoque.
+                                Nenhum extra disponível no estoque.
                               </p>
                             ) : (
                               <div className="space-y-2">
@@ -1402,26 +1402,26 @@ export default function AdminWalkInAppointmentButton({
                             <SummaryRow label="Cliente" value={normalizeCustomerName(customerName)} />
                             <SummaryRow
                               label="Telefone"
-                              value={formatBrazilianPhone(customerPhone) || "Nao informado"}
+                              value={formatBrazilianPhone(customerPhone) || "Não informado"}
                             />
                             <SummaryRow
-                              label="Servicos"
+                              label="Serviços"
                               value={
                                 selectedServices.map((service) => service.name).join(" + ") ||
-                                "Nao informado"
+                                "Não informado"
                               }
                             />
                             <SummaryRow
                               label="Tipo"
                               value={
                                 fitInMode === "quick"
-                                  ? "Encaixe rapido"
-                                  : "Agendamento padrao"
+                                  ? "Encaixe rápido"
+                                  : "Agendamento padrão"
                               }
                             />
                             <SummaryRow label="Data" value={formatDateValue(date)} />
-                            <SummaryRow label="Horario" value={startTime || "Nao informado"} />
-                            <SummaryRow label="Duracao" value={`${activeDuration || 0} min`} />
+                            <SummaryRow label="Horário" value={startTime || "Não informado"} />
+                            <SummaryRow label="Duração" value={`${activeDuration || 0} min`} />
                             <SummaryRow
                               label="Extras"
                               value={
@@ -1435,7 +1435,7 @@ export default function AdminWalkInAppointmentButton({
 
                           <label className="block">
                             <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-500">
-                              Observacao
+                              Observação
                             </span>
                             <textarea
                               rows={2}
@@ -1523,7 +1523,7 @@ export default function AdminWalkInAppointmentButton({
                       Encaixe criado!
                     </h2>
                     <p className="mt-2 text-sm text-zinc-400">
-                      O horario foi reservado e a agenda do dia ja foi atualizada.
+                      O horário foi reservado e a agenda do dia já foi atualizada.
                     </p>
                   </div>
 
@@ -1547,9 +1547,9 @@ export default function AdminWalkInAppointmentButton({
 
                 <div className="mt-5 space-y-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm">
                   <SummaryRow label="Cliente" value={successDetails.customerName} />
-                  <SummaryRow label="Servicos" value={successDetails.serviceName} />
+                  <SummaryRow label="Serviços" value={successDetails.serviceName} />
                   <SummaryRow label="Data" value={formatDateValue(successDetails.date)} />
-                  <SummaryRow label="Horario" value={successDetails.startTime} />
+                  <SummaryRow label="Horário" value={successDetails.startTime} />
                 </div>
 
                 <button
@@ -1831,19 +1831,19 @@ function QuickConflictPopup({
         </div>
 
         <div className="mt-5 space-y-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm">
-          <SummaryRow label="Encaixe rapido" value={`${preview.startTime} ate ${preview.endTime}`} />
+          <SummaryRow label="Encaixe rápido" value={`${preview.startTime} ate ${preview.endTime}`} />
           <SummaryRow
             label="Atendimento existente"
             value={`#${String(conflict.publicId).padStart(8, "0")} - ${conflict.customerName}`}
           />
           <SummaryRow
-            label="Horario existente"
+            label="Horário existente"
             value={`${conflict.startTime} ate ${conflict.endTime}`}
           />
         </div>
 
         <p className="mt-4 text-sm leading-6 text-zinc-400">
-          Confirme somente se da para atender sem prejudicar o cliente ja agendado.
+          Confirme somente se da para atender sem prejudicar o cliente já agendado.
         </p>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2">

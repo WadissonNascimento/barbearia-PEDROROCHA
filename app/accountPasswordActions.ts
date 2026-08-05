@@ -41,7 +41,7 @@ export async function updateOwnAdminContactAction(
   });
 
   if (!rateLimit.allowed) {
-    return mutationError("Muitas alteracoes em pouco tempo. Aguarde e tente novamente.");
+    return mutationError("Muitas alterações em pouco tempo. Aguarde e tente novamente.");
   }
 
   const name = String(formData.get("name") || "").trim().replace(/\s+/g, " ");
@@ -52,11 +52,11 @@ export async function updateOwnAdminContactAction(
     : "";
 
   if (name.length < 2 || name.length > 80) {
-    return mutationError("Informe um nome valido.");
+    return mutationError("Informe um nome válido.");
   }
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return mutationError("Informe um e-mail valido.");
+    return mutationError("Informe um e-mail válido.");
   }
 
   if (rawPhone.trim() && !isValidBrazilianPhone(phone)) {
@@ -77,7 +77,7 @@ export async function updateOwnAdminContactAction(
   });
 
   if (emailOwner) {
-    return mutationError("Este e-mail ja esta em uso.");
+    return mutationError("Este e-mail já esta em uso.");
   }
 
   try {
@@ -93,7 +93,7 @@ export async function updateOwnAdminContactAction(
     });
   } catch (error) {
     if (isUniqueConstraintError(error, "email")) {
-      return mutationError("Este e-mail ja esta em uso.");
+      return mutationError("Este e-mail já esta em uso.");
     }
 
     throw error;
@@ -129,7 +129,7 @@ export async function updateOwnAccountPasswordAction(
   const confirmPassword = String(formData.get("confirmPassword") || "");
 
   if (!currentPassword || !newPassword || !confirmPassword) {
-    return mutationError("Preencha senha atual, nova senha e confirmacao.");
+    return mutationError("Preencha senha atual, nova senha e confirmação.");
   }
 
   if (!isStrongPassword(newPassword)) {
@@ -137,7 +137,7 @@ export async function updateOwnAccountPasswordAction(
   }
 
   if (newPassword !== confirmPassword) {
-    return mutationError("A confirmacao da nova senha nao confere.");
+    return mutationError("A confirmação da nova senha não confere.");
   }
 
   if (newPassword === currentPassword) {
@@ -157,7 +157,7 @@ export async function updateOwnAccountPasswordAction(
   });
 
   if (!account?.passwordHash) {
-    return mutationError("Nao foi possivel trocar a senha desta conta.");
+    return mutationError("Não foi possível trocar a senha desta conta.");
   }
 
   const passwordMatches = await bcrypt.compare(currentPassword, account.passwordHash);
@@ -169,7 +169,7 @@ export async function updateOwnAccountPasswordAction(
       role: sessionUser.role,
     });
 
-    return mutationError("Senha atual invalida.");
+    return mutationError("Senha atual inválida.");
   }
 
   const passwordHash = await bcrypt.hash(newPassword, 10);

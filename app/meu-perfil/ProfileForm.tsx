@@ -267,7 +267,7 @@ export default function ProfileForm({
                   pattern="[0-9]{6}"
                   maxLength={6}
                   required
-                  placeholder="Codigo"
+                  placeholder="Código"
                   className="form-control text-sm sm:flex-1"
                 />
                 <button

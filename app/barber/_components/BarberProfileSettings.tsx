@@ -137,11 +137,11 @@ export default function BarberProfileSettings({
         ) : (
           <>
             <div className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
-              <ProfileValue label="Nome" value={name || "Nao informado"} />
-              <ProfileValue label="E-mail" value={email || "Nao informado"} />
+              <ProfileValue label="Nome" value={name || "Não informado"} />
+              <ProfileValue label="E-mail" value={email || "Não informado"} />
               <ProfileValue
                 label="Telefone"
-                value={formatBrazilianPhone(phone) || "Nao informado"}
+                value={formatBrazilianPhone(phone) || "Não informado"}
               />
             </div>
 

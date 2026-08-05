@@ -89,7 +89,7 @@ export default function AdminHomeImagesClient({
           message:
             error instanceof Error
               ? error.message
-              : "Nao foi possivel atualizar as fotos da home.",
+              : "Não foi possível atualizar as fotos da home.",
           tone: "error",
         });
       } finally {
@@ -153,7 +153,7 @@ export default function AdminHomeImagesClient({
                 message:
                   error instanceof Error
                     ? error.message
-                    : "Imagem invalida.",
+                    : "Imagem inválida.",
                 tone: "error",
               });
               return;
@@ -240,7 +240,7 @@ export default function AdminHomeImagesClient({
                         message:
                           error instanceof Error
                             ? error.message
-                            : "Imagem invalida.",
+                            : "Imagem inválida.",
                         tone: "error",
                       });
                       return;

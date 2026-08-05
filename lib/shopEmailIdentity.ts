@@ -51,7 +51,7 @@ export async function getShopEmailIdentity(shopId: string | null | undefined) {
     };
   } catch (error) {
     console.warn(
-      `[email] Nao foi possivel carregar identidade de email da shop ${shopId}: ${
+      `[email] Não foi possível carregar identidade de email da shop ${shopId}: ${
         error instanceof Error ? error.message : "erro desconhecido"
       }`
     );

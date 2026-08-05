@@ -66,7 +66,7 @@ function escapeHtml(value: string) {
     .replaceAll("'", "&#039;");
 }
 
-function clean(value: string | null | undefined, fallback = "Nao informado") {
+function clean(value: string | null | undefined, fallback = "Não informado") {
   return value?.trim() || fallback;
 }
 
@@ -131,11 +131,11 @@ function InfoCard(rows: Array<[string, string]>) {
 
 export function AppointmentCard(data: CustomerAppointmentEmailData) {
   const rows: Array<[string, string]> = [
-    ["Codigo", clean(data.codigoAgendamento)],
+    ["Código", clean(data.codigoAgendamento)],
     ["Data", clean(data.dataAgendamento)],
-    ["Horario", clean(data.horarioAgendamento)],
+    ["Horário", clean(data.horarioAgendamento)],
     ["Barbeiro", clean(data.nomeBarbeiro)],
-    ["Servico", clean(data.servico)],
+    ["Serviço", clean(data.servico)],
     ["Detalhes", clean(data.detalhesServico)],
     ["Total", clean(data.valorTotal)],
   ];
@@ -324,9 +324,9 @@ function appointmentTextIntro(data: CustomerAppointmentEmailData) {
   return [
     `Codigo: ${data.codigoAgendamento}`,
     `Data: ${data.dataAgendamento}`,
-    `Horario: ${data.horarioAgendamento}`,
+    `Horário: ${data.horarioAgendamento}`,
     `Barbeiro: ${data.nomeBarbeiro}`,
-    `Servico: ${data.servico}`,
+    `Serviço: ${data.servico}`,
     `Detalhes: ${data.detalhesServico}`,
     `Total: ${data.valorTotal}`,
     data.extras ? `Extras: ${data.extras}` : null,
@@ -343,15 +343,15 @@ export function renderCustomerAppointmentConfirmationEmail(
     html: EmailLayout({
       ...data,
       eyebrow: "Agendamento confirmado",
-      title: "Seu horario esta reservado",
-      intro: `Ola, ${data.nomeCliente}. Seu atendimento foi agendado com sucesso.`,
+      title: "Seu horário está reservado",
+      intro: `Olá, ${data.nomeCliente}. Seu atendimento foi agendado com sucesso.`,
       buttonLabel: "Ver meus agendamentos",
       buttonUrl: data.linkPainelCliente,
-      footerNote: "Chegue alguns minutos antes do horario marcado.",
+      footerNote: "Chegue alguns minutos antes do horário marcado.",
       children: AppointmentCard(data),
     }),
     text: lines([
-      `Ola, ${data.nomeCliente}.`,
+      `Olá, ${data.nomeCliente}.`,
       "Seu agendamento foi confirmado.",
       ...appointmentTextIntro(data),
       data.linkPainelCliente ? `Ver meus agendamentos: ${data.linkPainelCliente}` : null,
@@ -362,23 +362,23 @@ export function renderCustomerAppointmentConfirmationEmail(
 export function renderCustomerAppointmentCompletedEmail(
   data: CustomerAppointmentEmailData
 ): RenderedEmail {
-  const subject = `Atendimento concluido - ${data.nomeBarbearia}`;
+  const subject = `Atendimento concluído - ${data.nomeBarbearia}`;
 
   return {
     subject,
     html: EmailLayout({
       ...data,
-      eyebrow: "Atendimento concluido",
+      eyebrow: "Atendimento concluído",
       title: "Obrigado pela visita",
-      intro: `Ola, ${data.nomeCliente}. Seu atendimento foi finalizado e voce ja pode avaliar a experiencia.`,
+      intro: `Olá, ${data.nomeCliente}. Seu atendimento foi finalizado e você já pode avaliar a experiência.`,
       buttonLabel: "Avaliar atendimento",
       buttonUrl: data.linkAvaliacao || data.linkPainelCliente,
-      footerNote: "Sua avaliacao ajuda a barbearia a manter a qualidade.",
+      footerNote: "Sua avaliação ajuda a barbearia a manter a qualidade.",
       children: AppointmentCard(data) + RatingBox(brandColor(data)),
     }),
     text: lines([
-      `Ola, ${data.nomeCliente}.`,
-      "Seu atendimento foi concluido.",
+      `Olá, ${data.nomeCliente}.`,
+      "Seu atendimento foi concluído.",
       ...appointmentTextIntro(data),
       data.linkAvaliacao || data.linkPainelCliente
         ? `Avaliar atendimento: ${data.linkAvaliacao || data.linkPainelCliente}`
@@ -397,11 +397,11 @@ export function renderCustomerAppointmentCancelledEmail(
     html: EmailLayout({
       ...data,
       eyebrow: "Cancelamento",
-      title: "Seu horario foi cancelado",
-      intro: `Ola, ${data.nomeCliente}. Esse agendamento nao esta mais ativo.`,
-      buttonLabel: "Agendar outro horario",
+      title: "Seu horário foi cancelado",
+      intro: `Olá, ${data.nomeCliente}. Esse agendamento não está mais ativo.`,
+      buttonLabel: "Agendar outro horário",
       buttonUrl: data.linkPainelCliente,
-      footerNote: "Se o cancelamento nao parece correto, fale com a barbearia.",
+      footerNote: "Se o cancelamento não parece correto, fale com a barbearia.",
       children:
         AppointmentCard(data) +
         NoticeBox({
@@ -411,11 +411,11 @@ export function renderCustomerAppointmentCancelledEmail(
         }),
     }),
     text: lines([
-      `Ola, ${data.nomeCliente}.`,
+      `Olá, ${data.nomeCliente}.`,
       "Seu agendamento foi cancelado.",
       ...appointmentTextIntro(data),
       data.motivoCancelamento ? `Motivo: ${data.motivoCancelamento}` : null,
-      data.linkPainelCliente ? `Agendar outro horario: ${data.linkPainelCliente}` : null,
+      data.linkPainelCliente ? `Agendar outro horário: ${data.linkPainelCliente}` : null,
     ]),
   };
 }
@@ -430,15 +430,15 @@ export function renderCustomerAppointmentReminderEmail(
     html: EmailLayout({
       ...data,
       eyebrow: "Lembrete",
-      title: "Seu atendimento esta proximo",
-      intro: `Ola, ${data.nomeCliente}. Faltam cerca de 30 minutos para seu horario.`,
+      title: "Seu atendimento esta próximo",
+      intro: `Olá, ${data.nomeCliente}. Faltam cerca de 30 minutos para seu horário.`,
       buttonLabel: "Ver agendamento",
       buttonUrl: data.linkPainelCliente,
-      footerNote: "Esse lembrete e automatico para ajudar voce a chegar no horario.",
+      footerNote: "Esse lembrete é automático para ajudar você a chegar no horário.",
       children: AppointmentCard(data),
     }),
     text: lines([
-      `Ola, ${data.nomeCliente}.`,
+      `Olá, ${data.nomeCliente}.`,
       "Faltam cerca de 30 minutos para seu atendimento.",
       ...appointmentTextIntro(data),
       data.linkPainelCliente ? `Ver agendamento: ${data.linkPainelCliente}` : null,
@@ -459,24 +459,24 @@ export function renderCustomerAppointmentRescheduledEmail(
     html: EmailLayout({
       ...data,
       eyebrow: "Reagendamento",
-      title: "Seu horario foi alterado",
-      intro: `Ola, ${data.nomeCliente}. Confira o novo horario do seu atendimento.`,
+      title: "Seu horário foi alterado",
+      intro: `Olá, ${data.nomeCliente}. Confira o novo horário do seu atendimento.`,
       buttonLabel: "Ver agendamento",
       buttonUrl: data.linkPainelCliente,
       footerNote: "Confira a agenda atualizada antes de sair.",
       children:
         InfoCard([
-          ["Servico", clean(data.servico)],
-          ["Horario antigo", clean(data.horarioAntigo)],
-          ["Novo horario", clean(data.novoHorario)],
+          ["Serviço", clean(data.servico)],
+          ["Horário antigo", clean(data.horarioAntigo)],
+          ["Novo horário", clean(data.novoHorario)],
           ["Barbeiro", clean(data.nomeBarbeiro)],
         ]) + AppointmentCard(data),
     }),
     text: lines([
-      `Ola, ${data.nomeCliente}.`,
+      `Olá, ${data.nomeCliente}.`,
       "Seu agendamento foi remarcado.",
-      `Horario antigo: ${data.horarioAntigo}`,
-      `Novo horario: ${data.novoHorario}`,
+      `Horário antigo: ${data.horarioAntigo}`,
+      `Novo horário: ${data.novoHorario}`,
       ...appointmentTextIntro(data),
       data.linkPainelCliente ? `Ver agendamento: ${data.linkPainelCliente}` : null,
     ]),
@@ -492,20 +492,20 @@ export function renderCustomerVerificationCodeEmail(
     subject,
     html: EmailLayout({
       ...data,
-      eyebrow: "Verificacao de e-mail",
+      eyebrow: "Verificação de e-mail",
       title: "Confirme seu acesso",
-      intro: `Ola, ${data.nomeCliente}. Use o codigo abaixo para concluir ${data.contexto}.`,
+      intro: `Olá, ${data.nomeCliente}. Use o codigo abaixo para concluir ${data.contexto}.`,
       buttonLabel: data.rotuloAcao,
       buttonUrl: data.linkAcao,
-      footerNote: "Se voce nao solicitou esse codigo, ignore esta mensagem.",
+      footerNote: "Se você não solicitou esse código, ignore esta mensagem.",
       children: SecurityCodeBox(data.codigoVerificacao, brandColor(data)),
     }),
     text: lines([
-      `Ola, ${data.nomeCliente}.`,
+      `Olá, ${data.nomeCliente}.`,
       `Use este codigo para concluir ${data.contexto}: ${data.codigoVerificacao}`,
-      "Esse codigo expira em 10 minutos.",
+      "Esse código expira em 10 minutos.",
       data.linkAcao ? `${data.rotuloAcao || "Abrir"}: ${data.linkAcao}` : null,
-      "Se voce nao solicitou esse codigo, ignore esta mensagem.",
+      "Se você não solicitou esse código, ignore esta mensagem.",
     ]),
   };
 }
@@ -521,18 +521,18 @@ export function renderCustomerPasswordResetEmail(
       ...data,
       eyebrow: "Seguranca da conta",
       title: "Redefina sua senha",
-      intro: `Ola, ${data.nomeCliente}. Use o codigo abaixo para criar uma nova senha.`,
+      intro: `Olá, ${data.nomeCliente}. Use o codigo abaixo para criar uma nova senha.`,
       buttonLabel: data.rotuloAcao,
       buttonUrl: data.linkAcao,
-      footerNote: "Se voce nao solicitou a redefinicao, ignore esta mensagem.",
+      footerNote: "Se você não solicitou a redefinição, ignore esta mensagem.",
       children: SecurityCodeBox(data.codigoVerificacao, brandColor(data)),
     }),
     text: lines([
-      `Ola, ${data.nomeCliente}.`,
+      `Olá, ${data.nomeCliente}.`,
       `Seu codigo para redefinir a senha e: ${data.codigoVerificacao}`,
-      "Esse codigo expira em 10 minutos.",
+      "Esse código expira em 10 minutos.",
       data.linkAcao ? `${data.rotuloAcao || "Abrir"}: ${data.linkAcao}` : null,
-      "Se voce nao solicitou a redefinicao, ignore esta mensagem.",
+      "Se você não solicitou a redefinição, ignore esta mensagem.",
     ]),
   };
 }

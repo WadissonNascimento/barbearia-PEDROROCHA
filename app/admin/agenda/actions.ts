@@ -163,13 +163,13 @@ async function getAdminQuickFitInPreview({
   const endMinutes = startMinutes + durationMinutes;
 
   if (endMinutes > 24 * 60) {
-    throw new Error("A duracao informada ultrapassa o dia de atendimento.");
+    throw new Error("A duração informada ultrapassa o dia de atendimento.");
   }
 
   const dayRange = getScheduleDayRange(date);
 
   if (!dayRange) {
-    throw new Error("Nao foi possivel calcular o horario atual.");
+    throw new Error("Não foi possível calcular o horário atual.");
   }
 
   const appointments = await prisma.appointment.findMany({
@@ -323,7 +323,7 @@ export async function getAdminWalkInAvailableSlotsAction({
     selectedServiceIds.length > 8
   ) {
     return adminWalkInSlotsError(
-      "Selecione barbeiro, servicos e data para carregar os horarios."
+      "Selecione barbeiro, serviços e data para carregar os horários."
     );
   }
 
@@ -355,12 +355,12 @@ export async function getAdminWalkInAvailableSlotsAction({
   ]);
 
   if (!barber) {
-    return adminWalkInSlotsError("Barbeiro selecionado nao encontrado.");
+    return adminWalkInSlotsError("Barbeiro selecionado não encontrado.");
   }
 
   if (services.length !== selectedServiceIds.length) {
     return adminWalkInSlotsError(
-      "Um ou mais servicos estao indisponiveis para esse barbeiro."
+      "Um ou mais serviços estão indisponíveis para esse barbeiro."
     );
   }
 
@@ -372,7 +372,7 @@ export async function getAdminWalkInAvailableSlotsAction({
       additionalDurationMinutes,
     });
 
-    return mutationSuccess("Horarios carregados.", {
+    return mutationSuccess("Horários carregados.", {
       slots: flattenAvailableSlots(availability.periodSlots),
       periodSlots: availability.periodSlots,
     });
@@ -404,7 +404,7 @@ export async function getAdminQuickFitInPreviewAction({
 
   if (!selectedBarberId || !normalizedDuration) {
     return mutationError(
-      "Selecione barbeiro e uma duracao entre 5 e 240 minutos."
+      "Selecione barbeiro e uma duração entre 5 e 240 minutos."
     ) as MutationResult<AdminQuickFitInPreviewPayload>;
   }
 
@@ -422,13 +422,13 @@ export async function getAdminQuickFitInPreviewAction({
 
   if (!barber) {
     return mutationError(
-      "Barbeiro selecionado nao encontrado."
+      "Barbeiro selecionado não encontrado."
     ) as MutationResult<AdminQuickFitInPreviewPayload>;
   }
 
   try {
     return mutationSuccess(
-      "Previa do encaixe rapido calculada.",
+      "Previa do encaixe rápido calculada.",
       await getAdminQuickFitInPreview({
         shopId: admin.shopId,
         barberId: selectedBarberId,
@@ -439,7 +439,7 @@ export async function getAdminQuickFitInPreviewAction({
     return mutationError(
       error instanceof Error
         ? error.message
-        : "Nao foi possivel calcular o encaixe rapido."
+        : "Não foi possível calcular o encaixe rápido."
     ) as MutationResult<AdminQuickFitInPreviewPayload>;
   }
 }
@@ -474,7 +474,7 @@ export async function createAdminWalkInAppointmentAction(
 
   if (fitInMode === "quick") {
     if (!manualDurationMinutes) {
-      return mutationError("Informe uma duracao entre 5 e 240 minutos.");
+      return mutationError("Informe uma duração entre 5 e 240 minutos.");
     }
 
     const now = new Date();
@@ -482,7 +482,7 @@ export async function createAdminWalkInAppointmentAction(
     startTime = minutesToTime(getCurrentScheduleMinutes(now));
 
     if (toMinutes(startTime) + manualDurationMinutes > 24 * 60) {
-      return mutationError("A duracao informada ultrapassa o dia de atendimento.");
+      return mutationError("A duração informada ultrapassa o dia de atendimento.");
     }
   }
 
@@ -516,7 +516,7 @@ export async function createAdminWalkInAppointmentAction(
     notes.length > 200
   ) {
     return mutationError(
-      `Preencha barbeiro, nome completo, telefone valido quando informado (${BRAZILIAN_PHONE_EXAMPLE}), servicos, data e horario.`
+      `Preencha barbeiro, nome completo, telefone válido quando informado (${BRAZILIAN_PHONE_EXAMPLE}), serviços, data e horário.`
     );
   }
 
@@ -589,15 +589,15 @@ export async function createAdminWalkInAppointmentAction(
   ]);
 
   if (!barber) {
-    return mutationError("Barbeiro selecionado nao encontrado.");
+    return mutationError("Barbeiro selecionado não encontrado.");
   }
 
   if (services.length !== serviceIds.length) {
-    return mutationError("Um ou mais servicos estao indisponiveis para esse barbeiro.");
+    return mutationError("Um ou mais serviços estão indisponíveis para esse barbeiro.");
   }
 
   if (customerId && !selectedCustomerById) {
-    return mutationError("Cliente selecionado nao pertence a esta barbearia.");
+    return mutationError("Cliente selecionado não pertence a esta barbearia.");
   }
 
   const customerPhoneDigits = stripPhoneDigits(customerPhone);
@@ -628,7 +628,7 @@ export async function createAdminWalkInAppointmentAction(
       const availableSlots = flattenAvailableSlots(availability.periodSlots);
 
       if (!availableSlots.includes(startTime)) {
-        return mutationError("Escolha um dos horarios disponiveis para esse encaixe.");
+        return mutationError("Escolha um dos horários disponíveis para esse encaixe.");
       }
     }
   } catch (error) {
@@ -645,7 +645,7 @@ export async function createAdminWalkInAppointmentAction(
   const appointmentCustomerId = linkedCustomer?.id || walkInCustomer?.id;
 
   if (!appointmentCustomerId) {
-    return mutationError("Nao foi possivel vincular o cliente do encaixe.");
+    return mutationError("Não foi possível vincular o cliente do encaixe.");
   }
 
   const displayCustomerName =
@@ -668,7 +668,7 @@ export async function createAdminWalkInAppointmentAction(
         customerPhone: displayCustomerPhone,
         notes:
           fitInMode === "quick" && manualDurationMinutes
-            ? `Encaixe rapido (${manualDurationMinutes} min)${notes ? ` - ${notes}` : ""}`
+            ? `Encaixe rápido (${manualDurationMinutes} min)${notes ? ` - ${notes}` : ""}`
             : notes,
       }),
     });
@@ -693,7 +693,7 @@ export async function createAdminWalkInAppointmentAction(
   revalidateAgendaViews(barberId);
   return mutationSuccess(
     fitInMode === "quick"
-      ? "Encaixe rapido criado na agenda do barbeiro."
+      ? "Encaixe rápido criado na agenda do barbeiro."
       : "Encaixe criado na agenda do barbeiro."
   );
 }
@@ -708,7 +708,7 @@ export async function updateAdminAppointmentStatusAction(
   const cancellationReason = String(formData.get("cancellationReason") || "").trim();
 
   if (!appointmentId || !APPOINTMENT_STATUSES.includes(status as never)) {
-    return mutationError("Status de agendamento invalido.");
+    return mutationError("Status de agendamento inválido.");
   }
 
   if (status === "CANCELLED" && !cancellationReason) {
@@ -812,7 +812,7 @@ export async function editAdminAppointmentAction(
     extras.length > 12 ||
     notes.length > 400
   ) {
-    return mutationError("Selecione servicos, extras e observacoes corretamente.");
+    return mutationError("Selecione serviços, extras e observações corretamente.");
   }
 
   if (!admin.shopId) {
@@ -831,7 +831,7 @@ export async function editAdminAppointmentAction(
   });
 
   if (!currentAppointment) {
-    return mutationError("Agendamento nao encontrado.");
+    return mutationError("Agendamento não encontrado.");
   }
 
   const currentStatus = normalizeAppointmentStatus(currentAppointment.status);
@@ -843,7 +843,7 @@ export async function editAdminAppointmentAction(
       !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
       !/^\d{2}:\d{2}$/.test(time))
   ) {
-    return mutationError("Preencha barbeiro, data, horario e servicos corretamente.");
+    return mutationError("Preencha barbeiro, data, horário e serviços corretamente.");
   }
 
   try {

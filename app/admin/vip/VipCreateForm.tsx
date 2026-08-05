@@ -159,7 +159,7 @@ export default function VipCreateForm({
           </label>
 
           <label className="grid min-w-0 gap-2 text-sm font-bold text-zinc-300">
-            Observacao
+            Observação
             <input
               name="notes"
               maxLength={180}

@@ -113,7 +113,7 @@ const navIcons: Record<string, LucideIcon> = {
   "/admin/agenda": CalendarDays,
   "/admin/avaliacoes": MessageSquareText,
   "/admin/barbeiros": Users,
-  "/admin/configuracoes": Settings,
+  "/admin/configurações": Settings,
   "/admin/extras": ShoppingBag,
   "/admin/financeiro": Landmark,
   "/admin?notifications=1": Bell,

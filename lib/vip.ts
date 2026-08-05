@@ -295,7 +295,7 @@ export async function assertCanScheduleVipAppointment(
   });
 
   if (weeklyAppointment) {
-    throw new Error("Voce ja possui um atendimento do plano VIP nesta semana.");
+    throw new Error("Você já possui um atendimento do plano VIP nesta semana.");
   }
 }
 
@@ -356,7 +356,7 @@ export async function consumeVipTokenForCompletedAppointment(
   });
 
   if (updatedSubscription.count === 0) {
-    throw new Error("Assinatura VIP sem token disponivel para concluir este atendimento.");
+    throw new Error("Assinatura VIP sem token disponível para concluir este atendimento.");
   }
 
   return db.vipUsage.create({

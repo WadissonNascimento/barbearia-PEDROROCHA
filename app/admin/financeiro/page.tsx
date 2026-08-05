@@ -50,7 +50,7 @@ function getPaymentBreakdownDetails(breakdown: PaymentBreakdown) {
 
   if (breakdown.UNKNOWN > 0) {
     details.push({
-      label: "Nao informado",
+      label: "Não informado",
       value: formatCurrency(breakdown.UNKNOWN),
     });
   }
@@ -64,7 +64,7 @@ function formatPaymentBreakdown(breakdown: PaymentBreakdown) {
   );
 
   if (breakdown.UNKNOWN > 0) {
-    parts.push(`Nao informado: ${formatCurrency(breakdown.UNKNOWN)}`);
+    parts.push(`Não informado: ${formatCurrency(breakdown.UNKNOWN)}`);
   }
 
   return parts.join(" · ");
@@ -590,7 +590,7 @@ export default async function AdminFinanceiroPage({
                     <div className="border-t border-white/10 px-3.5 pb-3.5 pt-3">
                       <div className="grid gap-2 sm:grid-cols-4">
                         <PayoutValueTile
-                          label="Servicos"
+                          label="Serviços"
                           value={formatCurrency(item.serviceRevenue)}
                         />
                         <PayoutValueTile
@@ -638,13 +638,13 @@ export default async function AdminFinanceiroPage({
 
                       <div className="mt-4 border-t border-white/10 pt-3">
                         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">
-                          Atendimentos do periodo
+                          Atendimentos do período
                         </p>
                         <div className="mt-2 space-y-2">
                           {(financeAppointments.appointmentsByBarber.get(item.barberId) || [])
                             .length === 0 ? (
                             <p className="rounded-2xl border border-dashed border-white/10 p-3 text-sm text-zinc-400">
-                              Nenhum atendimento concluido para revisar.
+                              Nenhum atendimento concluído para revisar.
                             </p>
                           ) : (
                             (financeAppointments.appointmentsByBarber.get(item.barberId) || []).map(

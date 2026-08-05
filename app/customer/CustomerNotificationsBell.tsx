@@ -440,9 +440,9 @@ function getAppointmentCard(metadata: unknown) {
   return {
     appointmentCode: appointmentCode || "Agendamento",
     barberName: asString(record.barberName) || "Barbeiro",
-    serviceName: serviceName || "Servico agendado",
+    serviceName: serviceName || "Serviço agendado",
     date: asString(record.date) || "Data",
-    time: asString(record.time) || "Horario",
+    time: asString(record.time) || "Horário",
     status: asString(record.status) || inferStatusFromMetadata(record),
     reason: asString(record.reason) || null,
   };
@@ -469,7 +469,7 @@ function getStatusView(status: string) {
 
   if (normalized.includes("CONCL") || normalized === "COMPLETED" || normalized === "DONE") {
     return {
-      label: "Concluido",
+      label: "Concluído",
       cardBorder: "border-emerald-300/15",
       badgeClass: "border-emerald-300/35 bg-emerald-400/10 text-emerald-100",
     };
@@ -499,9 +499,9 @@ function getMetadataRows(metadata: unknown) {
   const labels: Array<[string, string]> = [
     ["appointmentCode", "Agendamento"],
     ["barberName", "Barbeiro"],
-    ["serviceName", "Servico"],
+    ["serviceName", "Serviço"],
     ["date", "Data"],
-    ["time", "Horario"],
+    ["time", "Horário"],
     ["reason", "Motivo"],
   ];
 

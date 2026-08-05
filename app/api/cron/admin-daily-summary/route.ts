@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const authorization = request.headers.get("authorization");
 
   if (cronSecret && authorization !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ message: "Nao autorizado." }, { status: 401 });
+    return NextResponse.json({ message: "Não autorizado." }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);

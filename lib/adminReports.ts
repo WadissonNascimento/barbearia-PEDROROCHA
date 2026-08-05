@@ -153,7 +153,7 @@ export function buildAgendaCsv(
     "Barbeiro",
     "Cliente",
     "Email do cliente",
-    "Servico",
+    "Serviço",
     "Valor",
     "Status",
     "Extras",

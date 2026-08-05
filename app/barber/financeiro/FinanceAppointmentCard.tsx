@@ -332,7 +332,7 @@ function FinanceEditAppointmentModal({
           router.refresh();
         } else {
           setDialogFeedback({
-            title: "Nao foi possivel salvar",
+            title: "Não foi possível salvar",
             message: result.message,
             tone: "error",
           });
@@ -341,7 +341,7 @@ function FinanceEditAppointmentModal({
         setDialogFeedback({
           title: "Erro ao salvar",
           message:
-            "Nao foi possivel salvar as alteracoes agora. Confira sua conexao e tente novamente.",
+            "Não foi possível salvar as alterações agora. Confira sua conexão e tente novamente.",
           tone: "error",
         });
       }
@@ -368,9 +368,9 @@ function FinanceEditAppointmentModal({
               <p className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--brand-strong)]">
                 Financeiro
               </p>
-              <h3 className="mt-2 text-xl font-bold">Editar itens concluidos</h3>
+              <h3 className="mt-2 text-xl font-bold">Editar itens concluídos</h3>
               <p className="mt-1 text-sm text-zinc-400">
-                Ajuste servicos e extras que entram no repasse.
+                Ajuste serviços e extras que entram no repasse.
               </p>
             </div>
             <button
@@ -396,7 +396,7 @@ function FinanceEditAppointmentModal({
 
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-zinc-500">
-              Servicos
+              Serviços
             </p>
             <div className="mt-2 grid gap-2">
               {services.map((service) => {
@@ -440,7 +440,7 @@ function FinanceEditAppointmentModal({
             <div className="mt-2 grid gap-2">
               {extras.length === 0 ? (
                 <p className="rounded-2xl border border-dashed border-white/10 p-4 text-sm text-zinc-400">
-                  Nenhum extra disponivel para ajuste.
+                  Nenhum extra disponível para ajuste.
                 </p>
               ) : (
                 extras.map((extra) => {

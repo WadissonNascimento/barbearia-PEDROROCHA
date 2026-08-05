@@ -54,7 +54,7 @@ export async function syncAppointmentFinancialSnapshots(
   });
 
   if (!appointment) {
-    throw new Error("Agendamento nao encontrado.");
+    throw new Error("Agendamento não encontrado.");
   }
 
   await db.$transaction(

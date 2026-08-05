@@ -83,10 +83,10 @@ export default async function BarberFinancePage({
             icon={<Wallet />}
             label="Repasse confirmado"
             value={formatCurrency(data.summary.completedPayout)}
-            helper={`${data.summary.completedCount} atendimento(s) concluido(s)`}
+            helper={`${data.summary.completedCount} atendimento(s) concluído(s)`}
             details={[
               {
-                label: "Servicos",
+                label: "Serviços",
                 value: formatCurrency(data.summary.servicePayout),
               },
               {
@@ -150,7 +150,7 @@ export default async function BarberFinancePage({
               Caixinhas
             </p>
             <h2 className="mt-1 text-xl font-bold text-white">
-              Caixinhas do periodo
+              Caixinhas do período
             </h2>
             <p className="mt-1 text-sm text-zinc-400">
               Valores registrados como caixinha entram 100% no seu repasse.
@@ -164,7 +164,7 @@ export default async function BarberFinancePage({
         <div className="mt-4 space-y-2">
           {data.tips.length === 0 ? (
             <EmptyState
-              title="Nenhuma caixinha no periodo"
+              title="Nenhuma caixinha no período"
               description="Quando houver caixinhas registradas, elas aparecem aqui e entram no repasse."
             />
           ) : (
@@ -438,7 +438,7 @@ function VipPlanSummaryCard({
             Atendimentos de clientes com assinatura
           </h2>
           <p className="mt-1 text-sm leading-5 text-zinc-400">
-            Combos do plano nao entram no repasse.
+            Combos do plano não entram no repasse.
           </p>
         </div>
         <span className="shrink-0 rounded-full border border-white/10 bg-black/25 px-3 py-1 text-xs font-bold text-zinc-300">

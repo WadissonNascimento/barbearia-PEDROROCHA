@@ -14,13 +14,13 @@ export const UNCONFIGURED_SHOP_ID = "__unconfigured_shop__";
 
 const UNCONFIGURED_SHOP_CONFIG: ShopRuntimeConfig = {
   id: UNCONFIGURED_SHOP_ID,
-  name: "Loja nao configurada",
-  slug: "loja-nao-configurada",
+  name: "Loja não configurada",
+  slug: "loja-não-configurada",
   primaryDomain: null,
   isDefault: false,
   isActive: false,
-  metadataTitle: "Loja nao configurada",
-  metadataDescription: "Esta loja ainda nao foi configurada para este dominio.",
+  metadataTitle: "Loja não configurada",
+  metadataDescription: "Esta loja ainda não foi configurada para este domínio.",
   whatsappNumber: null,
   instagramUrl: null,
   addressLine: null,
@@ -37,14 +37,14 @@ const UNCONFIGURED_SHOP_CONFIG: ShopRuntimeConfig = {
   heroImageUrl: null,
   heroEyebrow: "Barbearia premium",
   heroTitle: "Seu estilo comeca aqui.",
-  heroSubtitle: "Agende seu horario com praticidade e tenha uma experiencia premium.",
-  primaryCtaLabel: "Agendar horario",
-  secondaryCtaLabel: "Ver servicos",
+  heroSubtitle: "Agende seu horário com praticidade e tenha uma experiência premium.",
+  primaryCtaLabel: "Agendar horário",
+  secondaryCtaLabel: "Ver serviços",
   secondaryCtaHref: "/servicos",
   attendanceText: "Com hora marcada",
   reviewsTitle: "O que os clientes acharam.",
   reviewsEmptyText:
-    "As avaliacoes reais dos clientes vao aparecer aqui depois dos atendimentos concluidos.",
+    "As avaliacoes reais dos clientes vao aparecer aqui depois dos atendimentos concluídos.",
 };
 
 export type ShopRuntimeConfig = Pick<

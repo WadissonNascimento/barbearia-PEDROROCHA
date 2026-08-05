@@ -58,11 +58,11 @@ export async function completeCustomerPhoneAction(
   });
 
   if (!customer) {
-    return mutationError("Cliente nao encontrado.");
+    return mutationError("Cliente não encontrado.");
   }
 
   if (customer.phone) {
-    return mutationSuccess("Telefone ja cadastrado.");
+    return mutationSuccess("Telefone já cadastrado.");
   }
 
   await prisma.user.update({

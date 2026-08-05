@@ -18,11 +18,11 @@ const ALLOWED_IMAGE_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp", "heic", 
 const HEIC_IMAGE_EXTENSIONS = new Set(["heic", "heif"]);
 const IMAGE_TYPE_MESSAGE = "Envie uma imagem JPG, PNG, WEBP ou HEIC.";
 const INVALID_IMAGE_MESSAGE =
-  "O arquivo enviado nao parece ser uma imagem valida. Envie JPG, PNG, WEBP ou HEIC.";
+  "O arquivo enviado não parece ser uma imagem válida. Envie JPG, PNG, WEBP ou HEIC.";
 const INVALID_HEIC_MESSAGE =
-  "Essa foto do iPhone nao chegou como HEIC valido. Envie como JPG/PNG ou tire uma captura e tente novamente.";
+  "Essa foto do iPhone não chegou como HEIC válido. Envie como JPG/PNG ou tire uma captura e tente novamente.";
 const IMAGE_DECODE_MESSAGE =
-  "Nao foi possivel ler essa foto no navegador. No iPhone, aguarde a foto baixar do iCloud ou envie como JPG/PNG.";
+  "Não foi possível ler essa foto no navegador. No iPhone, aguarde a foto baixar do iCloud ou envie como JPG/PNG.";
 const HEIC_BRANDS = [
   "heic",
   "heix",
@@ -598,7 +598,7 @@ export async function prepareSecondaryProductImageUpload(file: File) {
   const blob = await compressCanvasToSecondaryBlob(canvas);
 
   if (!blob) {
-    throw new Error("Nao foi possivel compactar a foto secundaria.");
+    throw new Error("Não foi possível compactar a foto secundária.");
   }
 
   const uploadFile = new File(

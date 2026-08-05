@@ -55,7 +55,7 @@ export async function updateCustomerProfileAction(
   });
 
   if (!tenantSession) {
-    throw new Error("Nao autorizado.");
+    throw new Error("Não autorizado.");
   }
   const { session } = tenantSession;
 
@@ -75,7 +75,7 @@ export async function updateCustomerProfileAction(
   }
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return mutationError("Informe um e-mail valido.");
+    return mutationError("Informe um e-mail válido.");
   }
 
   if (rawPhone.trim() && !isValidBrazilianPhone(phone)) {
@@ -99,7 +99,7 @@ export async function updateCustomerProfileAction(
   });
 
   if (!currentUser) {
-    return mutationError("Nao foi possivel atualizar seu perfil.");
+    return mutationError("Não foi possível atualizar seu perfil.");
   }
 
   const emailOwner = await prisma.user.findFirst({
@@ -116,7 +116,7 @@ export async function updateCustomerProfileAction(
   });
 
   if (emailOwner) {
-    return mutationError("Este e-mail ja esta em uso.");
+    return mutationError("Este e-mail já esta em uso.");
   }
 
   const emailChanged = currentUser.email?.toLowerCase() !== email;
@@ -147,7 +147,7 @@ export async function updateCustomerProfileAction(
     });
 
     if (pendingEmailOwner) {
-      return mutationError("Esse e-mail ja possui uma verificacao pendente.");
+      return mutationError("Esse e-mail já possui uma verificação pendente.");
     }
 
     const code = generateVerificationCode();
@@ -181,7 +181,7 @@ export async function updateCustomerProfileAction(
     } catch (error) {
       if (isUniqueConstraintError(error, "email")) {
         return mutationError(
-          "Este e-mail ja esta em uso ou possui verificacao pendente."
+          "Este e-mail já esta em uso ou possui verificação pendente."
         );
       }
 
@@ -203,7 +203,7 @@ export async function updateCustomerProfileAction(
         },
       });
 
-      return mutationError("Nao foi possivel enviar o codigo de verificacao do e-mail.");
+      return mutationError("Não foi possível enviar o código de verificação do e-mail.");
     }
 
     logSecurityEvent("customer_email_change_requested", {
@@ -214,7 +214,7 @@ export async function updateCustomerProfileAction(
     return mutationSuccess(
       isUsingDevelopmentMailFallback()
         ? `Codigo de verificacao local: ${code}`
-        : "Enviamos um codigo para confirmar o novo e-mail. O telefone foi salvo sem verificacao por SMS."
+        : "Enviamos um código para confirmar o novo e-mail. O telefone foi salvo sem verificação por SMS."
     );
   }
 
@@ -246,14 +246,14 @@ export async function verifyCustomerEmailChangeAction(
   });
 
   if (!tenantSession) {
-    throw new Error("Nao autorizado.");
+    throw new Error("Não autorizado.");
   }
   const { session } = tenantSession;
 
   const code = String(formData.get("code") || "").trim();
 
   if (!code) {
-    return mutationError("Informe o codigo de verificacao do e-mail.");
+    return mutationError("Informe o código de verificação do e-mail.");
   }
 
   const rateLimit = await enforceRateLimit({
@@ -264,7 +264,7 @@ export async function verifyCustomerEmailChangeAction(
   });
 
   if (!rateLimit.allowed) {
-    return mutationError("Muitas tentativas de verificacao. Aguarde e tente novamente.");
+    return mutationError("Muitas tentativas de verificação. Aguarde e tente novamente.");
   }
 
   const pending = await prisma.emailChangeRequest.findFirst({
@@ -274,7 +274,7 @@ export async function verifyCustomerEmailChangeAction(
   });
 
   if (!pending) {
-    return mutationError("Nao ha troca de e-mail pendente para confirmar.");
+    return mutationError("Não há troca de e-mail pendente para confirmar.");
   }
 
   if (pending.expiresAt.getTime() < Date.now()) {
@@ -284,11 +284,11 @@ export async function verifyCustomerEmailChangeAction(
       },
     });
 
-    return mutationError("Esse codigo expirou. Solicite a troca de e-mail novamente.");
+    return mutationError("Esse código expirou. Solicite a troca de e-mail novamente.");
   }
 
   if (pending.attempts >= MAX_EMAIL_CHANGE_ATTEMPTS) {
-    return mutationError("Muitas tentativas invalidas. Solicite um novo codigo.");
+    return mutationError("Muitas tentativas invalidas. Solicite um novo código.");
   }
 
   if (pending.code !== code) {
@@ -303,7 +303,7 @@ export async function verifyCustomerEmailChangeAction(
       },
     });
 
-    return mutationError("Codigo invalido. Confira o e-mail e tente novamente.");
+    return mutationError("Código inválido. Confira o e-mail e tente novamente.");
   }
 
   const emailOwner = await prisma.user.findFirst({
@@ -326,7 +326,7 @@ export async function verifyCustomerEmailChangeAction(
       },
     });
 
-    return mutationError("Este e-mail ja esta em uso.");
+    return mutationError("Este e-mail já esta em uso.");
   }
 
   try {
@@ -346,7 +346,7 @@ export async function verifyCustomerEmailChangeAction(
     ]);
   } catch (error) {
     if (isUniqueConstraintError(error, "email")) {
-      return mutationError("Este e-mail ja esta em uso.");
+      return mutationError("Este e-mail já esta em uso.");
     }
 
     throw error;
@@ -368,7 +368,7 @@ export async function updateCustomerPasswordAction(
   });
 
   if (!tenantSession) {
-    throw new Error("Nao autorizado.");
+    throw new Error("Não autorizado.");
   }
   const { session } = tenantSession;
 
@@ -388,7 +388,7 @@ export async function updateCustomerPasswordAction(
   const confirmPassword = String(formData.get("confirmPassword") || "");
 
   if (!currentPassword || !newPassword || !confirmPassword) {
-    return mutationError("Preencha senha atual, nova senha e confirmacao.");
+    return mutationError("Preencha senha atual, nova senha e confirmação.");
   }
 
   if (!isStrongPassword(newPassword)) {
@@ -396,7 +396,7 @@ export async function updateCustomerPasswordAction(
   }
 
   if (newPassword !== confirmPassword) {
-    return mutationError("A confirmacao da nova senha nao confere.");
+    return mutationError("A confirmação da nova senha não confere.");
   }
 
   if (newPassword === currentPassword) {
@@ -414,7 +414,7 @@ export async function updateCustomerPasswordAction(
   });
 
   if (!user?.passwordHash) {
-    return mutationError("Nao foi possivel trocar a senha desta conta.");
+    return mutationError("Não foi possível trocar a senha desta conta.");
   }
 
   const passwordMatches = await bcrypt.compare(currentPassword, user.passwordHash);
@@ -424,7 +424,7 @@ export async function updateCustomerPasswordAction(
       reason: "bad_current_password",
       userId: session.user.id,
     });
-    return mutationError("Senha atual invalida.");
+    return mutationError("Senha atual inválida.");
   }
 
   const passwordHash = await bcrypt.hash(newPassword, 10);

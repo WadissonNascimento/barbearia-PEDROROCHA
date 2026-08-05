@@ -58,7 +58,7 @@ async function requireAdminBarberTarget(formData: FormData) {
     return {
       admin,
       barber: null,
-      error: "Barbeiro invalido.",
+      error: "Barbeiro inválido.",
     };
   }
 
@@ -77,7 +77,7 @@ async function requireAdminBarberTarget(formData: FormData) {
     return {
       admin,
       barber: null,
-      error: "Barbeiro nao encontrado.",
+      error: "Barbeiro não encontrado.",
     };
   }
 
@@ -190,14 +190,14 @@ export async function createBarberAction(
   if (existingUser) {
     return mutationError(
       existingUser.isActive
-        ? "Ja existe uma conta ativa com esse e-mail."
-        : "Ja existe um barbeiro desligado com esse e-mail. Reative a conta existente em vez de criar outra.",
+        ? "Já existe uma conta ativa com esse e-mail."
+        : "Já existe um barbeiro desligado com esse e-mail. Reative a conta existente em vez de criar outra.",
     );
   }
 
   if (existingPendingRegistration) {
     return mutationError(
-      "Ja existe um cadastro pendente com esse e-mail. O barbeiro precisa concluir a verificacao antes de um novo convite.",
+      "Já existe um cadastro pendente com esse e-mail. O barbeiro precisa concluir a verificação antes de um novo convite.",
     );
   }
 
@@ -237,14 +237,14 @@ export async function createBarberAction(
 
     if (isUniqueConstraintError(error, "email")) {
       return mutationError(
-        "Ja existe uma conta ou cadastro pendente com esse e-mail.",
+        "Já existe uma conta ou cadastro pendente com esse e-mail.",
       );
     }
 
     return mutationError(
       error instanceof Error
         ? error.message
-        : "Nao foi possivel enviar o convite do barbeiro.",
+        : "Não foi possível enviar o convite do barbeiro.",
     );
   }
 
@@ -263,7 +263,7 @@ export async function toggleBarberStatusAction(
   const currentActive = String(formData.get("currentActive") || "") === "true";
 
   if (!barberId) {
-    return mutationError("Barbeiro invalido.");
+    return mutationError("Barbeiro inválido.");
   }
 
   const barber = await prisma.user.findFirst({
@@ -278,7 +278,7 @@ export async function toggleBarberStatusAction(
   });
 
   if (!barber) {
-    return mutationError("Barbeiro nao encontrado.");
+    return mutationError("Barbeiro não encontrado.");
   }
 
   if (!currentActive) {
@@ -313,7 +313,7 @@ export async function updateBarberPhotoAction(
   const file = formData.get("photo");
 
   if (!barberId) {
-    return mutationError("Barbeiro invalido.");
+    return mutationError("Barbeiro inválido.");
   }
 
   if (!(file instanceof File)) {
@@ -333,7 +333,7 @@ export async function updateBarberPhotoAction(
   });
 
   if (!barber) {
-    return mutationError("Barbeiro nao encontrado.");
+    return mutationError("Barbeiro não encontrado.");
   }
 
   try {
@@ -360,7 +360,7 @@ export async function updateBarberPhotoAction(
     return mutationError(
       error instanceof Error
         ? error.message
-        : "Nao foi possivel atualizar a foto.",
+        : "Não foi possível atualizar a foto.",
     );
   }
 }
@@ -373,7 +373,7 @@ export async function deleteBarberAction(
   const barberId = String(formData.get("barberId") || "");
 
   if (!barberId) {
-    return mutationError("Barbeiro invalido.");
+    return mutationError("Barbeiro inválido.");
   }
 
   const barber = await prisma.user.findFirst({
@@ -388,7 +388,7 @@ export async function deleteBarberAction(
   });
 
   if (!barber) {
-    return mutationError("Barbeiro nao encontrado.");
+    return mutationError("Barbeiro não encontrado.");
   }
 
   await prisma.user.update({
@@ -407,7 +407,7 @@ export async function deleteBarberAction(
   revalidatePath("/agendar");
   revalidatePath("/meu-perfil");
   return mutationSuccess(
-    "Barbeiro excluido da equipe. Historico, agendamentos antigos e fechamentos foram preservados.",
+    "Barbeiro excluido da equipe. Histórico, agendamentos antigos e fechamentos foram preservados.",
   );
 }
 
@@ -454,11 +454,11 @@ export async function upsertBarberServiceCommissionAction(
   ]);
 
   if (!barber) {
-    return mutationError("Barbeiro nao encontrado.");
+    return mutationError("Barbeiro não encontrado.");
   }
 
   if (!service) {
-    return mutationError("Servico nao encontrado para esse barbeiro.");
+    return mutationError("Serviço não encontrado para esse barbeiro.");
   }
 
   await prisma.barberServiceCommission.upsert({
@@ -498,11 +498,11 @@ export async function saveAdminBarberAvailabilityAction(
   const isActive = String(formData.get("isActive") || "false") === "true";
 
   if (!barber) {
-    return mutationError(error || "Barbeiro invalido.");
+    return mutationError(error || "Barbeiro inválido.");
   }
 
   if (weekDay < 0 || weekDay > 6 || !isValidTimeRange(startTime, endTime)) {
-    return mutationError("Disponibilidade invalida.");
+    return mutationError("Disponibilidade inválida.");
   }
 
   await prisma.barberAvailability.upsert({
@@ -543,11 +543,11 @@ export async function createAdminBarberBlockAction(
   const reason = String(formData.get("reason") || "").trim();
 
   if (!barber) {
-    return mutationError(error || "Barbeiro invalido.");
+    return mutationError(error || "Barbeiro inválido.");
   }
 
   if (!startDateTime || !endDateTime || startDateTime >= endDateTime) {
-    return mutationError("Periodo de bloqueio invalido.");
+    return mutationError("Período de bloqueio inválido.");
   }
 
   await prisma.barberBlock.create({
@@ -577,11 +577,11 @@ export async function updateAdminBarberBlockAction(
   const reason = String(formData.get("reason") || "").trim();
 
   if (!barber) {
-    return mutationError(error || "Barbeiro invalido.");
+    return mutationError(error || "Barbeiro inválido.");
   }
 
   if (!startDateTime || !endDateTime || startDateTime >= endDateTime) {
-    return mutationError("Periodo de bloqueio invalido.");
+    return mutationError("Período de bloqueio inválido.");
   }
 
   const block = await prisma.barberBlock.findUnique({
@@ -589,7 +589,7 @@ export async function updateAdminBarberBlockAction(
   });
 
   if (!block || block.barberId !== barber.id) {
-    return mutationError("Bloqueio nao encontrado para este barbeiro.");
+    return mutationError("Bloqueio não encontrado para este barbeiro.");
   }
 
   await prisma.barberBlock.update({
@@ -615,11 +615,11 @@ export async function createAdminRecurringBarberBlockAction(
   const reason = String(formData.get("reason") || "").trim();
 
   if (!barber) {
-    return mutationError(error || "Barbeiro invalido.");
+    return mutationError(error || "Barbeiro inválido.");
   }
 
   if (weekDay < 0 || weekDay > 6 || !isValidTimeRange(startTime, endTime)) {
-    return mutationError("Bloqueio recorrente invalido.");
+    return mutationError("Bloqueio recorrente inválido.");
   }
 
   await prisma.recurringBarberBlock.create({
@@ -650,11 +650,11 @@ export async function updateAdminRecurringBarberBlockAction(
   const reason = String(formData.get("reason") || "").trim();
 
   if (!barber) {
-    return mutationError(error || "Barbeiro invalido.");
+    return mutationError(error || "Barbeiro inválido.");
   }
 
   if (weekDay < 0 || weekDay > 6 || !isValidTimeRange(startTime, endTime)) {
-    return mutationError("Pausa fixa invalida.");
+    return mutationError("Pausa fixa inválida.");
   }
 
   const recurringBlock = await prisma.recurringBarberBlock.findUnique({
@@ -662,7 +662,7 @@ export async function updateAdminRecurringBarberBlockAction(
   });
 
   if (!recurringBlock || recurringBlock.barberId !== barber.id) {
-    return mutationError("Pausa fixa nao encontrada para este barbeiro.");
+    return mutationError("Pausa fixa não encontrada para este barbeiro.");
   }
 
   await prisma.recurringBarberBlock.update({
@@ -688,7 +688,7 @@ export async function deleteAdminRecurringBarberBlockAction(
   ).trim();
 
   if (!barber) {
-    return mutationError(error || "Barbeiro invalido.");
+    return mutationError(error || "Barbeiro inválido.");
   }
 
   const recurringBlock = await prisma.recurringBarberBlock.findUnique({
@@ -696,7 +696,7 @@ export async function deleteAdminRecurringBarberBlockAction(
   });
 
   if (!recurringBlock || recurringBlock.barberId !== barber.id) {
-    return mutationError("Pausa fixa nao encontrada para este barbeiro.");
+    return mutationError("Pausa fixa não encontrada para este barbeiro.");
   }
 
   await prisma.recurringBarberBlock.delete({
@@ -714,7 +714,7 @@ export async function deleteAdminBarberBlockAction(
   const blockId = String(formData.get("blockId") || "").trim();
 
   if (!barber) {
-    return mutationError(error || "Barbeiro invalido.");
+    return mutationError(error || "Barbeiro inválido.");
   }
 
   const block = await prisma.barberBlock.findUnique({
@@ -722,7 +722,7 @@ export async function deleteAdminBarberBlockAction(
   });
 
   if (!block || block.barberId !== barber.id) {
-    return mutationError("Bloqueio nao encontrado para este barbeiro.");
+    return mutationError("Bloqueio não encontrado para este barbeiro.");
   }
 
   await prisma.barberBlock.delete({

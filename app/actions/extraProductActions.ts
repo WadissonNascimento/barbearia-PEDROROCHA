@@ -155,7 +155,7 @@ export async function updateExtraProductFromForm(formData: FormData) {
   });
 
   if (!currentExtra) {
-    throw new Error("Extra nao encontrado.");
+    throw new Error("Extra não encontrado.");
   }
 
   await prisma.extraProduct.update({
@@ -219,7 +219,7 @@ export async function updateExtraProductImage(formData: FormData) {
   });
 
   if (!currentExtra) {
-    throw new Error("Extra nao encontrado.");
+    throw new Error("Extra não encontrado.");
   }
 
   const image = await uploadExtraProductImage({
@@ -253,7 +253,7 @@ export async function toggleExtraProduct(id: string) {
   const extra = await prisma.extraProduct.findUnique({ where: { id } });
 
   if (!extra) {
-    throw new Error("Extra nao encontrado.");
+    throw new Error("Extra não encontrado.");
   }
 
   const updatedExtra = await prisma.extraProduct.update({
@@ -289,7 +289,7 @@ export async function deleteExtraProduct(id: string) {
   });
 
   if (!extra) {
-    throw new Error("Extra nao encontrado.");
+    throw new Error("Extra não encontrado.");
   }
 
   if (extra._count.appointmentItems > 0 || extra._count.stockMovements > 0) {
@@ -307,8 +307,8 @@ export async function deleteExtraProduct(id: string) {
     return {
       deleted: false,
       message: extra.isActive
-        ? "Extra ocultado para preservar historico de entregas e estoque."
-        : "Extra ja estava oculto. Historico preservado.",
+        ? "Extra ocultado para preservar histórico de entregas e estoque."
+        : "Extra já estava oculto. Histórico preservado.",
     };
   }
 

@@ -121,7 +121,7 @@ export async function editCompletedAdminFinanceAppointmentAction(
     extras.length > 12 ||
     notes.length > 400
   ) {
-    return mutationError("Selecione servicos, extras e observacoes corretamente.");
+    return mutationError("Selecione serviços, extras e observações corretamente.");
   }
 
   try {
@@ -161,7 +161,7 @@ export async function markBarberPayoutAsPaidAction(
   const payoutId = String(formData.get("payoutId") || "");
 
   if (!payoutId) {
-    return mutationError("Repasse invalido.");
+    return mutationError("Repasse inválido.");
   }
 
   await prisma.barberPayout.update({
@@ -185,7 +185,7 @@ export async function reopenBarberPayoutAction(
   const payoutId = String(formData.get("payoutId") || "");
 
   if (!payoutId) {
-    return mutationError("Repasse invalido.");
+    return mutationError("Repasse inválido.");
   }
 
   await prisma.barberPayout.update({
@@ -209,7 +209,7 @@ export async function closeBarberPayoutAction(
   const payoutId = String(formData.get("payoutId") || "");
 
   if (!payoutId) {
-    return mutationError("Repasse invalido.");
+    return mutationError("Repasse inválido.");
   }
 
   const payout = await prisma.barberPayout.findUnique({
@@ -217,7 +217,7 @@ export async function closeBarberPayoutAction(
   });
 
   if (!payout) {
-    return mutationError("Repasse nao encontrado.");
+    return mutationError("Repasse não encontrado.");
   }
 
   if (payout.status !== "OPEN") {
@@ -254,7 +254,7 @@ export async function deleteBarberPayoutAction(
   const payoutId = String(formData.get("payoutId") || "");
 
   if (!payoutId) {
-    return mutationError("Repasse invalido.");
+    return mutationError("Repasse inválido.");
   }
 
   const payout = await prisma.barberPayout.findUnique({
@@ -263,7 +263,7 @@ export async function deleteBarberPayoutAction(
   });
 
   if (!payout) {
-    return mutationError("Repasse nao encontrado.");
+    return mutationError("Repasse não encontrado.");
   }
 
   await prisma.barberPayout.delete({

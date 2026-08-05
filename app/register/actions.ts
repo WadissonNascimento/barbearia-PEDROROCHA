@@ -118,7 +118,7 @@ export async function registerCustomerAction(
 
   if (existingUser) {
     return {
-      error: "Ja existe uma conta com esse e-mail.",
+      error: "Já existe uma conta com esse e-mail.",
       success: null,
     };
   }
@@ -179,13 +179,13 @@ export async function registerCustomerAction(
 
     if (isUniqueConstraintError(error, "email")) {
       return {
-        error: "Ja existe uma conta ou cadastro pendente com esse e-mail.",
+        error: "Já existe uma conta ou cadastro pendente com esse e-mail.",
         success: null,
       };
     }
 
     return {
-      error: "Nao foi possivel enviar o codigo de verificacao.",
+      error: "Não foi possível enviar o código de verificação.",
       success: null,
     };
   }
@@ -207,7 +207,7 @@ export async function verifyRegistrationCodeAction(
 
   if (!email || !code) {
     return {
-      error: "Informe o e-mail e o codigo de verificacao.",
+      error: "Informe o e-mail e o código de verificação.",
       success: null,
     };
   }
@@ -221,7 +221,7 @@ export async function verifyRegistrationCodeAction(
 
   if (!rateLimit.allowed) {
     return {
-      error: "Muitas tentativas de verificacao. Aguarde e tente novamente.",
+      error: "Muitas tentativas de verificação. Aguarde e tente novamente.",
       success: null,
     };
   }
@@ -232,21 +232,21 @@ export async function verifyRegistrationCodeAction(
 
   if (!pending) {
     return {
-      error: "Nao encontramos um cadastro pendente para esse e-mail.",
+      error: "Não encontramos um cadastro pendente para esse e-mail.",
       success: null,
     };
   }
 
   if (pending.expiresAt.getTime() < Date.now()) {
     return {
-      error: "Esse codigo expirou. Solicite um novo envio.",
+      error: "Esse código expirou. Solicite um novo envio.",
       success: null,
     };
   }
 
   if (pending.attempts >= MAX_CODE_ATTEMPTS) {
     return {
-      error: "Muitas tentativas invalidas. Solicite um novo codigo.",
+      error: "Muitas tentativas invalidas. Solicite um novo código.",
       success: null,
     };
   }
@@ -263,7 +263,7 @@ export async function verifyRegistrationCodeAction(
     });
 
     return {
-      error: "Codigo invalido. Confira o e-mail e tente novamente.",
+      error: "Código inválido. Confira o e-mail e tente novamente.",
       success: null,
     };
   }
@@ -278,7 +278,7 @@ export async function verifyRegistrationCodeAction(
     });
 
     return {
-      error: "Ja existe uma conta ativa com esse e-mail.",
+      error: "Já existe uma conta ativa com esse e-mail.",
       success: null,
     };
   }
@@ -313,7 +313,7 @@ export async function verifyRegistrationCodeAction(
       });
 
       return {
-        error: "Ja existe uma conta ativa com esse e-mail.",
+        error: "Já existe uma conta ativa com esse e-mail.",
         success: null,
       };
     }
@@ -331,7 +331,7 @@ export async function verifyRegistrationCodeAction(
     if (error instanceof AuthError) {
       redirect(
         `/login?registered=1&error=${encodeURIComponent(
-          "Conta criada com sucesso, mas nao foi possivel entrar automaticamente. Entre com seu e-mail e senha."
+          "Conta criada com sucesso, mas não foi possível entrar automaticamente. Entre com seu e-mail e senha."
         )}`
       );
     }
@@ -352,7 +352,7 @@ export async function resendRegistrationCodeAction(
 
   if (!email) {
     return {
-      error: "Informe o e-mail para reenviar o codigo.",
+      error: "Informe o e-mail para reenviar o código.",
       success: null,
     };
   }
@@ -377,14 +377,14 @@ export async function resendRegistrationCodeAction(
 
   if (!pending) {
     return {
-      error: "Nao encontramos um cadastro pendente para esse e-mail.",
+      error: "Não encontramos um cadastro pendente para esse e-mail.",
       success: null,
     };
   }
 
   if (pending.expiresAt.getTime() < Date.now()) {
     return {
-      error: "O codigo anterior expirou. Recomece o cadastro para receber um novo.",
+      error: "O código anterior expirou. Recomece o cadastro para receber um novo.",
       success: null,
     };
   }
@@ -422,7 +422,7 @@ export async function resendRegistrationCodeAction(
     });
 
     return {
-      error: "Nao foi possivel reenviar o codigo.",
+      error: "Não foi possível reenviar o código.",
       success: null,
     };
   }
@@ -431,6 +431,6 @@ export async function resendRegistrationCodeAction(
     error: null,
     success: isUsingDevelopmentMailFallback()
       ? `Codigo de verificacao local: ${code}`
-      : "Enviamos um novo codigo para o seu e-mail.",
+      : "Enviamos um novo código para o seu e-mail.",
   };
 }

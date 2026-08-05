@@ -28,7 +28,7 @@ async function handleAppointmentRemindersCron(request: Request) {
     });
 
     return NextResponse.json(
-      { message: "CRON_SECRET nao configurado." },
+      { message: "CRON_SECRET não configurado." },
       { status: 503 }
     );
   }
@@ -38,7 +38,7 @@ async function handleAppointmentRemindersCron(request: Request) {
       route: "/api/cron/appointment-reminders",
     });
 
-    return NextResponse.json({ message: "Nao autorizado." }, { status: 401 });
+    return NextResponse.json({ message: "Não autorizado." }, { status: 401 });
   }
 
   const [dayResult, result, vipPaymentResult] = await Promise.all([

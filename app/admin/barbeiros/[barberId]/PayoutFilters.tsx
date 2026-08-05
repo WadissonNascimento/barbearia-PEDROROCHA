@@ -47,7 +47,7 @@ export default function PayoutFilters({
       }}
     >
       <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-sky-300">
-        Filtrar periodo
+        Filtrar período
       </p>
       <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
         <label className="block">

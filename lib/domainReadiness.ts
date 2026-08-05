@@ -6,7 +6,7 @@ const DNS_TIMEOUT_MS = 1_500;
 export type DomainReadiness =
   | {
       status: "missing";
-      label: "Sem dominio";
+      label: "Sem domínio";
       tone: "muted";
       domain: null;
       expectedIpv4s: string[];
@@ -51,7 +51,7 @@ export type DomainReadiness =
     }
   | {
       status: "error";
-      label: "DNS indisponivel";
+      label: "DNS indisponível";
       tone: "danger";
       domain: string;
       expectedIpv4s: string[];
@@ -124,12 +124,12 @@ export async function getDomainReadiness(
   if (!domain) {
     return {
       status: "missing",
-      label: "Sem dominio",
+      label: "Sem domínio",
       tone: "muted",
       domain: null,
       expectedIpv4s,
       resolvedIpv4s: [],
-      message: "Nenhum dominio principal cadastrado.",
+      message: "Nenhum domínio principal cadastrado.",
     };
   }
 
@@ -141,7 +141,7 @@ export async function getDomainReadiness(
       domain,
       expectedIpv4s,
       resolvedIpv4s: [],
-      message: "Dominio reservado para testes locais; nao deve receber SSL em producao.",
+      message: "Domínio reservado para testes locais; não deve receber SSL em produção.",
     };
   }
 
@@ -157,7 +157,7 @@ export async function getDomainReadiness(
         domain,
         expectedIpv4s,
         resolvedIpv4s,
-        message: "O dominio ja aponta para a VPS esperada.",
+        message: "O domínio já aponta para a VPS esperada.",
       };
     }
 
@@ -168,7 +168,7 @@ export async function getDomainReadiness(
       domain,
       expectedIpv4s,
       resolvedIpv4s,
-      message: "O dominio resolve, mas ainda nao aponta para a VPS esperada.",
+      message: "O domínio resolve, mas ainda não aponta para a VPS esperada.",
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : "dns_error";
@@ -182,13 +182,13 @@ export async function getDomainReadiness(
         domain,
         expectedIpv4s,
         resolvedIpv4s: [],
-        message: "Ainda nao existe apontamento A valido para este dominio.",
+        message: "Ainda não existe apontamento A válido para este domínio.",
       };
     }
 
     return {
       status: "error",
-      label: "DNS indisponivel",
+      label: "DNS indisponível",
       tone: "danger",
       domain,
       expectedIpv4s,

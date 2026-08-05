@@ -496,7 +496,7 @@ function BarberAgendaBlockCard({
       <div className="mt-2 grid gap-1.5 text-sm">
         <p className="font-semibold text-white">Motivo: {block.reason}</p>
         <p className="text-xs leading-5 text-zinc-300">
-          Esse horario so aceita encaixes rapidos pelo admin ou barbeiro.
+          Esse horário só aceita encaixes rápidos pelo admin ou barbeiro.
         </p>
       </div>
 

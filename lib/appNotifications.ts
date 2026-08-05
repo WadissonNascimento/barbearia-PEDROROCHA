@@ -250,7 +250,7 @@ function getAdminAppointmentMetadata(
     customerName: appointment.customer.name || "Cliente",
     phone: appointment.customer.phone || null,
     serviceName:
-      getAppointmentDisplayName(appointment.services) || "Servico agendado",
+      getAppointmentDisplayName(appointment.services) || "Serviço agendado",
     date: formatScheduleDate(appointment.date),
     time: formatScheduleTime(appointment.date),
     status: appointment.status,
@@ -266,7 +266,7 @@ function getCancellationReason(notes: string | null, explicitReason?: string | n
 
   const parts = notes?.split("|").map((part) => part.trim()).filter(Boolean) || [];
 
-  return parts.at(-1) || "Motivo nao informado.";
+  return parts.at(-1) || "Motivo não informado.";
 }
 
 export async function notifyAdminsAppointmentCancelled(
@@ -281,7 +281,7 @@ export async function notifyAdminsAppointmentCancelled(
 
   const reason = getCancellationReason(appointment.notes, cancellationReason);
   const serviceName =
-    getAppointmentDisplayName(appointment.services) || "Servico agendado";
+    getAppointmentDisplayName(appointment.services) || "Serviço agendado";
 
   return createNotificationForShopAdmins({
     shopId: appointment.shopId,
@@ -305,7 +305,7 @@ export async function notifyAdminsAppointmentNoShow(appointmentId: string) {
   }
 
   const serviceName =
-    getAppointmentDisplayName(appointment.services) || "Servico agendado";
+    getAppointmentDisplayName(appointment.services) || "Serviço agendado";
 
   return createNotificationForShopAdmins({
     shopId: appointment.shopId,
@@ -351,7 +351,7 @@ export async function notifyAdminsLowStockExtras({
 
   const title =
     extras.length === 1
-      ? `${extras[0].name} esta com estoque baixo`
+      ? `${extras[0].name} está com estoque baixo`
       : `${extras.length} extras com estoque baixo`;
 
   return createNotificationForShopAdmins({
@@ -469,7 +469,7 @@ export async function notifyBarberOpenAppointmentsAtShiftEnd({
       customerName: appointment.customer.name || "Cliente",
       phone: appointment.customer.phone || null,
       serviceName:
-        getAppointmentDisplayName(appointment.services) || "Servico agendado",
+        getAppointmentDisplayName(appointment.services) || "Serviço agendado",
       date: formatScheduleDate(appointment.date),
       time: formatScheduleTime(appointment.date),
       status: appointment.status,
@@ -482,7 +482,7 @@ export async function notifyBarberOpenAppointmentsAtShiftEnd({
     eventKey: `barber:open_appointments_shift_end:${barber.id}:${date}`,
     eyebrow: "Fim do turno",
     title: label,
-    body: "Ainda existem atendimentos do dia sem conclusao.",
+    body: "Ainda existem atendimentos do dia sem conclusão.",
     actionUrl: `/barber/agenda?date=${date}`,
     metadata,
   });
@@ -493,7 +493,7 @@ export async function notifyBarberOpenAppointmentsAtShiftEnd({
     eventKey: `admin:barber_open_appointments_shift_end:${barber.id}:${date}`,
     eyebrow: "Fim do turno",
     title: `${barberName?.name || "Barbeiro"} tem ${label}`,
-    body: "Ainda existem atendimentos do dia sem conclusao.",
+    body: "Ainda existem atendimentos do dia sem conclusão.",
     actionUrl: `/admin/agenda?dateFrom=${date}&dateTo=${date}&barberId=${barber.id}`,
     metadata,
   });

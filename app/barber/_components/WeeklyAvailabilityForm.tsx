@@ -122,7 +122,7 @@ export function WeeklyAvailabilityForm({
         </span>
         <span className="min-w-0">
           <span className="block truncate text-base font-bold text-white">
-            Horarios de atendimento
+            Horários de atendimento
           </span>
           <span className="mt-1 block text-sm leading-5 text-zinc-400">
             Edite e salve cada dia separadamente.
@@ -170,7 +170,7 @@ export function WeeklyAvailabilityForm({
                     <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-zinc-400">
                       <Clock3 className="h-4 w-4 shrink-0" />
                       <span>
-                        {day.startTime} ate {day.endTime}
+                        {day.startTime} até {day.endTime}
                       </span>
                     </p>
                   </div>
@@ -311,7 +311,7 @@ export function WeeklyAvailabilityForm({
                     ))}
                     {dayBlocks.map((block) => (
                       <p key={block.id} className="text-sm text-zinc-300">
-                        Pontual: {formatBlockTime(block.startDateTime)} ate{" "}
+                        Pontual: {formatBlockTime(block.startDateTime)} até{" "}
                         {formatBlockTime(block.endDateTime)}
                         {block.reason ? ` - ${block.reason}` : ""}
                       </p>
@@ -429,7 +429,7 @@ function RecurringBlockRow({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-zinc-200">
-            Fixa: {block.startTime} ate {block.endTime}
+            Fixa: {block.startTime} até {block.endTime}
           </p>
           <p className="mt-0.5 truncate text-xs text-zinc-500">
             {block.reason || "Sem motivo informado"}

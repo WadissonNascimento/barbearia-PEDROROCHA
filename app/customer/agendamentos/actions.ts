@@ -38,7 +38,7 @@ export async function cancelCustomerAppointmentAction(
   const appointmentId = String(formData.get("appointmentId") || "").trim();
 
   if (!appointmentId) {
-    return mutationError("Agendamento invalido.");
+    return mutationError("Agendamento inválido.");
   }
 
   const appointment = await prisma.appointment.findUnique({
@@ -63,7 +63,7 @@ export async function cancelCustomerAppointmentAction(
       userId: session.user.id,
       appointmentId,
     });
-    return mutationError("Agendamento nao encontrado para sua conta.");
+    return mutationError("Agendamento não encontrado para sua conta.");
   }
 
   try {
@@ -123,7 +123,7 @@ export async function submitAppointmentReviewAction(
   const comment = String(formData.get("comment") || "").trim();
 
   if (!appointmentId) {
-    return mutationError("Agendamento invalido.");
+    return mutationError("Agendamento inválido.");
   }
 
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
@@ -131,7 +131,7 @@ export async function submitAppointmentReviewAction(
   }
 
   if (comment.length > 50) {
-    return mutationError("Escreva uma avaliacao com ate 50 caracteres.");
+    return mutationError("Escreva uma avaliação com até 50 caracteres.");
   }
 
   const appointment = await prisma.appointment.findUnique({
@@ -157,11 +157,11 @@ export async function submitAppointmentReviewAction(
       userId: session.user.id,
       appointmentId,
     });
-    return mutationError("Agendamento nao encontrado para sua conta.");
+    return mutationError("Agendamento não encontrado para sua conta.");
   }
 
   if (!["COMPLETED", "DONE"].includes(appointment.status)) {
-    return mutationError("A avaliacao fica disponivel depois que o atendimento e concluido.");
+    return mutationError("A avaliação fica disponível depois que o atendimento e concluído.");
   }
 
   const existingReview = await prisma.review.findUnique({
@@ -174,7 +174,7 @@ export async function submitAppointmentReviewAction(
   });
 
   if (existingReview) {
-    return mutationError("Esse atendimento ja foi avaliado.");
+    return mutationError("Esse atendimento já foi avaliado.");
   }
 
   const review = await prisma.review.create({
@@ -194,5 +194,5 @@ export async function submitAppointmentReviewAction(
 
   await notifyBarberNewReview(review.id);
 
-  return mutationSuccess("Obrigado pela avaliacao. Ela ja entrou para revisao do admin.");
+  return mutationSuccess("Obrigado pela avaliação. Ela já entrou para revisao do admin.");
 }

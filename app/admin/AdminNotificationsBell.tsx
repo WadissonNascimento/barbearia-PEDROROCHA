@@ -479,7 +479,7 @@ function AdminDailySummaryCard({
 
       <div className="mt-4 grid grid-cols-2 gap-2">
         <CompactInfo label="Total" value={summary.totalAppointments} />
-        <CompactInfo label="Concluidos" value={summary.completedAppointments} />
+        <CompactInfo label="Concluídos" value={summary.completedAppointments} />
         <CompactInfo label="Cancelados" value={summary.cancelledAppointments} />
         <CompactInfo label="Faltas" value={summary.noShowAppointments} />
       </div>
@@ -534,9 +534,9 @@ function getAppointmentCards(metadata: unknown) {
         customerName: customerName || "Cliente",
         barberName: asString(appointment.barberName) || "Barbeiro",
         phone: asString(appointment.phone) || null,
-        serviceName: asString(appointment.serviceName) || "Servico agendado",
-        date: asString(appointment.date) || "Nao informado",
-        time: asString(appointment.time) || "Horario",
+        serviceName: asString(appointment.serviceName) || "Serviço agendado",
+        date: asString(appointment.date) || "Não informado",
+        time: asString(appointment.time) || "Horário",
         status,
         reason: asString(appointment.reason) || null,
       };
@@ -684,14 +684,14 @@ function getMetadataRows(metadata: unknown) {
     ["appointmentCode", "Atendimento"],
     ["customerName", "Cliente"],
     ["phone", "Telefone"],
-    ["serviceName", "Servico"],
+    ["serviceName", "Serviço"],
     ["date", "Data"],
-    ["time", "Horario"],
+    ["time", "Horário"],
     ["reason", "Motivo"],
     ["rating", "Nota"],
     ["reviewComment", "Comentario"],
     ["totalAppointments", "Total"],
-    ["completedAppointments", "Concluidos"],
+    ["completedAppointments", "Concluídos"],
     ["cancelledAppointments", "Cancelados"],
     ["noShowAppointments", "Faltas"],
     ["revenue", "Faturamento"],

@@ -74,7 +74,7 @@ function escapeHtml(value: string) {
     .replaceAll("'", "&#039;");
 }
 
-function clean(value: string | null | undefined, fallback = "Nao informado") {
+function clean(value: string | null | undefined, fallback = "Não informado") {
   return value?.trim() || fallback;
 }
 
@@ -270,9 +270,9 @@ function appointmentRows(data: BarberAppointmentEmailData) {
   return [
     ["Cliente", clean(data.nomeCliente)],
     ["Telefone", clean(data.telefoneCliente)],
-    ["Servico", clean(data.servico)],
+    ["Serviço", clean(data.servico)],
     ["Data", clean(data.dataAgendamento)],
-    ["Horario", clean(data.horarioAgendamento)],
+    ["Horário", clean(data.horarioAgendamento)],
   ] as Array<[string, string]>;
 }
 
@@ -286,23 +286,23 @@ export function renderBarberNewAppointmentEmail(
     html: renderLayout({
       ...data,
       eyebrow: "Novo agendamento",
-      title: "Voce tem um novo horario",
-      intro: `${data.nomeCliente} acabou de agendar um atendimento com voce.`,
+      title: "Você tem um novo horário",
+      intro: `${data.nomeCliente} acabou de agendar um atendimento com você.`,
       buttonLabel: "Abrir Agenda",
       footerNote: "Confira os detalhes no painel antes do atendimento.",
       children:
         renderInfoCard(appointmentRows(data)) +
-        renderObservation("Observacoes do cliente", data.observacoes),
+        renderObservation("Observações do cliente", data.observacoes),
     }),
     text: textLines([
       `Novo agendamento em ${data.nomeBarbearia}`,
       `Barbeiro: ${data.nomeBarbeiro}`,
       `Cliente: ${data.nomeCliente}`,
       `Telefone: ${clean(data.telefoneCliente)}`,
-      `Servico: ${data.servico}`,
+      `Serviço: ${data.servico}`,
       `Data: ${data.dataAgendamento}`,
-      `Horario: ${data.horarioAgendamento}`,
-      data.observacoes ? `Observacoes: ${data.observacoes}` : null,
+      `Horário: ${data.horarioAgendamento}`,
+      data.observacoes ? `Observações: ${data.observacoes}` : null,
       `Abrir agenda: ${data.linkPainel}`,
     ]),
   };
@@ -318,10 +318,10 @@ export function renderBarberAppointmentCancelledEmail(
     html: renderLayout({
       ...data,
       eyebrow: "Cancelamento",
-      title: "Um horario foi cancelado",
+      title: "Um horário foi cancelado",
       intro: `O atendimento de ${data.nomeCliente} saiu da sua agenda.`,
       buttonLabel: "Abrir Agenda",
-      footerNote: "O historico continua registrado no painel.",
+      footerNote: "O histórico continua registrado no painel.",
       children:
         renderInfoCard(appointmentRows(data)) +
         renderObservation("Motivo do cancelamento", data.motivoCancelamento),
@@ -330,9 +330,9 @@ export function renderBarberAppointmentCancelledEmail(
       `Agendamento cancelado em ${data.nomeBarbearia}`,
       `Barbeiro: ${data.nomeBarbeiro}`,
       `Cliente: ${data.nomeCliente}`,
-      `Servico: ${data.servico}`,
+      `Serviço: ${data.servico}`,
       `Data: ${data.dataAgendamento}`,
-      `Horario: ${data.horarioAgendamento}`,
+      `Horário: ${data.horarioAgendamento}`,
       data.motivoCancelamento ? `Motivo: ${data.motivoCancelamento}` : null,
       `Abrir agenda: ${data.linkPainel}`,
     ]),
@@ -349,26 +349,26 @@ export function renderBarberAppointmentRescheduledEmail(
     html: renderLayout({
       ...data,
       eyebrow: "Reagendamento",
-      title: "Um horario foi alterado",
-      intro: `O atendimento de ${data.nomeCliente} recebeu uma nova data ou horario.`,
+      title: "Um horário foi alterado",
+      intro: `O atendimento de ${data.nomeCliente} recebeu uma nova data ou horário.`,
       buttonLabel: "Abrir Agenda",
       footerNote: "Confira a agenda atualizada antes de organizar o dia.",
       children:
         renderInfoCard([
           ["Cliente", clean(data.nomeCliente)],
-          ["Servico", clean(data.servico)],
-          ["Horario antigo", clean(data.horarioAntigo)],
-          ["Novo horario", clean(data.novoHorario)],
+          ["Serviço", clean(data.servico)],
+          ["Horário antigo", clean(data.horarioAntigo)],
+          ["Novo horário", clean(data.novoHorario)],
           ["Telefone", clean(data.telefoneCliente)],
-        ]) + renderObservation("Observacoes", data.observacoes),
+        ]) + renderObservation("Observações", data.observacoes),
     }),
     text: textLines([
       `Agendamento remarcado em ${data.nomeBarbearia}`,
       `Barbeiro: ${data.nomeBarbeiro}`,
       `Cliente: ${data.nomeCliente}`,
-      `Servico: ${data.servico}`,
-      `Horario antigo: ${data.horarioAntigo}`,
-      `Novo horario: ${data.novoHorario}`,
+      `Serviço: ${data.servico}`,
+      `Horário antigo: ${data.horarioAntigo}`,
+      `Novo horário: ${data.novoHorario}`,
       `Abrir agenda: ${data.linkPainel}`,
     ]),
   };
@@ -410,26 +410,26 @@ export function renderBarberDailyAgendaEmail(
 export function renderBarberNoShowEmail(
   data: BarberAppointmentEmailData
 ): RenderedEmail {
-  const subject = `Cliente nao compareceu - ${data.nomeCliente}`;
+  const subject = `Cliente não compareceu - ${data.nomeCliente}`;
 
   return {
     subject,
     html: renderLayout({
       ...data,
-      eyebrow: "Nao compareceu",
+      eyebrow: "Não compareceu",
       title: "Atendimento marcado como falta",
-      intro: `${data.nomeCliente} foi marcado como nao compareceu.`,
+      intro: `${data.nomeCliente} foi marcado como não compareceu.`,
       buttonLabel: "Abrir Agenda",
-      footerNote: "Esse registro ajuda a manter o historico do cliente claro.",
+      footerNote: "Esse registro ajuda a manter o histórico do cliente claro.",
       children: renderInfoCard(appointmentRows(data)),
     }),
     text: textLines([
-      `Cliente nao compareceu em ${data.nomeBarbearia}`,
+      `Cliente não compareceu em ${data.nomeBarbearia}`,
       `Barbeiro: ${data.nomeBarbeiro}`,
       `Cliente: ${data.nomeCliente}`,
-      `Servico: ${data.servico}`,
+      `Serviço: ${data.servico}`,
       `Data: ${data.dataAgendamento}`,
-      `Horario: ${data.horarioAgendamento}`,
+      `Horário: ${data.horarioAgendamento}`,
       `Abrir agenda: ${data.linkPainel}`,
     ]),
   };
@@ -444,25 +444,25 @@ export function renderBarberNewReviewEmail(
     subject,
     html: renderLayout({
       ...data,
-      eyebrow: "Nova avaliacao",
+      eyebrow: "Nova avaliação",
       title: `${data.nota}/5 recebido`,
       intro: `${data.nomeCliente} avaliou o atendimento realizado.`,
       buttonLabel: "Ver Avaliacoes",
-      footerNote: "Avaliacoes ajudam a acompanhar qualidade e experiencia do cliente.",
+      footerNote: "Avaliacoes ajudam a acompanhar qualidade e experiência do cliente.",
       children:
         renderInfoCard([
           ["Cliente", clean(data.nomeCliente)],
-          ["Servico", clean(data.servico)],
+          ["Serviço", clean(data.servico)],
           ["Nota", `${data.nota}/5`],
           ["Data", clean(data.dataAgendamento)],
-          ["Horario", clean(data.horarioAgendamento)],
+          ["Horário", clean(data.horarioAgendamento)],
         ]) + renderObservation("Comentario", data.comentario),
     }),
     text: textLines([
       `Nova avaliacao em ${data.nomeBarbearia}`,
       `Barbeiro: ${data.nomeBarbeiro}`,
       `Cliente: ${data.nomeCliente}`,
-      `Servico: ${data.servico}`,
+      `Serviço: ${data.servico}`,
       `Nota: ${data.nota}/5`,
       data.comentario ? `Comentario: ${data.comentario}` : null,
       `Ver avaliacoes: ${data.linkPainel}`,

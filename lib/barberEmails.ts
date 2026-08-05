@@ -132,7 +132,7 @@ function serviceLabel(
     orderIndex: number;
   }>
 ) {
-  return getAppointmentDisplayName(services) || "Servico agendado";
+  return getAppointmentDisplayName(services) || "Serviço agendado";
 }
 
 function getCancellationReason(notes: string | null | undefined, fallback?: string | null) {
@@ -260,7 +260,7 @@ async function sendBarberAppointmentEmail({
 
 function getBarberNotificationEyebrow(template: string) {
   if (template === "barber.daily_agenda") return "Agenda";
-  if (template === "barber.new_review") return "Avaliacao";
+  if (template === "barber.new_review") return "Avaliação";
   return "Atendimento";
 }
 
@@ -275,7 +275,7 @@ function getBarberNotificationTitle(template: string) {
     case "barber.no_show":
       return "Cliente marcado como falta";
     default:
-      return "Atualizacao da agenda";
+      return "Atualização da agenda";
   }
 }
 
@@ -293,7 +293,7 @@ function getBarberNotificationBody(
     case "barber.no_show":
       return `${data.nomeCliente} foi marcado como falta.`;
     default:
-      return `${data.nomeCliente} teve uma atualizacao no atendimento.`;
+      return `${data.nomeCliente} teve uma atualização no atendimento.`;
   }
 }
 
@@ -432,8 +432,8 @@ export async function notifyBarberNewReview(reviewId: string) {
       recipientUserId: review.barber.id,
       type: "barber.new_review",
       eventKey: `barber:new_review:${review.id}`,
-      eyebrow: "Avaliacao",
-      title: "Nova avaliacao recebida",
+      eyebrow: "Avaliação",
+      title: "Nova avaliação recebida",
       body: `${normalizeName(review.customer.name, "Cliente")} avaliou seu atendimento com ${review.rating} estrela(s).`,
       actionUrl: absoluteAppUrl("/barber", review.shop),
       metadata: {
@@ -617,8 +617,8 @@ export async function sendDailyBarberAgendaEmails({
       title: "Sua agenda do dia",
       body:
         appointments.length === 1
-          ? "Voce tem 1 atendimento agendado hoje."
-          : `Voce tem ${appointments.length} atendimentos agendados hoje.`,
+          ? "Você tem 1 atendimento agendado hoje."
+          : `Você tem ${appointments.length} atendimentos agendados hoje.`,
       actionUrl: absoluteAppUrl(BARBER_PANEL_PATH, barber.shop),
       metadata: {
         appointmentCount: appointments.length,

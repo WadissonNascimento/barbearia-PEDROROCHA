@@ -43,7 +43,7 @@ function getPaymentBreakdownDetails(breakdown: PaymentBreakdown) {
 
   if (breakdown.UNKNOWN > 0) {
     details.push({
-      label: "Nao informado",
+      label: "Não informado",
       value: formatCurrency(breakdown.UNKNOWN),
     });
   }
@@ -57,7 +57,7 @@ function formatPaymentBreakdown(breakdown: PaymentBreakdown) {
   );
 
   if (breakdown.UNKNOWN > 0) {
-    parts.push(`Nao informado: ${formatCurrency(breakdown.UNKNOWN)}`);
+    parts.push(`Não informado: ${formatCurrency(breakdown.UNKNOWN)}`);
   }
 
   return parts.join(" · ");
@@ -255,9 +255,9 @@ export default async function AdminPage() {
       badge: visibleReviews ? `${visibleReviews}` : undefined,
     },
     {
-      href: "/admin/configuracoes",
+      href: "/admin/configurações",
       icon: Settings,
-      title: "Configuracoes da barbearia",
+      title: "Configurações da barbearia",
       description: "WhatsApp, e-mail, Instagram e fotos da home.",
     },
     {
@@ -282,7 +282,7 @@ export default async function AdminPage() {
     "/admin/servicos",
     "/admin/extras",
     "/admin/caixinhas",
-    "/admin/configuracoes",
+    "/admin/configurações",
     "/admin/avaliacoes",
     "/admin/perfil",
   ];
@@ -307,7 +307,7 @@ export default async function AdminPage() {
                 Hoje na barbearia
               </h1>
               <p className="mt-2 text-sm text-zinc-400">
-                Agenda, equipe e dinheiro do dia em um lugar so.
+                Agenda, equipe e dinheiro do dia em um lugar só.
               </p>
             </div>
             <AdminNotificationsBell notifications={appNotifications} />

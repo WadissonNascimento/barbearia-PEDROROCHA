@@ -130,7 +130,7 @@ function sanitizeInputElement(element: HTMLInputElement | HTMLTextAreaElement) {
     element.setCustomValidity(
       isValidBrazilianPhone(element.value)
         ? ""
-        : `Use um telefone brasileiro valido no formato ${BRAZILIAN_PHONE_EXAMPLE}.`
+        : `Use um telefone brasileiro válido no formato ${BRAZILIAN_PHONE_EXAMPLE}.`
     );
     return;
   }

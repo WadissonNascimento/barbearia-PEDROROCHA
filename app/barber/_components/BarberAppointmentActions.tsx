@@ -175,8 +175,8 @@ export default function BarberAppointmentActions({
           setActionFeedback({
             title:
               nextStatus === "COMPLETED"
-                ? "Nao foi possivel concluir"
-                : "Nao foi possivel atualizar",
+                ? "Não foi possível concluir"
+                : "Não foi possível atualizar",
             message: result.message,
             tone: "error",
           });
@@ -184,13 +184,13 @@ export default function BarberAppointmentActions({
         }
       } catch {
         onFeedback({
-          message: "Nao foi possivel atualizar o atendimento. Tente novamente.",
+          message: "Não foi possível atualizar o atendimento. Tente novamente.",
           tone: "error",
         });
         setActionFeedback({
           title: "Erro ao salvar",
           message:
-            "Nao foi possivel atualizar o atendimento agora. Confira sua conexao e tente novamente.",
+            "Não foi possível atualizar o atendimento agora. Confira sua conexão e tente novamente.",
           tone: "error",
         });
         onStatusUpdated?.(appointmentId, status);
@@ -325,7 +325,7 @@ function PaymentMethodPrompt({
         </p>
         <h3 className="mt-2 text-2xl font-black">Como o cliente pagou?</h3>
         <p className="mt-2 text-sm leading-6 text-zinc-400">
-          Essa forma fica marcada no atendimento concluido e entra no resumo financeiro.
+          Essa forma fica marcada no atendimento concluído e entra no resumo financeiro.
         </p>
 
         <div className="mt-5 grid gap-2">
@@ -429,20 +429,20 @@ function BarberEditAppointmentModal({
           onSaved();
         } else {
           setDialogFeedback({
-            title: "Nao foi possivel salvar",
+            title: "Não foi possível salvar",
             message: result.message,
             tone: "error",
           });
         }
       } catch {
         onFeedback({
-          message: "Nao foi possivel salvar as alteracoes. Tente novamente.",
+          message: "Não foi possível salvar as alterações. Tente novamente.",
           tone: "error",
         });
         setDialogFeedback({
           title: "Erro ao salvar",
           message:
-            "Nao foi possivel salvar as alteracoes agora. Confira sua conexao e tente novamente.",
+            "Não foi possível salvar as alterações agora. Confira sua conexão e tente novamente.",
           tone: "error",
         });
       }
@@ -467,12 +467,12 @@ function BarberEditAppointmentModal({
                 {isCompletedEdit ? "Financeiro" : "Atendimento aberto"}
               </p>
               <h3 className="mt-2 text-xl font-bold">
-                {isCompletedEdit ? "Editar itens concluidos" : "Editar itens"}
+                {isCompletedEdit ? "Editar itens concluídos" : "Editar itens"}
               </h3>
               <p className="mt-1 text-sm text-zinc-400">
                 {isCompletedEdit
-                  ? "Ajuste servicos, extras e observacoes sem reabrir o atendimento."
-                  : "Ajuste servicos, extras e observacoes antes de salvar."}
+                  ? "Ajuste serviços, extras e observações sem reabrir o atendimento."
+                  : "Ajuste serviços, extras e observações antes de salvar."}
               </p>
             </div>
             <button
@@ -497,7 +497,7 @@ function BarberEditAppointmentModal({
 
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-zinc-500">
-              Servicos
+              Serviços
             </p>
             <div className="mt-2 grid gap-2">
               {services.map((service) => {

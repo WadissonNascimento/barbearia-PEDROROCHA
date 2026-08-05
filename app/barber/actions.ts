@@ -151,13 +151,13 @@ async function getQuickFitInPreviewForBarber({
   const endMinutes = startMinutes + durationMinutes;
 
   if (endMinutes > 24 * 60) {
-    throw new Error("A duracao informada ultrapassa o dia de atendimento.");
+    throw new Error("A duração informada ultrapassa o dia de atendimento.");
   }
 
   const dayRange = getScheduleDayRange(date);
 
   if (!dayRange) {
-    throw new Error("Nao foi possivel calcular o horario atual.");
+    throw new Error("Não foi possível calcular o horário atual.");
   }
 
   const appointments = await prisma.appointment.findMany({
@@ -229,7 +229,7 @@ async function requireBarber() {
   const barber = await getActiveBarberForSession(user);
 
   if (!barber) {
-    throw new Error("Barbeiro inativo ou nao autorizado.");
+    throw new Error("Barbeiro inativo ou não autorizado.");
   }
 
   return barber;
@@ -354,7 +354,7 @@ export async function updateOwnBarberPhotoAction(
     return mutationError(
       error instanceof Error
         ? error.message
-        : "Nao foi possivel atualizar a foto.",
+        : "Não foi possível atualizar a foto.",
     );
   }
 }
@@ -379,16 +379,16 @@ export async function updateOwnBarberContactAction(
 
   if (!rateLimit.allowed) {
     return mutationError(
-      "Muitas alteracoes em pouco tempo. Aguarde e tente novamente.",
+      "Muitas alterações em pouco tempo. Aguarde e tente novamente.",
     );
   }
 
   if (name.length < 2 || name.length > 80) {
-    return mutationError("Informe um nome valido.");
+    return mutationError("Informe um nome válido.");
   }
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return mutationError("Informe um e-mail valido.");
+    return mutationError("Informe um e-mail válido.");
   }
 
   if (rawPhone.trim() && !isValidBrazilianPhone(phone)) {
@@ -411,7 +411,7 @@ export async function updateOwnBarberContactAction(
   });
 
   if (emailOwner) {
-    return mutationError("Este e-mail ja esta em uso.");
+    return mutationError("Este e-mail já esta em uso.");
   }
 
   try {
@@ -427,7 +427,7 @@ export async function updateOwnBarberContactAction(
     });
   } catch (error) {
     if (isUniqueConstraintError(error, "email")) {
-      return mutationError("Este e-mail ja esta em uso.");
+      return mutationError("Este e-mail já esta em uso.");
     }
 
     throw error;
@@ -457,7 +457,7 @@ export async function updateAppointmentStatusAction(
     status === "COMPLETED" ? parseItemDeliveryDecisions(formData) : [];
 
   if (!appointmentId || !APPOINTMENT_STATUSES.includes(status as never)) {
-    return mutationError("Status de agendamento invalido.");
+    return mutationError("Status de agendamento inválido.");
   }
 
   if (status === "CANCELLED" && !cancellationReason) {
@@ -529,7 +529,7 @@ export async function setAppointmentItemDeliveryStatusAction(
   const isDelivered = String(formData.get("isDelivered") || "") === "true";
 
   if (!appointmentItemId) {
-    return mutationError("Extra invalido.");
+    return mutationError("Extra inválido.");
   }
 
   try {
@@ -581,7 +581,7 @@ export async function editOpenBarberAppointmentAction(
     notes.length > 400
   ) {
     return mutationError(
-      "Selecione servicos, extras e observacoes corretamente.",
+      "Selecione serviços, extras e observações corretamente.",
     );
   }
 
@@ -629,7 +629,7 @@ export async function editCompletedBarberFinanceAppointmentAction(
     notes.length > 400
   ) {
     return mutationError(
-      "Selecione servicos, extras e observacoes corretamente.",
+      "Selecione serviços, extras e observações corretamente.",
     );
   }
 
@@ -691,7 +691,7 @@ export async function createWalkInAppointmentAction(
 
   if (fitInMode === "quick") {
     if (!manualDurationMinutes) {
-      return mutationError("Informe uma duracao entre 5 e 240 minutos.");
+      return mutationError("Informe uma duração entre 5 e 240 minutos.");
     }
 
     const now = new Date();
@@ -700,7 +700,7 @@ export async function createWalkInAppointmentAction(
 
     if (toMinutes(startTime) + manualDurationMinutes > 24 * 60) {
       return mutationError(
-        "A duracao informada ultrapassa o dia de atendimento.",
+        "A duração informada ultrapassa o dia de atendimento.",
       );
     }
   }
@@ -734,7 +734,7 @@ export async function createWalkInAppointmentAction(
     extraNotes.length > 200
   ) {
     return mutationError(
-      "Preencha nome completo, telefone valido quando informado, servicos, data e horario corretamente.",
+      "Preencha nome completo, telefone válido quando informado, serviços, data e horário corretamente.",
     );
   }
 
@@ -754,7 +754,7 @@ export async function createWalkInAppointmentAction(
 
   if (services.length !== selectedServiceIds.length) {
     return mutationError(
-      "Um ou mais servicos estao indisponiveis para encaixe.",
+      "Um ou mais serviços estão indisponíveis para encaixe.",
     );
   }
 
@@ -810,7 +810,7 @@ export async function createWalkInAppointmentAction(
   const selectedCustomer = customerMatchedByPhone || selectedCustomerById;
 
   if (customerId && !selectedCustomer) {
-    return mutationError("Cliente selecionado nao pertence a sua base.");
+    return mutationError("Cliente selecionado não pertence a sua base.");
   }
 
   if (useVipPlan && !customerVipSubscription) {
@@ -834,7 +834,7 @@ export async function createWalkInAppointmentAction(
 
       if (!availableSlots.includes(startTime)) {
         return mutationError(
-          "Escolha um dos horarios disponiveis para esse encaixe.",
+          "Escolha um dos horários disponíveis para esse encaixe.",
         );
       }
     }
@@ -876,7 +876,7 @@ export async function createWalkInAppointmentAction(
         customerPhone: displayCustomerPhone,
         notes:
           fitInMode === "quick" && manualDurationMinutes
-            ? `Encaixe rapido (${manualDurationMinutes} min)${extraNotes ? ` - ${extraNotes}` : ""}`
+            ? `Encaixe rápido (${manualDurationMinutes} min)${extraNotes ? ` - ${extraNotes}` : ""}`
             : extraNotes,
       }),
     });
@@ -891,7 +891,7 @@ export async function createWalkInAppointmentAction(
   revalidateBarberViews();
   return mutationSuccess(
     fitInMode === "quick"
-      ? "Encaixe rapido criado com sucesso!"
+      ? "Encaixe rápido criado com sucesso!"
       : "Encaixe criado com sucesso!",
   );
 }
@@ -906,13 +906,13 @@ export async function getQuickFitInPreviewAction({
 
   if (!normalizedDuration) {
     return mutationError(
-      "Informe uma duracao entre 5 e 240 minutos.",
+      "Informe uma duração entre 5 e 240 minutos.",
     ) as MutationResult<QuickFitInPreviewPayload>;
   }
 
   try {
     return mutationSuccess(
-      "Previa do encaixe rapido calculada.",
+      "Previa do encaixe rápido calculada.",
       await getQuickFitInPreviewForBarber({
         shopId: barber.shopId,
         barberId: barber.id,
@@ -923,7 +923,7 @@ export async function getQuickFitInPreviewAction({
     return mutationError(
       error instanceof Error
         ? error.message
-        : "Nao foi possivel calcular o encaixe rapido.",
+        : "Não foi possível calcular o encaixe rápido.",
     ) as MutationResult<QuickFitInPreviewPayload>;
   }
 }
@@ -949,7 +949,7 @@ export async function getWalkInAvailableSlotsAction({
     selectedServiceIds.length > 8
   ) {
     return walkInSlotsError(
-      "Selecione servicos e data para carregar os horarios.",
+      "Selecione serviços e data para carregar os horários.",
     );
   }
 
@@ -969,7 +969,7 @@ export async function getWalkInAvailableSlotsAction({
 
   if (services.length !== selectedServiceIds.length) {
     return walkInSlotsError(
-      "Um ou mais servicos estao indisponiveis para encaixe.",
+      "Um ou mais serviços estão indisponíveis para encaixe.",
     );
   }
 
@@ -981,7 +981,7 @@ export async function getWalkInAvailableSlotsAction({
       additionalDurationMinutes,
     });
 
-    return mutationSuccess("Horarios carregados.", {
+    return mutationSuccess("Horários carregados.", {
       slots: flattenAvailableSlots(availability.periodSlots),
       periodSlots: availability.periodSlots,
     });
@@ -1004,7 +1004,7 @@ export async function saveBarberAvailabilityAction(
   const isActive = String(formData.get("isActive") || "false") === "true";
 
   if (weekDay < 0 || weekDay > 6 || !isValidTimeRange(startTime, endTime)) {
-    return mutationError("Disponibilidade invalida.");
+    return mutationError("Disponibilidade inválida.");
   }
 
   await prisma.barberAvailability.upsert({
@@ -1044,7 +1044,7 @@ export async function saveWeeklyBarberAvailabilityAction(
       String(formData.get(`day-${weekDay}-isActive`) || "false") === "true";
 
     if (!isValidTimeRange(startTime, endTime)) {
-      throw new Error(`Horario invalido para o dia ${weekDay}.`);
+      throw new Error(`Horário inválido para o dia ${weekDay}.`);
     }
 
     return {
@@ -1105,7 +1105,7 @@ export async function createBarberBlockAction(
   const reason = String(formData.get("reason") || "").trim();
 
   if (!startDateTime || !endDateTime || startDateTime >= endDateTime) {
-    return mutationError("Periodo de bloqueio invalido.");
+    return mutationError("Período de bloqueio inválido.");
   }
 
   await prisma.barberBlock.create({
@@ -1135,7 +1135,7 @@ export async function updateBarberBlockAction(
   const reason = String(formData.get("reason") || "").trim();
 
   if (!startDateTime || !endDateTime || startDateTime >= endDateTime) {
-    return mutationError("Periodo de bloqueio invalido.");
+    return mutationError("Período de bloqueio inválido.");
   }
 
   const block = await prisma.barberBlock.findUnique({
@@ -1143,7 +1143,7 @@ export async function updateBarberBlockAction(
   });
 
   if (!block || block.barberId !== barber.id) {
-    return mutationError("Bloqueio nao encontrado para este barbeiro.");
+    return mutationError("Bloqueio não encontrado para este barbeiro.");
   }
 
   await prisma.barberBlock.update({
@@ -1169,7 +1169,7 @@ export async function createRecurringBarberBlockAction(
   const reason = String(formData.get("reason") || "").trim();
 
   if (weekDay < 0 || weekDay > 6 || !isValidTimeRange(startTime, endTime)) {
-    return mutationError("Bloqueio recorrente invalido.");
+    return mutationError("Bloqueio recorrente inválido.");
   }
 
   await prisma.recurringBarberBlock.create({
@@ -1199,7 +1199,7 @@ export async function deleteRecurringBarberBlockAction(
 
   if (!recurringBlock || recurringBlock.barberId !== barber.id) {
     return mutationError(
-      "Bloqueio recorrente nao encontrado para este barbeiro.",
+      "Bloqueio recorrente não encontrado para este barbeiro.",
     );
   }
 
@@ -1222,7 +1222,7 @@ export async function updateRecurringBarberBlockAction(
   const reason = String(formData.get("reason") || "").trim();
 
   if (weekDay < 0 || weekDay > 6 || !isValidTimeRange(startTime, endTime)) {
-    return mutationError("Pausa fixa invalida.");
+    return mutationError("Pausa fixa inválida.");
   }
 
   const recurringBlock = await prisma.recurringBarberBlock.findUnique({
@@ -1230,7 +1230,7 @@ export async function updateRecurringBarberBlockAction(
   });
 
   if (!recurringBlock || recurringBlock.barberId !== barber.id) {
-    return mutationError("Pausa fixa nao encontrada para este barbeiro.");
+    return mutationError("Pausa fixa não encontrada para este barbeiro.");
   }
 
   await prisma.recurringBarberBlock.update({
@@ -1258,7 +1258,7 @@ export async function deleteBarberBlockAction(
   });
 
   if (!block || block.barberId !== barber.id) {
-    return mutationError("Bloqueio nao encontrado para este barbeiro.");
+    return mutationError("Bloqueio não encontrado para este barbeiro.");
   }
 
   await prisma.barberBlock.delete({
@@ -1277,7 +1277,7 @@ export async function saveClientNoteAction(
   const note = String(formData.get("note") || "").trim();
 
   if (!customerId || !note) {
-    return mutationError("Anotacao invalida.");
+    return mutationError("Anotacao inválida.");
   }
 
   const hasAppointment = await prisma.appointment.findFirst({
@@ -1291,7 +1291,7 @@ export async function saveClientNoteAction(
   });
 
   if (!hasAppointment) {
-    return mutationError("Cliente nao vinculado a este barbeiro.");
+    return mutationError("Cliente não vinculado a este barbeiro.");
   }
 
   await prisma.clientNote.upsert({
@@ -1313,5 +1313,5 @@ export async function saveClientNoteAction(
 
   revalidateBarberViews();
   revalidatePath(`/barber/clientes/${customerId}`);
-  return mutationSuccess("Observacao salva com sucesso.");
+  return mutationSuccess("Observação salva com sucesso.");
 }

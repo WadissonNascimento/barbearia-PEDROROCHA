@@ -30,7 +30,7 @@ export async function toggleReviewVisibilityAction(
   const reviewId = String(formData.get("reviewId") || "").trim();
 
   if (!reviewId) {
-    return mutationError("Avaliacao invalida.");
+    return mutationError("Avaliação inválida.");
   }
 
   const review = await prisma.review.findFirst({
@@ -44,7 +44,7 @@ export async function toggleReviewVisibilityAction(
   });
 
   if (!review) {
-    return mutationError("Avaliacao nao encontrada.");
+    return mutationError("Avaliação não encontrada.");
   }
 
   await prisma.review.updateMany({
@@ -59,7 +59,7 @@ export async function toggleReviewVisibilityAction(
 
   revalidateReviewViews();
   return mutationSuccess(
-    review.isVisible ? "Avaliacao ocultada da home." : "Avaliacao publicada novamente."
+    review.isVisible ? "Avaliação ocultada da home." : "Avaliação publicada novamente."
   );
 }
 
@@ -71,7 +71,7 @@ export async function deleteReviewAction(
   const reviewId = String(formData.get("reviewId") || "").trim();
 
   if (!reviewId) {
-    return mutationError("Avaliacao invalida.");
+    return mutationError("Avaliação inválida.");
   }
 
   await prisma.review.deleteMany({
@@ -82,5 +82,5 @@ export async function deleteReviewAction(
   });
 
   revalidateReviewViews();
-  return mutationSuccess("Avaliacao excluida com sucesso.");
+  return mutationSuccess("Avaliação excluida com sucesso.");
 }

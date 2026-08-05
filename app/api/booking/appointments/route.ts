@@ -80,7 +80,7 @@ export async function POST(request: Request) {
       route: "/api/booking/appointments",
       role: "anonymous",
     });
-    return NextResponse.json({ message: "Nao autorizado." }, { status: 401 });
+    return NextResponse.json({ message: "Não autorizado." }, { status: 401 });
   }
   const { session } = tenantSession;
 
@@ -199,7 +199,7 @@ export async function POST(request: Request) {
 
     console.error("Erro ao criar agendamento:", error);
     return NextResponse.json(
-      { message: "Nao foi possivel concluir o agendamento." },
+      { message: "Não foi possível concluir o agendamento." },
       { status: 500 }
     );
   }

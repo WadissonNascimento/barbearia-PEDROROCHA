@@ -83,7 +83,7 @@ export default function AdminTipsClient({
     });
 
     if (!result.ok) {
-      setDetailsError(result.message || "Nao foi possivel carregar as caixinhas.");
+      setDetailsError(result.message || "Não foi possível carregar as caixinhas.");
       setDetails([]);
       setHasNextPage(false);
       setIsLoadingDetails(false);
@@ -115,7 +115,7 @@ export default function AdminTipsClient({
           <div className="grid gap-3 sm:grid-cols-3">
             <label className="grid gap-2">
               <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
-                Periodo
+                Período
               </span>
               <select
                 value={localFilters.period}
@@ -172,7 +172,7 @@ export default function AdminTipsClient({
           </div>
 
           <p className="text-xs text-zinc-500">
-            {isPending ? "Atualizando..." : "Resumo carregado por periodo."}
+            {isPending ? "Atualizando..." : "Resumo carregado por período."}
           </p>
         </div>
       </section>
@@ -214,7 +214,7 @@ export default function AdminTipsClient({
                       <p className="text-xs text-zinc-500">
                         {summary.lastTip
                           ? `Ultima: ${formatCurrency(summary.lastTip.amount)} de ${summary.lastTip.clientName}`
-                          : "Sem caixinhas no periodo"}
+                          : "Sem caixinhas no período"}
                       </p>
                     </div>
                     <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-zinc-300">
@@ -247,7 +247,7 @@ export default function AdminTipsClient({
                     ) : details.length === 0 ? (
                       <div className="mt-4">
                         <EmptyState
-                          title="Sem caixinhas nesse periodo"
+                          title="Sem caixinhas nesse período"
                           description="Troque o filtro ou escolha outro barbeiro."
                         />
                       </div>

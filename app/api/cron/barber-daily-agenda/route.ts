@@ -24,7 +24,7 @@ async function handleBarberDailyAgendaCron(request: Request) {
     });
 
     return NextResponse.json(
-      { message: "CRON_SECRET nao configurado." },
+      { message: "CRON_SECRET não configurado." },
       { status: 503 }
     );
   }
@@ -34,7 +34,7 @@ async function handleBarberDailyAgendaCron(request: Request) {
       route: "/api/cron/barber-daily-agenda",
     });
 
-    return NextResponse.json({ message: "Nao autorizado." }, { status: 401 });
+    return NextResponse.json({ message: "Não autorizado." }, { status: 401 });
   }
 
   const url = new URL(request.url);

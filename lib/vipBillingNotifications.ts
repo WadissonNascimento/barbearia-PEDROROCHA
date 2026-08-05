@@ -60,7 +60,7 @@ function renderVipPaymentEmail({
 }) {
   const title = isDueToday
     ? "Seu plano mensal vence hoje"
-    : "Seu plano mensal esta perto do vencimento";
+    : "Seu plano mensal está perto do vencimento";
   const escapedTitle = escapeHtml(title);
 
   return `
@@ -178,7 +178,7 @@ export async function sendVipPaymentDueNotifications() {
     const isDueToday = kind === "due";
     const title = isDueToday
       ? "Seu plano mensal vence hoje"
-      : "Seu plano mensal esta perto do vencimento";
+      : "Seu plano mensal está perto do vencimento";
     const body = isDueToday
       ? `O plano ${subscription.plan.name} vence hoje. Valor: ${amountLabel}.`
       : `Seu plano ${subscription.plan.name} vence em ${dueDateLabel}. Valor: ${amountLabel}.`;

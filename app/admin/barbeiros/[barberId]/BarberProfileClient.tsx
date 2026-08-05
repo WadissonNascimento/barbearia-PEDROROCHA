@@ -245,10 +245,10 @@ function ProfileConfirmDialog({
       ? `Desativar ${barberName}?`
       : `Reativar ${barberName}?`;
   const description = isDelete
-    ? "Ele some da equipe e nao podera receber novos agendamentos. Os agendamentos antigos continuam salvos no historico."
+    ? "Ele some da equipe e não poderá receber novos agendamentos. Os agendamentos antigos continuam salvos no histórico."
     : isActive
-      ? "Ele continuara aparecendo na equipe, mas ficara indisponivel para novos agendamentos."
-      : "Ele voltara a aparecer como ativo e podera receber novos agendamentos.";
+      ? "Ele continuara aparecendo na equipe, mas ficara indisponível para novos agendamentos."
+      : "Ele voltara a aparecer como ativo e poderá receber novos agendamentos.";
 
   return createPortal(
     <div className="fixed inset-0 z-[10000] flex touch-none items-center justify-center overflow-hidden overscroll-none bg-black/80 px-4 py-6 backdrop-blur-md">

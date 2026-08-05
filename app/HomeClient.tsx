@@ -455,7 +455,7 @@ function ThemedDefaultHomeClient({
         {reviews.length === 0 ? (
           <div className="rounded-lg border border-dashed border-white/10 bg-white/[0.04] p-5 text-sm text-zinc-400">
             {reviewsEmptyText ||
-              "As avaliacoes reais dos clientes vao aparecer aqui depois dos atendimentos concluidos."}
+              "As avaliacoes reais dos clientes vao aparecer aqui depois dos atendimentos concluídos."}
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-3">

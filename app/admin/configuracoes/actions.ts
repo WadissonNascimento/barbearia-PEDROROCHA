@@ -36,7 +36,7 @@ function normalizeOptionalEmail(formData: FormData, key: string) {
   }
 
   if (!EMAIL_PATTERN.test(value)) {
-    throw new Error("Informe um e-mail valido.");
+    throw new Error("Informe um e-mail válido.");
   }
 
   return value;
@@ -63,12 +63,12 @@ function normalizeInstagram(value: string | null | undefined) {
     const url = new URL(cleaned.startsWith("http") ? cleaned : `https://${cleaned}`);
 
     if (!["http:", "https:"].includes(url.protocol)) {
-      throw new Error("Protocolo invalido.");
+      throw new Error("Protocolo inválido.");
     }
 
     return url.toString();
   } catch {
-    throw new Error("Informe um Instagram valido, como @perfil ou link completo.");
+    throw new Error("Informe um Instagram válido, como @perfil ou link completo.");
   }
 }
 
@@ -77,7 +77,7 @@ function revalidateShopSettingsViews() {
   revalidatePath("/agendar");
   revalidatePath("/admin");
   revalidatePath("/admin/home");
-  revalidatePath("/admin/configuracoes");
+  revalidatePath("/admin/configurações");
 }
 
 export async function updateAdminShopSettingsAction(
@@ -98,7 +98,7 @@ export async function updateAdminShopSettingsAction(
       return {
         ok: false,
         tone: "error",
-        message: "Informe um WhatsApp valido no formato (11) 96590-0713.",
+        message: "Informe um WhatsApp válido no formato (11) 96590-0713.",
       };
     }
 
@@ -132,7 +132,7 @@ export async function updateAdminShopSettingsAction(
     return {
       ok: true,
       tone: "success",
-      message: "Configuracoes da barbearia atualizadas.",
+      message: "Configurações da barbearia atualizadas.",
     };
   } catch (error) {
     return {
@@ -141,7 +141,7 @@ export async function updateAdminShopSettingsAction(
       message:
         error instanceof Error
           ? error.message
-          : "Nao foi possivel salvar as configuracoes.",
+          : "Não foi possível salvar as configurações.",
     };
   }
 }
