@@ -8,9 +8,10 @@ import {
 import { formatCurrency } from "@/lib/utils";
 
 export const SYSTEM_BILLING_OWNER_EMAIL = "wadisson97.w.g@gmail.com";
-export const SYSTEM_BILLING_PIX_KEY = "04378155524";
+export const SYSTEM_BILLING_PAYMENT_URL = "https://www.asaas.com/c/o7lse06d3qyovho2";
 export const SYSTEM_BILLING_GRACE_DAYS = 7;
-export const DEFAULT_SYSTEM_BILLING_AMOUNT = 48;
+export const DEFAULT_SYSTEM_BILLING_AMOUNT = 48.9;
+export const SYSTEM_BILLING_DUE_DAY = 5;
 
 export type SystemBillingAlert = {
   paymentId: string;
@@ -18,7 +19,7 @@ export type SystemBillingAlert = {
   amountLabel: string;
   dueDateLabel: string;
   graceDateLabel: string;
-  pixKey: string;
+  paymentUrl: string;
   isOverdue: boolean;
   canMarkPaid: boolean;
 } | null;
@@ -40,35 +41,14 @@ function getCycleMonth(dateValue: string) {
   return dateValue.slice(0, 7);
 }
 
-function isBusinessDay(date: Date) {
-  const day = date.getUTCDay();
-  return day !== 0 && day !== 6;
-}
-
-export function getFifthBusinessDayDate(cycleMonth: string) {
+export function getSystemBillingDueDate(cycleMonth: string) {
   const [yearValue, monthValue] = cycleMonth.split("-");
   const year = Number(yearValue);
   const month = Number(monthValue);
-  let businessDays = 0;
-
-  for (let day = 1; day <= 31; day += 1) {
-    const dateValue = `${year}-${pad(month)}-${pad(day)}`;
-    const date = createScheduleDate(dateValue, "00:00");
-
-    if (!date || date.getUTCMonth() !== month - 1) {
-      break;
-    }
-
-    if (isBusinessDay(date)) {
-      businessDays += 1;
-    }
-
-    if (businessDays === 5) {
-      return date;
-    }
-  }
-
-  return createScheduleDate(`${year}-${pad(month)}-05`, "00:00")!;
+  return createScheduleDate(
+    `${year}-${pad(month)}-${pad(SYSTEM_BILLING_DUE_DAY)}`,
+    "00:00"
+  )!;
 }
 
 function addCalendarDays(date: Date, days: number) {
@@ -90,17 +70,9 @@ export async function getSystemBillingAlert({
 }): Promise<SystemBillingAlert> {
   const todayValue = getCurrentScheduleDateValue(now);
   const cycleMonth = getCycleMonth(todayValue);
-  const dueDate = getFifthBusinessDayDate(cycleMonth);
+  const dueDate = getSystemBillingDueDate(cycleMonth);
   const graceEndsAt = addCalendarDays(dueDate, SYSTEM_BILLING_GRACE_DAYS);
-  const shop = await prisma.shop.findUnique({
-    where: { id: shopId },
-    select: {
-      subscriptionMonthlyPrice: true,
-    },
-  });
-  const amount = Number(
-    shop?.subscriptionMonthlyPrice || DEFAULT_SYSTEM_BILLING_AMOUNT
-  );
+  const amount = DEFAULT_SYSTEM_BILLING_AMOUNT;
 
   const payment = await prisma.systemBillingPayment.upsert({
     where: {
@@ -134,7 +106,7 @@ export async function getSystemBillingAlert({
     amountLabel: formatCurrency(payment.amount),
     dueDateLabel: formatLongDate(dueDate),
     graceDateLabel: formatLongDate(graceEndsAt),
-    pixKey: SYSTEM_BILLING_PIX_KEY,
+    paymentUrl: SYSTEM_BILLING_PAYMENT_URL,
     isOverdue: todayValue > getScheduleDateValue(dueDate),
     canMarkPaid:
       userEmail?.trim().toLowerCase() === SYSTEM_BILLING_OWNER_EMAIL,

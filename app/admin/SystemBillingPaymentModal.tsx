@@ -5,7 +5,7 @@ import { useFormStatus } from "react-dom";
 import {
   AlertTriangle,
   CheckCircle2,
-  Clipboard,
+  ExternalLink,
   ShieldCheck,
   X,
 } from "lucide-react";
@@ -31,7 +31,6 @@ export default function SystemBillingPaymentModal({
   );
   const [isDismissed, setIsDismissed] = useState(false);
   const [isPaidConfirmed, setIsPaidConfirmed] = useState(false);
-  const [copyLabel, setCopyLabel] = useState("Copiar chave Pix");
 
   useEffect(() => {
     if (state.ok) {
@@ -41,16 +40,6 @@ export default function SystemBillingPaymentModal({
 
   if (isPaidConfirmed) {
     return null;
-  }
-
-  async function copyPixKey() {
-    try {
-      await navigator.clipboard.writeText(alert.pixKey);
-      setCopyLabel("Pix copiado");
-      window.setTimeout(() => setCopyLabel("Copiar chave Pix"), 1800);
-    } catch {
-      setCopyLabel("Copie manualmente");
-    }
   }
 
   return (
@@ -66,8 +55,8 @@ export default function SystemBillingPaymentModal({
                 Plano do sistema aguardando pagamento
               </h2>
               <p className="mt-2 text-sm leading-6 text-zinc-300">
-                Venceu em {alert.dueDateLabel}. Pix {alert.pixKey}. Se não for
-                confirmado até {alert.graceDateLabel}, o site poderá ser
+                Vence todo dia 5. O pagamento é feito pelo link do Asaas. Se não
+                for confirmado até {alert.graceDateLabel}, o site poderá ser
                 suspenso automaticamente.
               </p>
             </div>
@@ -76,6 +65,15 @@ export default function SystemBillingPaymentModal({
               <strong className="text-left text-2xl font-black text-white sm:text-right">
                 {alert.amountLabel}
               </strong>
+              <a
+                href={alert.paymentUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl bg-amber-300 px-4 py-2.5 text-sm font-black text-black transition hover:bg-amber-200"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Pagar pelo Asaas
+              </a>
               {alert.canMarkPaid ? (
                 <form action={action}>
                   <input type="hidden" name="paymentId" value={alert.paymentId} />
@@ -133,8 +131,9 @@ export default function SystemBillingPaymentModal({
                   id="system-billing-description"
                   className="mt-2 text-sm leading-5 text-zinc-300 sm:mt-3 sm:leading-6"
                 >
-                  Mensalidade vencida em {alert.dueDateLabel}. Confirme o Pix de{" "}
-                  <strong className="text-white">{alert.amountLabel}</strong>.
+                  A mensalidade vence todo dia 5. Faça o pagamento de{" "}
+                  <strong className="text-white">{alert.amountLabel}</strong>{" "}
+                  pelo link do Asaas.
                 </p>
               </div>
             </div>
@@ -150,24 +149,15 @@ export default function SystemBillingPaymentModal({
               </p>
             </div>
 
-            <div className="mt-3 grid gap-2 rounded-2xl border border-white/10 bg-black/30 p-3 sm:mt-4 sm:gap-3 sm:p-4">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500 sm:text-xs">
-                  Chave Pix
-                </span>
-                <strong className="text-right text-base font-black text-white tabular-nums sm:text-lg">
-                  {alert.pixKey}
-                </strong>
-              </div>
-              <button
-                type="button"
-                onClick={copyPixKey}
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-2.5 text-sm font-black text-white transition hover:bg-white/[0.1] sm:min-h-11 sm:py-3"
-              >
-                <Clipboard className="h-4 w-4" />
-                {copyLabel}
-              </button>
-            </div>
+            <a
+              href={alert.paymentUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-amber-300 px-4 py-3 text-sm font-black text-black shadow-[0_18px_40px_rgba(251,191,36,0.2)] transition hover:bg-amber-200 sm:mt-4"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Abrir link de pagamento
+            </a>
 
             {state.message ? (
               <p
