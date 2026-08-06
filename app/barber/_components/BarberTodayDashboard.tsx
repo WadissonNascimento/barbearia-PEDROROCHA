@@ -333,6 +333,7 @@ export default function BarberTodayDashboard({
                           (item) => item.extraProductId || ""
                         ).filter(Boolean)}
                         notes={appointment.notes}
+                        isVipPlanUse={appointment.isVipPlanUse}
                       />
                     )}
                   />

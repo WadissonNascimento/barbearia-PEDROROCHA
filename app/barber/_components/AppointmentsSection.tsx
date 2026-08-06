@@ -419,6 +419,7 @@ export function AppointmentsSection({
                       (item) => item.extraProductId
                     )}
                     notes={cardAppointment.notes}
+                    isVipPlanUse={cardAppointment.isVipPlanUse}
                   />
                 )}
               />

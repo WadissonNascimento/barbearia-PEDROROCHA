@@ -1868,12 +1868,6 @@ export async function updateAppointmentStatusForBarber(
     throw new AppointmentMutationError("Informe o motivo do cancelamento.");
   }
 
-  if (normalizedStatus === "COMPLETED" && !normalizedPaymentMethod) {
-    throw new AppointmentMutationError(
-      "Escolha Pix, dinheiro ou cartão antes de concluir."
-    );
-  }
-
   const appointment = await db.appointment.findUnique({
     where: { id: appointmentId },
   });
@@ -1941,12 +1935,6 @@ export async function updateAppointmentStatusForAdmin(
 
   if (!appointmentId || !APPOINTMENT_STATUSES.includes(normalizedStatus)) {
     throw new AppointmentMutationError("Status de agendamento inválido.");
-  }
-
-  if (normalizedStatus === "COMPLETED" && !normalizedPaymentMethod) {
-    throw new AppointmentMutationError(
-      "Escolha Pix, dinheiro ou cartão antes de concluir."
-    );
   }
 
   const updatedAppointment = await db.$transaction(
@@ -2217,7 +2205,7 @@ async function updateAppointmentStatusWithSideEffects(
     );
   }
 
-  if (nextStatus === "COMPLETED") {
+  if (nextStatus === "COMPLETED" && !appointment.isVipPlanUse) {
     if (!paymentMethod) {
       throw new AppointmentMutationError(
         "Informe a forma de pagamento para concluir o atendimento."
@@ -2374,7 +2362,9 @@ async function updateAppointmentStatusWithSideEffects(
     data: {
       status: nextStatus,
       paymentMethod:
-        nextStatus === "COMPLETED" ? paymentMethod : null,
+        nextStatus === "COMPLETED" && !appointment.isVipPlanUse
+          ? paymentMethod
+          : null,
       notes:
         nextStatus === "CANCELLED" && cancellationReason
           ? [appointment.notes, cancellationReason].filter(Boolean).join(" | ")

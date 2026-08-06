@@ -1164,7 +1164,11 @@ export function AdminAppointmentActions({
       return;
     }
 
-    if (nextStatus === "COMPLETED" && !paymentMethod) {
+    if (
+      nextStatus === "COMPLETED" &&
+      !appointment.isVipPlanUse &&
+      !paymentMethod
+    ) {
       setIsPaymentPromptOpen(true);
       return;
     }

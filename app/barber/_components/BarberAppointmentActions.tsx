@@ -54,6 +54,7 @@ type BarberAppointmentActionsProps = {
   currentServiceIds?: string[];
   currentExtraProductIds?: string[];
   notes?: string | null;
+  isVipPlanUse?: boolean;
 };
 
 export default function BarberAppointmentActions({
@@ -69,6 +70,7 @@ export default function BarberAppointmentActions({
   currentServiceIds = [],
   currentExtraProductIds = [],
   notes = null,
+  isVipPlanUse = false,
 }: BarberAppointmentActionsProps) {
   const router = useRouter();
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
@@ -110,6 +112,11 @@ export default function BarberAppointmentActions({
       return;
     }
 
+    if (isVipPlanUse) {
+      submitStatus("COMPLETED");
+      return;
+    }
+
     setIsPaymentPromptOpen(true);
   }
 
@@ -125,7 +132,7 @@ export default function BarberAppointmentActions({
       return;
     }
 
-    if (nextStatus === "COMPLETED" && !paymentMethod) {
+    if (nextStatus === "COMPLETED" && !isVipPlanUse && !paymentMethod) {
       setIsPaymentPromptOpen(true);
       return;
     }
@@ -149,7 +156,9 @@ export default function BarberAppointmentActions({
         formData.set("status", nextStatus);
 
         if (nextStatus === "COMPLETED") {
-          formData.set("paymentMethod", paymentMethod || "");
+          if (!isVipPlanUse && paymentMethod) {
+            formData.set("paymentMethod", paymentMethod);
+          }
 
           for (const decision of itemDeliveryDecisions) {
             formData.append(
