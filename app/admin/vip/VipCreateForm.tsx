@@ -1,6 +1,6 @@
 "use client";
 
-import { Crown, Search, UserPlus } from "lucide-react";
+import { Crown, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { formatCurrency } from "@/lib/utils";
 import { createVipSubscriptionAction } from "./actions";
@@ -158,6 +158,11 @@ export default function VipCreateForm({
             </select>
           </label>
 
+          <input type="hidden" name="billingType" value="CREDIT_CARD" />
+          <p className="rounded-2xl border border-amber-300/25 bg-amber-300/10 p-3 text-sm leading-6 text-amber-100">
+            Por segurança, o próprio cliente deve ativar o plano em <strong>/planos</strong> e informar o cartão diretamente.
+          </p>
+
           <label className="grid min-w-0 gap-2 text-sm font-bold text-zinc-300">
             Observação
             <input
@@ -169,12 +174,11 @@ export default function VipCreateForm({
           </label>
 
           <button
-            type="submit"
-            disabled={!selectedCustomerId}
+            type="button"
+            disabled
             className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--brand)] px-4 text-sm font-black text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <UserPlus className="h-4 w-4" aria-hidden="true" />
-            Adicionar VIP
+            Ativação pelo cliente
           </button>
         </div>
       </div>

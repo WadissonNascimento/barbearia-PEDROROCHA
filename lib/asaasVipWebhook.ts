@@ -1,0 +1,191 @@
+import "server-only";
+
+import { Prisma } from "@prisma/client";
+import { AsaasApiError, getAsaasPayment, type AsaasPayment } from "@/lib/asaas";
+import { basePrisma } from "@/lib/prisma-core";
+
+type AsaasWebhookPayment = Partial<AsaasPayment>;
+
+export type AsaasWebhookPayload = {
+  id?: string;
+  event?: string;
+  payment?: AsaasWebhookPayment;
+};
+
+const PAID_STATUSES = new Set(["CONFIRMED", "RECEIVED", "RECEIVED_IN_CASH"]);
+
+function getCycleMonthFromDueDate(value: string | null | undefined) {
+  return value && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value.slice(0, 7) : null;
+}
+
+function parseAsaasDate(value: string | null | undefined) {
+  if (!value) return null;
+  const parsed = new Date(
+    /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T12:00:00.000Z` : value
+  );
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function getPaidAt(payment: AsaasWebhookPayment) {
+  return (
+    parseAsaasDate(payment.confirmedDate) ||
+    parseAsaasDate(payment.paymentDate) ||
+    new Date()
+  );
+}
+
+export async function processAsaasVipWebhook(payload: AsaasWebhookPayload) {
+  const eventId = payload.id?.trim();
+  const event = payload.event?.trim();
+  const deliveredPayment = payload.payment;
+  const asaasPaymentId = deliveredPayment?.id?.trim();
+  const deliveredSubscriptionId = deliveredPayment?.subscription?.trim();
+
+  if (!eventId || !event || !asaasPaymentId) {
+    throw new Error("Evento do Asaas inválido: id, event e payment.id são obrigatórios.");
+  }
+
+  const subscription = await basePrisma.vipSubscription.findFirst({
+    where: {
+      OR: [
+        deliveredSubscriptionId ? { asaasSubscriptionId: deliveredSubscriptionId } : undefined,
+        { payments: { some: { asaasPaymentId } } },
+      ].filter(Boolean) as Prisma.VipSubscriptionWhereInput[],
+    },
+    include: { plan: true },
+  });
+
+  // The same Asaas account may receive events from the system's own billing.
+  if (!subscription) return { ignored: true, reason: "not-a-vip-payment" as const };
+
+  const previousEvent = await basePrisma.asaasWebhookEvent.findUnique({
+    where: { asaasEventId: eventId },
+    select: { processedAt: true },
+  });
+  if (previousEvent?.processedAt) return { ignored: true, reason: "duplicate" as const };
+  if (previousEvent) {
+    await basePrisma.asaasWebhookEvent.delete({ where: { asaasEventId: eventId } });
+  }
+
+  try {
+    await basePrisma.$transaction(
+      async (tx) => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${subscription.id}))`;
+
+        let payment: AsaasWebhookPayment;
+        try {
+          payment = await getAsaasPayment(asaasPaymentId);
+        } catch (error) {
+          if (!(event === "PAYMENT_DELETED" && error instanceof AsaasApiError && error.status === 404)) {
+            throw error;
+          }
+          payment = { ...deliveredPayment, id: asaasPaymentId, status: "DELETED" };
+        }
+
+        if (
+          payment.subscription &&
+          subscription.asaasSubscriptionId &&
+          payment.subscription !== subscription.asaasSubscriptionId
+        ) {
+          throw new Error("Cobrança não pertence à assinatura VIP.");
+        }
+
+        const existingProviderPayment = await tx.vipPayment.findUnique({
+          where: { asaasPaymentId },
+          select: { cycleMonth: true, dueDate: true },
+        });
+        const now = new Date();
+        const providerStatus = payment.status || event;
+        const localStatus = PAID_STATUSES.has(providerStatus) ? "PAID" : "PENDING";
+        // Standalone migration charges can be issued today for an older cycle,
+        // because Asaas rejects creating a new charge with a past due date.
+        const cycleMonth =
+          existingProviderPayment?.cycleMonth || getCycleMonthFromDueDate(payment.dueDate);
+        const dueDate =
+          existingProviderPayment?.dueDate || parseAsaasDate(payment.dueDate);
+
+        await tx.asaasWebhookEvent.create({
+          data: {
+            shopId: subscription.shopId,
+            asaasEventId: eventId,
+            event,
+            asaasPaymentId,
+            asaasSubscriptionId: deliveredSubscriptionId || subscription.asaasSubscriptionId,
+            payload: payload as Prisma.InputJsonValue,
+          },
+        });
+
+        await tx.vipSubscription.update({
+          where: { id: subscription.id },
+          data: { asaasStatus: providerStatus, lastAsaasSyncAt: now },
+        });
+
+        if (event === "PAYMENT_DELETED" && (!cycleMonth || !dueDate)) {
+          await tx.vipPayment.updateMany({
+            where: { subscriptionId: subscription.id, asaasPaymentId },
+            data: {
+              status: "PENDING",
+              paidAt: null,
+              asaasStatus: "DELETED",
+              lastAsaasEventAt: now,
+            },
+          });
+        } else {
+          if (!cycleMonth || !dueDate) throw new Error("Vencimento inválido no Asaas.");
+
+          const paymentData = {
+            amount: payment.value ?? subscription.plan.price,
+            dueDate,
+            asaasPaymentId,
+            asaasStatus: providerStatus,
+            invoiceUrl: payment.invoiceUrl || null,
+            bankSlipUrl: payment.bankSlipUrl || null,
+            externalReference: payment.externalReference || null,
+            lastAsaasEventAt: now,
+          };
+
+          await tx.vipPayment.upsert({
+            where: {
+              shopId_subscriptionId_cycleMonth: {
+                shopId: subscription.shopId,
+                subscriptionId: subscription.id,
+                cycleMonth,
+              },
+            },
+            create: {
+              shopId: subscription.shopId,
+              subscriptionId: subscription.id,
+              cycleMonth,
+              status: localStatus,
+              paidAt: localStatus === "PAID" ? getPaidAt(payment) : null,
+              notes: `Cobrança sincronizada pelo Asaas (${event}).`,
+              ...paymentData,
+            },
+            update: {
+              ...paymentData,
+              status: localStatus,
+              paidAt: localStatus === "PAID" ? getPaidAt(payment) : null,
+            },
+          });
+        }
+
+        await tx.asaasWebhookEvent.update({
+          where: { asaasEventId: eventId },
+          data: { processedAt: new Date(), processingError: null },
+        });
+      },
+      { timeout: 30_000 }
+    );
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const duplicate = await basePrisma.asaasWebhookEvent.findUnique({
+        where: { asaasEventId: eventId },
+        select: { processedAt: true },
+      });
+      if (duplicate?.processedAt) return { ignored: true, reason: "duplicate" as const };
+    }
+    throw error;
+  }
+
+  return { ignored: false, subscriptionId: subscription.id, event };
+}

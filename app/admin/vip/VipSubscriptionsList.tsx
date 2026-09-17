@@ -15,9 +15,7 @@ import { useMemo, useState } from "react";
 import { formatCurrency } from "@/lib/utils";
 import {
   cancelVipSubscriptionAction,
-  markVipPaymentPaidAction,
   pauseVipSubscriptionAction,
-  reopenVipPaymentAction,
   updateVipSubscriptionSettingsAction,
 } from "./actions";
 
@@ -91,7 +89,6 @@ export default function VipSubscriptionsList({
     const normalizedQuery = normalizeSearch(query);
 
     return subscriptions.filter((subscription) => {
-      const isPaid = subscription.paymentStatus === "PAID";
       const searchableText = normalizeSearch(
         [
           subscription.customer.name,
@@ -187,7 +184,6 @@ export default function VipSubscriptionsList({
           </div>
         ) : (
           filteredSubscriptions.map((subscription) => {
-            const isPaid = subscription.paymentStatus === "PAID";
             const historyExpanded = expandedHistoryIds.includes(subscription.id);
             const visibleUsages = historyExpanded
               ? subscription.usages
@@ -249,21 +245,6 @@ export default function VipSubscriptionsList({
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <form
-                      action={
-                        isPaid ? reopenVipPaymentAction : markVipPaymentPaidAction
-                      }
-                    >
-                      <input type="hidden" name="subscriptionId" value={subscription.id} />
-                      <button
-                        type="submit"
-                        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#d9ae55]/35 bg-[#d9ae55]/12 px-3 text-sm font-black text-[#f5efe3] transition hover:bg-[#d9ae55]/20 active:scale-[0.98]"
-                      >
-                        <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                        {isPaid ? "Reabrir" : "Pagar"}
-                      </button>
-                    </form>
-
                     <button
                       type="button"
                       onClick={() =>

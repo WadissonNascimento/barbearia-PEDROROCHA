@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentShop } from "@/lib/shop";
 import { CUSTOMER_ROLES, getTenantSession } from "@/lib/tenantSession";
 import { formatCurrency } from "@/lib/utils";
-import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import {
   getActiveVipSubscriptionForCustomer,
   getVipPaymentDueDate,
@@ -12,16 +11,18 @@ import {
   hasPaidCurrentVipCycle,
   isCurrentVipCyclePaymentCovered,
 } from "@/lib/vip";
+import VipBillingProfileForm from "./VipBillingProfileForm";
+import VipSubscribeButton from "./VipSubscribeButton";
+import { safeAsaasInvoiceUrl } from "@/lib/vipMigration";
 
 export const metadata = {
   title: "Planos",
   description: "Combos mensais de corte da Pedro Rocha Barbearia.",
 };
 
-const ownerPhone = "11958257965";
-
 const plans = [
   {
+    code: "CORTE",
     name: "Bronze",
     combo: "Corte",
     price: "R$ 120",
@@ -29,6 +30,7 @@ const plans = [
     features: ["Corte incluso", "1 atendimento por semana", "4 tokens mensais"],
   },
   {
+    code: "CORTE_SOBRANCELHA",
     name: "Prata",
     combo: "Corte + Sobrancelha",
     price: "R$ 140",
@@ -37,6 +39,7 @@ const plans = [
     highlighted: true,
   },
   {
+    code: "CORTE_BARBA_SOBRANCELHA",
     name: "Ouro",
     combo: "Corte + Sobrancelha + Barba",
     price: "R$ 180",
@@ -50,15 +53,6 @@ const rules = [
   "Assinar o plano apenas se for mante-lo",
   "Direito a um atendimento por semana",
 ];
-
-function planWhatsAppUrl(planName: string) {
-  return (
-    buildWhatsAppUrl(
-      ownerPhone,
-      `Ola! Tenho interesse no plano ${planName} da Pedro Rocha Barbearia.`
-    ) || "/"
-  );
-}
 
 function getPlanCombo(code: string) {
   if (code === "CORTE") {
@@ -131,6 +125,13 @@ export default async function PlanosPage() {
     ? await getActiveVipSubscriptionForCustomer(prisma, {
         shopId: shop.id,
         customerId: tenantSession.session.user.id,
+      })
+    : null;
+
+  const billingProfile = tenantSession
+    ? await prisma.customerProfile.findUnique({
+        where: { customerId: tenantSession.session.user.id },
+        select: { cpfCnpj: true },
       })
     : null;
 
@@ -241,6 +242,15 @@ export default async function PlanosPage() {
                 tone={paymentPaid ? "success" : paymentCovered ? undefined : "warning"}
               />
             </div>
+
+            {!activeSubscription.asaasSubscriptionId ? <VipBillingProfileForm /> : null}
+            <div className="grid gap-3 p-5">
+              {activeSubscription.payments.filter(payment => payment.asaasPaymentId && payment.status !== "PAID").map(payment => {
+                const url = safeAsaasInvoiceUrl(payment.invoiceUrl);
+                return url ? <a key={payment.id} href={url} target="_blank" rel="noopener noreferrer" className="rounded-xl bg-[#f1e8d8] p-4 text-center font-bold text-black">Pagar {payment.cycleMonth} — {formatCurrency(Number(payment.amount))}</a> : null;
+              })}
+              {activeSubscription.asaasSubscriptionId && !activeSubscription.payments.some(payment => payment.invoiceUrl && payment.status !== "PAID") ? <p className="text-sm text-zinc-400">As cobranças disponíveis aparecerão aqui após a sincronização.</p> : null}
+            </div>
           </div>
 
           <section className="mt-5 rounded-2xl border border-white/10 bg-[#0b0a09] p-5 sm:p-7">
@@ -344,6 +354,8 @@ export default async function PlanosPage() {
             </div>
           </section>
 
+          {tenantSession && !billingProfile?.cpfCnpj ? <VipBillingProfileForm /> : null}
+
           <div className="mt-8 grid gap-4 lg:grid-cols-3">
             {plans.map((plan) => (
               <article
@@ -393,14 +405,7 @@ export default async function PlanosPage() {
                   ))}
                 </ul>
 
-                <a
-                  href={planWhatsAppUrl(plan.name)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-[#f1e8d8] px-5 text-sm font-black text-[#080807] shadow-[0_16px_34px_rgba(241,232,216,0.12)] transition hover:bg-white active:scale-[0.98]"
-                >
-                  Tenho interesse nesse
-                </a>
+                <VipSubscribeButton planCode={plan.code} signedIn={Boolean(tenantSession)} enrollmentOpen={shop.vipEnrollmentOpen} />
               </article>
             ))}
           </div>

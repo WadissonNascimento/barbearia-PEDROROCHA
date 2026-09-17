@@ -4,12 +4,15 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireTenantSession, SHOP_ADMIN_ROLES } from "@/lib/tenantSession";
 import {
-  DEFAULT_VIP_DUE_DAY,
-  ensureVipPlansForShop,
   getVipCycle,
   getVipPaymentDueDate,
   normalizeVipDueDay,
 } from "@/lib/vip";
+import {
+  deleteAsaasVipSubscription,
+  type VipAsaasBillingType,
+  updateAsaasVipSubscription,
+} from "@/lib/asaas";
 
 function getRequiredString(formData: FormData, key: string) {
   const value = String(formData.get(key) || "").trim();
@@ -29,245 +32,49 @@ async function requireAdminShop() {
   return shopId;
 }
 
-export async function createVipSubscriptionAction(formData: FormData) {
+export async function setVipEnrollmentOpenAction(formData: FormData) {
   const shopId = await requireAdminShop();
-  const customerId = getRequiredString(formData, "customerId");
-  const planId = getRequiredString(formData, "planId");
-  const notes = String(formData.get("notes") || "").trim() || null;
-  const now = new Date();
-  const { start, end, cycleMonth } = getVipCycle(now);
-  const dueDay = DEFAULT_VIP_DUE_DAY;
-  const dueDate = getVipPaymentDueDate(now, dueDay);
+  const isOpen = String(formData.get("isOpen")) === "true";
 
-  await ensureVipPlansForShop(prisma, shopId);
-
-  await prisma.$transaction(async (tx) => {
-    const [customer, plan] = await Promise.all([
-      tx.user.findFirst({
-        where: {
-          id: customerId,
-          shopId,
-          role: "CUSTOMER",
-          isActive: true,
-        },
-        select: {
-          id: true,
-        },
-      }),
-      tx.vipPlan.findFirst({
-        where: {
-          id: planId,
-          shopId,
-          isActive: true,
-        },
-      }),
-    ]);
-
-    if (!customer || !plan) {
-      throw new Error("Cliente ou plano VIP inválido.");
-    }
-
-    await tx.vipSubscription.updateMany({
-      where: {
-        shopId,
-        customerId,
-        status: "ACTIVE",
-      },
-      data: {
-        status: "CANCELLED",
-        cancelledAt: now,
-      },
-    });
-
-    const subscription = await tx.vipSubscription.create({
-      data: {
-        shopId,
-        customerId,
-        planId: plan.id,
-        status: "ACTIVE",
-        tokensRemaining: plan.tokensPerCycle,
-        dueDay,
-        cycleStart: start,
-        cycleEnd: end,
-        notes,
-      },
-    });
-
-    await tx.vipPayment.create({
-      data: {
-        shopId,
-        subscriptionId: subscription.id,
-        cycleMonth,
-        amount: plan.price,
-        status: "PENDING",
-        dueDate,
-        notes: `Vence todo dia ${dueDay}`,
-      },
-    });
+  await prisma.shop.update({
+    where: { id: shopId },
+    data: { vipEnrollmentOpen: isOpen },
   });
 
   revalidatePath("/admin/vip");
   revalidatePath("/planos");
-  revalidatePath("/agendar");
 }
 
-export async function markVipPaymentPaidAction(formData: FormData) {
-  const shopId = await requireAdminShop();
-  const subscriptionId = getRequiredString(formData, "subscriptionId");
-  const now = new Date();
-  const { cycleMonth } = getVipCycle(now);
-
-  const subscription = await prisma.vipSubscription.findFirst({
-    where: {
-      id: subscriptionId,
-      shopId,
-      status: "ACTIVE",
-    },
-    include: {
-      plan: true,
-    },
-  });
-
-  if (!subscription) {
-    throw new Error("Assinatura VIP ativa não encontrada.");
-  }
-
-  await prisma.vipPayment.upsert({
-    where: {
-      shopId_subscriptionId_cycleMonth: {
-        shopId,
-        subscriptionId: subscription.id,
-        cycleMonth,
-      },
-    },
-    update: {
-      amount: subscription.plan.price,
-      status: "PAID",
-      dueDate: getVipPaymentDueDate(now, subscription.dueDay),
-      paidAt: now,
-    },
-    create: {
-      shopId,
-      subscriptionId: subscription.id,
-      cycleMonth,
-      amount: subscription.plan.price,
-      status: "PAID",
-      dueDate: getVipPaymentDueDate(now, subscription.dueDay),
-      paidAt: now,
-    },
-  });
-
-  revalidatePath("/admin/vip");
-  revalidatePath("/planos");
-  revalidatePath("/agendar");
-}
-
-export async function reopenVipPaymentAction(formData: FormData) {
-  const shopId = await requireAdminShop();
-  const subscriptionId = getRequiredString(formData, "subscriptionId");
-  const now = new Date();
-  const { cycleMonth } = getVipCycle(now);
-
-  await prisma.vipPayment.updateMany({
-    where: {
-      shopId,
-      subscriptionId,
-      cycleMonth,
-      status: "PAID",
-    },
-    data: {
-      status: "PENDING",
-      paidAt: null,
-    },
-  });
-
-  revalidatePath("/admin/vip");
-  revalidatePath("/planos");
-  revalidatePath("/agendar");
-}
-
-export async function renewVipCycleAction(formData: FormData) {
-  const shopId = await requireAdminShop();
-  const subscriptionId = getRequiredString(formData, "subscriptionId");
-  const now = new Date();
-  const { start, end, cycleMonth } = getVipCycle(now);
-
-  const subscription = await prisma.vipSubscription.findFirst({
-    where: {
-      id: subscriptionId,
-      shopId,
-      status: "ACTIVE",
-    },
-    include: {
-      plan: true,
-    },
-  });
-
-  if (!subscription) {
-    throw new Error("Assinatura VIP ativa não encontrada.");
-  }
-
-  const dueDate = getVipPaymentDueDate(now, subscription.dueDay);
-
-  await prisma.$transaction([
-    prisma.vipSubscription.update({
-      where: {
-        id_shopId: {
-          id: subscription.id,
-          shopId,
-        },
-      },
-      data: {
-        tokensRemaining: subscription.plan.tokensPerCycle,
-        cycleStart: start,
-        cycleEnd: end,
-      },
-    }),
-    prisma.vipPayment.upsert({
-      where: {
-        shopId_subscriptionId_cycleMonth: {
-          shopId,
-          subscriptionId: subscription.id,
-          cycleMonth,
-        },
-      },
-      update: {
-        amount: subscription.plan.price,
-        status: "PENDING",
-        dueDate,
-        paidAt: null,
-      },
-      create: {
-        shopId,
-        subscriptionId: subscription.id,
-        cycleMonth,
-        amount: subscription.plan.price,
-        status: "PENDING",
-        dueDate,
-        notes: `Vence todo dia ${subscription.dueDay}`,
-      },
-    }),
-  ]);
-
-  revalidatePath("/admin/vip");
-  revalidatePath("/planos");
-  revalidatePath("/agendar");
+export async function createVipSubscriptionAction(_formData: FormData) {
+  await requireAdminShop();
+  throw new Error(
+    "Por segurança, a ativação é feita pelo próprio cliente na área de planos, informando o cartão diretamente ao Asaas."
+  );
 }
 
 export async function cancelVipSubscriptionAction(formData: FormData) {
   const shopId = await requireAdminShop();
   const subscriptionId = getRequiredString(formData, "subscriptionId");
 
-  await prisma.vipSubscription.updateMany({
-    where: {
-      id: subscriptionId,
-      shopId,
-      status: "ACTIVE",
-    },
+  const subscription = await prisma.vipSubscription.findFirst({
+    where: { id: subscriptionId, shopId, status: "ACTIVE" },
+    select: { id: true, asaasSubscriptionId: true },
+  });
+
+  if (!subscription) throw new Error("Assinatura VIP ativa não encontrada.");
+  if (!subscription.asaasSubscriptionId) {
+    throw new Error("Esta assinatura ainda não está vinculada ao Asaas.");
+  }
+
+  await deleteAsaasVipSubscription(subscription.asaasSubscriptionId);
+  await prisma.vipSubscription.update({
+    where: { id_shopId: { id: subscription.id, shopId } },
     data: {
       status: "CANCELLED",
       cancelledAt: new Date(),
       tokensRemaining: 0,
+      asaasStatus: "DELETED",
+      lastAsaasSyncAt: new Date(),
     },
   });
 
@@ -280,15 +87,21 @@ export async function pauseVipSubscriptionAction(formData: FormData) {
   const shopId = await requireAdminShop();
   const subscriptionId = getRequiredString(formData, "subscriptionId");
 
-  await prisma.vipSubscription.updateMany({
-    where: {
-      id: subscriptionId,
-      shopId,
-      status: "ACTIVE",
-    },
-    data: {
-      status: "PAUSED",
-    },
+  const subscription = await prisma.vipSubscription.findFirst({
+    where: { id: subscriptionId, shopId, status: "ACTIVE" },
+    select: { id: true, asaasSubscriptionId: true },
+  });
+  if (!subscription) throw new Error("Assinatura VIP ativa não encontrada.");
+  if (!subscription.asaasSubscriptionId) {
+    throw new Error("Esta assinatura ainda não está vinculada ao Asaas.");
+  }
+
+  await updateAsaasVipSubscription(subscription.asaasSubscriptionId, {
+    status: "INACTIVE",
+  });
+  await prisma.vipSubscription.update({
+    where: { id_shopId: { id: subscription.id, shopId } },
+    data: { status: "PAUSED", asaasStatus: "INACTIVE", lastAsaasSyncAt: new Date() },
   });
 
   revalidatePath("/admin/vip");
@@ -311,9 +124,7 @@ export async function updateVipSubscriptionSettingsAction(formData: FormData) {
         shopId,
         status: "ACTIVE",
       },
-      select: {
-        id: true,
-      },
+      select: { id: true, asaasSubscriptionId: true, asaasBillingType: true },
     }),
     prisma.vipPlan.findFirst({
       where: {
@@ -330,6 +141,18 @@ export async function updateVipSubscriptionSettingsAction(formData: FormData) {
 
   const dueDate = getVipPaymentDueDate(now, dueDay);
 
+  if (!subscription.asaasSubscriptionId || !subscription.asaasBillingType) {
+    throw new Error("Esta assinatura ainda não está vinculada ao Asaas.");
+  }
+
+  await updateAsaasVipSubscription(subscription.asaasSubscriptionId, {
+    billingType: subscription.asaasBillingType as VipAsaasBillingType,
+    value: Number(plan.price),
+    nextDueDate: dueDate,
+    description: `Plano VIP ${plan.name}`,
+    updatePendingPayments: true,
+  });
+
   await prisma.$transaction([
     prisma.vipSubscription.update({
       where: {
@@ -342,6 +165,7 @@ export async function updateVipSubscriptionSettingsAction(formData: FormData) {
         planId: plan.id,
         dueDay,
         tokensRemaining: plan.tokensPerCycle,
+        lastAsaasSyncAt: new Date(),
       },
     }),
     prisma.vipPayment.upsert({
@@ -398,4 +222,3 @@ export async function adjustVipTokensAction(formData: FormData) {
   revalidatePath("/planos");
   revalidatePath("/agendar");
 }
-

@@ -46,6 +46,7 @@ type VipPlanOption = {
   name: string;
   tokensRemaining: number;
   paymentPaid: boolean;
+  billingSetupRequired: boolean;
   weeklyUsedWeekStarts: string[];
 };
 
@@ -737,13 +738,35 @@ export default function BookingClient({
                 Serviços
               </label>
               {vipPlan ? (
-                <div
-                  className={`relative mb-3 overflow-hidden rounded-2xl border p-3 transition ${
-                    useVipPlan
-                      ? "border-emerald-300/45 bg-emerald-300/[0.09] shadow-[0_16px_36px_rgba(16,185,129,0.12)]"
-                      : "border-[#d9ae55]/45 bg-[#d9ae55]/10"
-                  }`}
-                >
+                <div className="mb-3 grid gap-3">
+                  {vipPlan.billingSetupRequired ? (
+                    <div className="rounded-2xl border border-amber-300/45 bg-amber-300/10 p-4">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-200" aria-hidden="true" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-200">
+                            Ação necessária no seu plano
+                          </p>
+                          <p className="mt-1 text-sm leading-6 text-zinc-200">
+                            Complete seu CPF/CNPJ e informe o cartão para ativar as cobranças mensais automáticas pelo Asaas.
+                          </p>
+                          <Link
+                            href="/planos"
+                            className="mt-3 inline-flex min-h-10 items-center justify-center rounded-xl bg-[#f1e8d8] px-4 text-sm font-black text-[#080807] transition hover:bg-white"
+                          >
+                            Completar dados do plano
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                  <div
+                    className={`relative overflow-hidden rounded-2xl border p-3 transition ${
+                      useVipPlan
+                        ? "border-emerald-300/45 bg-emerald-300/[0.09] shadow-[0_16px_36px_rgba(16,185,129,0.12)]"
+                        : "border-[#d9ae55]/45 bg-[#d9ae55]/10"
+                    }`}
+                  >
                   <div className="flex flex-col gap-3 transition sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
                       <p
@@ -789,6 +812,7 @@ export default function BookingClient({
                         )}
                       </button>
                     </div>
+                  </div>
                   </div>
                 </div>
               ) : null}

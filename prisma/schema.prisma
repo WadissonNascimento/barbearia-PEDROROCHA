@@ -31,6 +31,7 @@ model Shop {
   planCode                 String?
   barberLimit              Int?
   subscriptionMonthlyPrice Decimal?  @db.Decimal(10, 2)
+  vipEnrollmentOpen        Boolean   @default(false)
   metadataTitle            String?
   metadataDescription      String?
   whatsappNumber           String?
@@ -93,6 +94,7 @@ model Shop {
   vipSubscriptions         VipSubscription[]
   vipPayments              VipPayment[]
   vipUsages                VipUsage[]
+  asaasWebhookEvents       AsaasWebhookEvent[]
   systemBillingPayments    SystemBillingPayment[]
 
   @@index([isActive, isDefault])
@@ -483,6 +485,12 @@ model VipSubscription {
   startedAt       DateTime  @default(now())
   cancelledAt     DateTime?
   notes           String?
+  asaasCustomerId String?
+  asaasFirstDueDate DateTime?
+  asaasSubscriptionId String? @unique
+  asaasBillingType String?
+  asaasStatus     String?
+  lastAsaasSyncAt DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -498,6 +506,8 @@ model VipSubscription {
   @@index([shopId, planId])
   @@index([shopId, dueDay])
   @@index([shopId, cycleStart, cycleEnd])
+  @@index([shopId, asaasCustomerId])
+  @@index([shopId, asaasStatus])
 }
 
 model VipPayment {
@@ -510,6 +520,14 @@ model VipPayment {
   dueDate        DateTime?
   paidAt         DateTime?
   notes          String?
+  asaasPaymentId String?   @unique
+  asaasStatus    String?
+  invoiceUrl     String?
+  bankSlipUrl    String?
+  pixQrCode      String?
+  pixCopyPaste   String?
+  externalReference String?
+  lastAsaasEventAt DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -519,6 +537,26 @@ model VipPayment {
   @@unique([shopId, subscriptionId, cycleMonth])
   @@index([shopId, status, cycleMonth])
   @@index([shopId, dueDate])
+  @@index([shopId, asaasStatus])
+}
+
+model AsaasWebhookEvent {
+  id               String   @id @default(cuid())
+  shopId           String
+  asaasEventId     String   @unique
+  event            String
+  asaasPaymentId   String?
+  asaasSubscriptionId String?
+  payload          Json
+  processedAt      DateTime?
+  processingError  String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, createdAt])
+  @@index([shopId, asaasPaymentId])
 }
 
 model VipUsage {
@@ -698,6 +736,7 @@ model CustomerProfile {
   preferredBarberId String?
   allergies         String?
   preferences       String?
+  cpfCnpj           String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -707,6 +746,7 @@ model CustomerProfile {
 
   @@unique([id, shopId])
   @@index([shopId, preferredBarberId])
+  @@index([shopId, cpfCnpj])
 }
 
 model Product {

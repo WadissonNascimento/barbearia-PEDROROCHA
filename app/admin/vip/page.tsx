@@ -13,6 +13,7 @@ import {
 import { getVipMonthlyFinancialSummary } from "@/lib/vipFinancials";
 import VipCreateForm from "./VipCreateForm";
 import VipSubscriptionsList from "./VipSubscriptionsList";
+import { setVipEnrollmentOpenAction } from "./actions";
 
 export const metadata = {
   title: "Clientes VIP",
@@ -67,7 +68,7 @@ export default async function AdminVipPage() {
   const { cycleMonth } = getVipCycle();
   const dueDate = getVipPaymentDueDate();
 
-  const [customers, subscriptions, vipFinancialSummary] = await Promise.all([
+  const [customers, subscriptions, vipFinancialSummary, shop] = await Promise.all([
     prisma.user.findMany({
       where: {
         shopId,
@@ -118,6 +119,10 @@ export default async function AdminVipPage() {
       orderBy: [{ createdAt: "desc" }],
     }),
     getVipMonthlyFinancialSummary(prisma, shopId),
+    prisma.shop.findUnique({
+      where: { id: shopId },
+      select: { vipEnrollmentOpen: true },
+    }),
   ]);
 
   const activeCustomerIds = new Set(
@@ -194,6 +199,21 @@ export default async function AdminVipPage() {
             <VipMonthlyFinancialPanel summary={vipFinancialSummary} compact />
           </div>
         </div>
+
+        <section className={`mt-5 flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between ${shop?.vipEnrollmentOpen ? "border-emerald-400/25 bg-emerald-400/[0.06]" : "border-amber-400/30 bg-amber-400/[0.08]"}`}>
+          <div>
+            <p className="text-sm font-black text-white">Inscrições dos planos</p>
+            <p className="mt-1 text-xs text-zinc-400">
+              {shop?.vipEnrollmentOpen ? "Novos clientes podem assinar um plano." : "Vagas lotadas: novos clientes não conseguem iniciar uma assinatura."}
+            </p>
+          </div>
+          <form action={setVipEnrollmentOpenAction}>
+            <input type="hidden" name="isOpen" value={String(!shop?.vipEnrollmentOpen)} />
+            <button type="submit" className={`min-h-11 rounded-xl px-4 text-sm font-black ${shop?.vipEnrollmentOpen ? "bg-amber-300 text-black" : "bg-emerald-300 text-black"}`}>
+              {shop?.vipEnrollmentOpen ? "Fechar inscrições" : "Abrir inscrições"}
+            </button>
+          </form>
+        </section>
 
         <section className="mt-7 max-w-full overflow-hidden rounded-3xl border border-white/10 bg-black/20 p-4 sm:p-5">
           <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">

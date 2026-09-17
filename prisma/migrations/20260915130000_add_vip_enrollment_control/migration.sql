@@ -1,0 +1,1 @@
+ALTER TABLE "Shop" ADD COLUMN "vipEnrollmentOpen" BOOLEAN NOT NULL DEFAULT true;

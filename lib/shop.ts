@@ -19,6 +19,7 @@ const UNCONFIGURED_SHOP_CONFIG: ShopRuntimeConfig = {
   primaryDomain: null,
   isDefault: false,
   isActive: false,
+  vipEnrollmentOpen: false,
   metadataTitle: "Loja não configurada",
   metadataDescription: "Esta loja ainda não foi configurada para este domínio.",
   whatsappNumber: null,
@@ -55,6 +56,7 @@ export type ShopRuntimeConfig = Pick<
   | "primaryDomain"
   | "isDefault"
   | "isActive"
+  | "vipEnrollmentOpen"
   | "metadataTitle"
   | "metadataDescription"
   | "whatsappNumber"
@@ -109,6 +111,7 @@ const shopRuntimeSelect = {
   primaryDomain: true,
   isDefault: true,
   isActive: true,
+  vipEnrollmentOpen: true,
   metadataTitle: true,
   metadataDescription: true,
   whatsappNumber: true,

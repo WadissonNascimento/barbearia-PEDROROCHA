@@ -40,7 +40,6 @@ export default async function BarberClientProfilePage({
   params,
 }: {
   params: Promise<{ customerId: string }>;
-  searchParams?: { feedback?: string; tone?: string };
 }) {
   noStore();
 

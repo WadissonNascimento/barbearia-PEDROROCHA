@@ -74,7 +74,7 @@ function getWeekStartValue(dateValue: string) {
 export default async function AdminAgendaPage({
   searchParams,
 }: {
-  searchParams: SearchParams | Promise<SearchParams>;
+  searchParams: Promise<SearchParams>;
 }) {
   const resolvedSearchParams = await searchParams;
   const { shopId } = await requireTenantSession({

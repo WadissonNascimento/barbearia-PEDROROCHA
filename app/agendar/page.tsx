@@ -309,6 +309,7 @@ export default async function AgendarPage({
               name: activeVipSubscription.plan.name,
               tokensRemaining: activeVipSubscription.tokensRemaining,
               paymentPaid: vipPaymentPaid,
+              billingSetupRequired: !activeVipSubscription.asaasSubscriptionId,
               weeklyUsedWeekStarts: vipWeeklyUsedWeekStarts,
             }
           : null

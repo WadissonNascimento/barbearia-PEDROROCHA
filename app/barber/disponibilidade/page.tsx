@@ -4,10 +4,7 @@ import { AvailabilitySection } from "../_components/AvailabilitySection";
 import { getBarberAvailabilityData } from "../data";
 import { requireActiveBarber } from "../guard";
 
-export default async function BarberAvailabilityPage({
-}: {
-  searchParams?: { feedback?: string; tone?: string };
-}) {
+export default async function BarberAvailabilityPage() {
   const { barber } = await requireActiveBarber();
   const dashboard = await getBarberAvailabilityData(barber.id);
   const barberName = barber.name || "barbeiro";
