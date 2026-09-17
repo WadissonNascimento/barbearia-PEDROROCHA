@@ -13,11 +13,13 @@ import {
   isAsaasVipBillingConfigured,
   listAsaasSubscriptionPayments,
   updateAsaasPayment,
+  updateAsaasCustomer,
   updateAsaasVipSubscription,
   type AsaasPayment,
   type AsaasCreditCardData,
   type VipAsaasBillingType,
 } from "@/lib/asaas";
+import { getVipAsaasPayerName } from "@/lib/vipCard";
 import { processAsaasVipWebhook } from "@/lib/asaasVipWebhook";
 import { basePrisma } from "@/lib/prisma-core";
 import { getCurrentScheduleDateValue } from "@/lib/scheduleTime";
@@ -143,12 +145,18 @@ export async function reconcileVipAsaasSubscriptions(input: {
         const customer =
           (await findAsaasCustomer(customerReference)) ||
           (await createAsaasCustomer({
-            name: subscription.customer.name || subscription.customer.email || "Cliente VIP",
+            name: getVipAsaasPayerName(subscription.customer, input.card),
             email: subscription.customer.email,
             phone: subscription.customer.phone,
             cpfCnpj,
             externalReference: customerReference,
           }));
+        await updateAsaasCustomer(customer.id, {
+          cpfCnpj,
+          name: getVipAsaasPayerName(subscription.customer, input.card),
+          email: subscription.customer.email || undefined,
+          mobilePhone: subscription.customer.phone?.replace(/\D/g, "") || undefined,
+        });
         asaasCustomerId = customer.id;
         await basePrisma.vipSubscription.update({
           where: { id: subscription.id },

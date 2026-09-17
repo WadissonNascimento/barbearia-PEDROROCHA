@@ -10,7 +10,7 @@ import { createAsaasCustomer, createAsaasPayment, createAsaasVipSubscription, fi
 import { getVipCycle, getVipPaymentDueDate } from "@/lib/vip";
 import { getCurrentScheduleDateValue } from "@/lib/scheduleTime";
 import { resolveAsaasRecurringDueDate } from "@/lib/vipMigration";
-import { parseVipCreditCard } from "@/lib/vipCard";
+import { getVipAsaasPayerName, parseVipCreditCard } from "@/lib/vipCard";
 import { parseVipBillingType } from "@/lib/vipBillingPolicy";
 import { updateVipAsaasPreferences } from "@/lib/vipAsaasPreferences";
 import { getVipBillingErrorMessage } from "@/lib/vipBillingErrors";
@@ -82,7 +82,7 @@ export async function saveVipBillingProfileAction(
   try {
     if (subscription.asaasCustomerId) {
       await updateAsaasCustomer(subscription.asaasCustomerId, {
-        cpfCnpj, name: customer.name || undefined, email: customer.email || undefined,
+        cpfCnpj, name: getVipAsaasPayerName(customer, card), email: customer.email || undefined,
         mobilePhone: customer.phone?.replace(/\D/g, "") || undefined,
       });
     }
@@ -214,11 +214,17 @@ export async function startVipSubscriptionAction(
     const cycleMonth = dueDate.toISOString().slice(0, 7);
     const customerReference = `vip-customer:${tenantSession.shopId}:${customer.id}`;
     const asaasCustomer = await findAsaasCustomer(customerReference) || await createAsaasCustomer({
-      name: customer.name || customer.email || "Cliente VIP",
+      name: getVipAsaasPayerName(customer, card),
       email: customer.email,
       phone: customer.phone,
       cpfCnpj,
       externalReference: customerReference,
+    });
+    await updateAsaasCustomer(asaasCustomer.id, {
+      cpfCnpj,
+      name: getVipAsaasPayerName(customer, card),
+      email: customer.email || undefined,
+      mobilePhone: customer.phone?.replace(/\D/g, "") || undefined,
     });
     await prisma.vipSubscription.update({ where: { id: localSubscription.id }, data: { asaasCustomerId: asaasCustomer.id } });
     const subscriptionReference = getVipAsaasExternalReference(tenantSession.shopId, localSubscription.id);

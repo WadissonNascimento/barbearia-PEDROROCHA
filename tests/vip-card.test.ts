@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseVipCreditCard } from "../lib/vipCard";
+import { getVipAsaasPayerName, parseVipCreditCard } from "../lib/vipCard";
 
 test("card holder information uses the name entered for the card, not the account nickname", () => {
   const formData = new FormData();
@@ -24,4 +24,11 @@ test("card holder information uses the name entered for the card, not the accoun
 
   assert.equal(card.creditCard.holderName, "Titular Legal");
   assert.equal(card.creditCardHolderInfo.name, "Titular Legal");
+  assert.equal(
+    getVipAsaasPayerName(
+      { name: "apelido-da-conta", email: "cliente@example.invalid" },
+      card
+    ),
+    "Titular Legal"
+  );
 });

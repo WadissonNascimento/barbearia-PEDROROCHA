@@ -2,6 +2,13 @@ import "server-only";
 
 import type { AsaasCreditCardData } from "@/lib/asaas";
 
+export function getVipAsaasPayerName(
+  customer: { name: string | null; email: string | null },
+  card?: AsaasCreditCardData
+) {
+  return card?.creditCardHolderInfo.name || customer.name || customer.email || "Cliente VIP";
+}
+
 function digits(value: FormDataEntryValue | null) {
   return String(value || "").replace(/\D/g, "");
 }
