@@ -1,6 +1,6 @@
-import NextAuth from "next-auth";
+import NextAuth, { type NextAuthRequest } from "next-auth";
 import authConfig from "@/auth.config";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 import { getPostLoginRedirect } from "@/lib/authRedirect";
 
 const { auth } = NextAuth(authConfig);
@@ -10,7 +10,7 @@ function isShopAdminRole(role?: string | null) {
   return SHOP_ADMIN_ROLES.includes(role || "");
 }
 
-export default auth((req) => {
+const authenticatedProxy = auth((req: NextAuthRequest, ..._args: [NextFetchEvent]) => {
   const isLoggedIn = !!req.auth;
   const pathname = req.nextUrl.pathname;
   const role = req.auth?.user?.role;
@@ -81,8 +81,23 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/painel", req.url));
   }
 
-  return NextResponse.next();
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.delete("x-local-billing-preview");
+  return NextResponse.next({ request: { headers: requestHeaders } });
 });
+
+export default function proxy(req: NextRequest, event: NextFetchEvent) {
+  if (
+    process.env.NODE_ENV === "development" &&
+    req.nextUrl.pathname === "/preview/planos"
+  ) {
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set("x-local-billing-preview", "/preview/planos");
+    return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
+  return authenticatedProxy(req, event);
+}
 
 export const config = {
   matcher: [
@@ -101,5 +116,6 @@ export const config = {
     "/agendar/:path*",
     "/meu-perfil/:path*",
     "/meus-pedidos/:path*",
+    "/preview/planos",
   ],
 };

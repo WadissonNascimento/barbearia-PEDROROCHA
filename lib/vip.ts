@@ -3,6 +3,7 @@ import {
   getCurrentScheduleDateValue,
   getScheduleDateValue,
 } from "@/lib/scheduleTime";
+import { getVipDueDateForCycle } from "@/lib/vipDueDate";
 
 export const VIP_PLAN_DEFINITIONS = [
   {
@@ -71,12 +72,7 @@ export function normalizeVipDueDay(value: unknown) {
 
 export function getVipDueDateForMonth(date = new Date(), dueDay = DEFAULT_VIP_DUE_DAY) {
   const normalizedDueDay = normalizeVipDueDay(dueDay);
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
-  const day = Math.min(normalizedDueDay, lastDayOfMonth);
-
-  return new Date(Date.UTC(year, month, day, 12, 0, 0, 0));
+  return getVipDueDateForCycle(getCycleMonth(date), normalizedDueDay);
 }
 
 export function getVipPlanDefinition(code: string) {

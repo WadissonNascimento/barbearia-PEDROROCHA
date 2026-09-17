@@ -7,7 +7,8 @@ const septemberPaid = [{ cycleMonth: "2026-09", status: "PAID" }];
 
 test("Historical paid renewals stay paid even if entered before their due day", () => {
   for (const day of [5, 13, 15]) {
-    assert.equal(resolveVipMigrationDueDate(day, septemberPaid, "2026-09-16").toISOString().slice(0, 10), `2026-10-${String(day).padStart(2, "0")}`);
+    const nextDueDay = day === 5 ? 6 : day;
+    assert.equal(resolveVipMigrationDueDate(day, septemberPaid, "2026-09-16").toISOString().slice(0, 10), `2026-10-${String(nextDueDay).padStart(2, "0")}`);
     assert.equal(shouldExpireLegacyRenewal(legacyPaid, new Date(`2026-09-${String(day).padStart(2, "0")}T12:00:00Z`), "2026-09-17"), false);
   }
   assert.equal(isVipRenewalPaymentSettled(legacyPaid), true);
@@ -37,8 +38,17 @@ test("New early payments, provider payments and later cycles are never expired b
 });
 test("Month ends and overdue recurring dates remain valid", () => {
   assert.equal(resolveVipMigrationDueDate(31, [], "2026-02-15").toISOString().slice(0, 10), "2026-02-28");
-  assert.equal(resolveVipMigrationDueDate(5, [{ cycleMonth: "2026-12", status: "PAID" }], "2026-12-15").toISOString().slice(0, 10), "2027-01-05");
-  assert.equal(resolveAsaasRecurringDueDate(new Date("2026-09-05T12:00:00Z"), 5, "2026-09-17").toISOString().slice(0, 10), "2026-10-05");
+  assert.equal(resolveVipMigrationDueDate(5, [{ cycleMonth: "2026-12", status: "PAID" }], "2026-12-15").toISOString().slice(0, 10), "2027-01-07");
+  assert.equal(resolveAsaasRecurringDueDate(new Date("2026-09-05T12:00:00Z"), 5, "2026-09-17").toISOString().slice(0, 10), "2026-10-06");
+});
+test("existing unpaid debts retain their historical day even where business day differs", () => {
+  assert.equal(resolveVipMigrationDueDate(5, [{ cycleMonth: "2026-02", status: "PENDING" }], "2026-02-10").toISOString().slice(0, 10), "2026-02-05");
+});
+test("future renewals use the fifth business day without an additional month jump on the due date", () => {
+  const firstDue = new Date("2026-10-05T12:00:00Z");
+  assert.equal(resolveAsaasRecurringDueDate(firstDue, 5, "2026-09-17").toISOString().slice(0, 10), "2026-10-06");
+  assert.equal(resolveAsaasRecurringDueDate(firstDue, 5, "2026-10-06").toISOString().slice(0, 10), "2026-10-06");
+  assert.equal(resolveAsaasRecurringDueDate(firstDue, 5, "2026-10-07").toISOString().slice(0, 10), "2026-11-07");
 });
 test("Only HTTPS Asaas invoice URLs are exposed", () => {
   assert.equal(safeAsaasInvoiceUrl("https://www.asaas.com/i/test"), "https://www.asaas.com/i/test");

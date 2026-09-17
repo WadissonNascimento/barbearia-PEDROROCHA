@@ -37,6 +37,34 @@ test("Webhook persiste, ignora duplicatas e consulta estado atual para eventos a
     assert.equal(standalone.cycleMonth,"2026-08");
     assert.equal(standalone.status,"PAID");
     assert.equal(standalone.dueDate?.toISOString().slice(0,10),"2026-08-05");
+
+    // Generated invoices must actually change at the provider AND in our DB.
+    const futureId = `future-${id}`;
+    const { getVipDueDateForCycle } = await import("../lib/vipDueDate");
+    const expectedDue = getVipDueDateForCycle("2090-10", 5).toISOString().slice(0, 10);
+    let remoteDue = "2090-10-01";
+    status = "PENDING";
+    const updates: unknown[] = [];
+    globalThis.fetch = async (_url, init) => {
+      if (init?.method === "PUT") {
+        const update = JSON.parse(String(init.body));
+        updates.push(update);
+        remoteDue = update.dueDate;
+      }
+      return Response.json({ id: futureId, subscription: id, billingType: "PIX", status, dueDate: remoteDue, value: 140 });
+    };
+    await db.vipPayment.create({ data: { shopId: shop.id, subscriptionId: sub.id, cycleMonth: "2090-10", amount: 140, status: "PENDING", dueDate: new Date("2090-10-01T12:00:00Z"), asaasPaymentId: futureId } });
+    await processAsaasVipWebhook({ id: `future-event-${id}`, event: "PAYMENT_CREATED", payment: { id: futureId, subscription: id } });
+    assert.equal(updates.length, 1);
+    assert.equal(remoteDue, expectedDue);
+    assert.equal((await db.vipPayment.findUniqueOrThrow({where:{asaasPaymentId:futureId}})).dueDate?.toISOString().slice(0,10),expectedDue);
+    // A replay is idempotent; a received payment is never rescheduled.
+    await processAsaasVipWebhook({ id: `future-event-${id}`, event: "PAYMENT_CREATED", payment: { id: futureId, subscription: id } });
+    assert.equal(updates.length, 1);
+    status = "RECEIVED";
+    await processAsaasVipWebhook({ id: `future-paid-${id}`, event: "PAYMENT_RECEIVED", payment: { id: futureId, subscription: id } });
+    assert.equal(updates.length, 1);
+    assert.equal((await db.vipPayment.findUniqueOrThrow({where:{asaasPaymentId:futureId}})).status,"PAID");
   } finally {
     globalThis.fetch = originalFetch;
     await db.shop.delete({where:{id:shop.id}});

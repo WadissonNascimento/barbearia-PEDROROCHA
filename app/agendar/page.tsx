@@ -18,6 +18,7 @@ import {
   isScheduleDateTimePast,
 } from "@/lib/scheduleTime";
 import BookingClient from "./BookingClient";
+import { needsVipBillingUpdate } from "@/lib/vipBillingPolicy";
 
 export async function generateMetadata() {
   const shop = await getCurrentShop();
@@ -309,7 +310,7 @@ export default async function AgendarPage({
               name: activeVipSubscription.plan.name,
               tokensRemaining: activeVipSubscription.tokensRemaining,
               paymentPaid: vipPaymentPaid,
-              billingSetupRequired: !activeVipSubscription.asaasSubscriptionId,
+              billingSetupRequired: needsVipBillingUpdate(activeVipSubscription),
               weeklyUsedWeekStarts: vipWeeklyUsedWeekStarts,
             }
           : null

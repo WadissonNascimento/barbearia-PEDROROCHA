@@ -158,9 +158,9 @@ export default function VipCreateForm({
             </select>
           </label>
 
-          <input type="hidden" name="billingType" value="CREDIT_CARD" />
           <p className="rounded-2xl border border-amber-300/25 bg-amber-300/10 p-3 text-sm leading-6 text-amber-100">
-            Por segurança, o próprio cliente deve ativar o plano em <strong>/planos</strong> e informar o cartão diretamente.
+            O próprio cliente deve ativar o plano em <strong>/planos</strong>,
+            atualizar seus dados e escolher Pix, boleto ou cartão de crédito.
           </p>
 
           <label className="grid min-w-0 gap-2 text-sm font-bold text-zinc-300">

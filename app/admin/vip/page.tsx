@@ -8,8 +8,9 @@ import {
   ensureVipPlansForShop,
   getVipCycle,
   getVipPaymentDueDate,
-  isVipPaymentPastDue,
 } from "@/lib/vip";
+import { getCurrentScheduleDateValue } from "@/lib/scheduleTime";
+import { resolveVipPolicyDueDate } from "@/lib/vipDueDate";
 import { getVipMonthlyFinancialSummary } from "@/lib/vipFinancials";
 import VipCreateForm from "./VipCreateForm";
 import VipSubscriptionsList from "./VipSubscriptionsList";
@@ -139,9 +140,16 @@ export default async function AdminVipPage() {
     summary: getPlanSummary(plan.code),
     price: Number(plan.price),
   }));
-  const subscriptionItems = subscriptions.map((subscription) => ({
+  const today = getCurrentScheduleDateValue();
+  const subscriptionItems = subscriptions.map((subscription) => {
+    const payment = subscription.payments[0];
+    const recordedDueDate = payment?.dueDate || getVipPaymentDueDate(new Date(), subscription.dueDay);
+    const effectiveDueDate = payment?.status === "PAID"
+      ? recordedDueDate
+      : resolveVipPolicyDueDate(recordedDueDate, subscription.dueDay, today);
+    return {
     dueDay: subscription.dueDay,
-    dueDateLabel: formatLongDate(getVipPaymentDueDate(new Date(), subscription.dueDay)),
+    dueDateLabel: formatLongDate(effectiveDueDate),
     id: subscription.id,
     planId: subscription.planId,
     plan: {
@@ -162,7 +170,7 @@ export default async function AdminVipPage() {
     paymentStatus:
       subscription.payments[0]?.status === "PAID"
         ? ("PAID" as const)
-        : isVipPaymentPastDue(new Date(), subscription.dueDay)
+        : effectiveDueDate.toISOString().slice(0, 10) < today
           ? ("OVERDUE" as const)
           : ("OPEN" as const),
     usageCount: subscription._count.usages,
@@ -171,7 +179,8 @@ export default async function AdminVipPage() {
       serviceLabel: usage.serviceLabel,
       usedAt: usage.usedAt.toISOString(),
     })),
-  }));
+    };
+  });
 
   return (
     <DashboardShell size="wide" className="min-w-0 max-w-full overflow-hidden px-3 sm:px-4">

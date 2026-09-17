@@ -28,6 +28,7 @@ export type AsaasSubscription = {
 
 export type AsaasPayment = {
   id: string;
+  billingType?: VipAsaasBillingType;
   subscription?: string | null;
   status: string;
   value: number;
@@ -167,6 +168,41 @@ export async function findAsaasCustomer(reference: string) {
     throw new Error("Clientes duplicados no Asaas: necessária conciliação.");
   }
   return result.data[0] || null;
+}
+
+export async function updateAsaasCustomer(customerId: string, input: {
+  cpfCnpj: string;
+  name?: string;
+  email?: string;
+  mobilePhone?: string;
+}) {
+  return asaasRequest<AsaasCustomer>(`/customers/${encodeURIComponent(customerId)}`, {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+}
+
+// This endpoint validates/replaces the card, but does not capture a payment.
+export async function updateAsaasSubscriptionCreditCard(subscriptionId: string, card: AsaasCreditCardData) {
+  return asaasRequest<AsaasSubscription>(`/subscriptions/${encodeURIComponent(subscriptionId)}/creditCard`, {
+    method: "PUT",
+    body: JSON.stringify(card),
+  }, 65_000);
+}
+
+export async function getAsaasSubscription(subscriptionId: string) {
+  return asaasRequest<AsaasSubscription>(`/subscriptions/${encodeURIComponent(subscriptionId)}`);
+}
+
+export async function updateAsaasPayment(paymentId: string, input: {
+  billingType: VipAsaasBillingType;
+  value: number;
+  dueDate: string;
+}) {
+  return asaasRequest<AsaasPayment>(`/payments/${encodeURIComponent(paymentId)}`, {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
 }
 
 export async function createAsaasVipSubscription(input: {

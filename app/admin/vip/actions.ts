@@ -124,7 +124,16 @@ export async function updateVipSubscriptionSettingsAction(formData: FormData) {
         shopId,
         status: "ACTIVE",
       },
-      select: { id: true, asaasSubscriptionId: true, asaasBillingType: true },
+      select: {
+        id: true,
+        asaasSubscriptionId: true,
+        asaasBillingType: true,
+        payments: {
+          where: { cycleMonth },
+          select: { status: true },
+          take: 1,
+        },
+      },
     }),
     prisma.vipPlan.findFirst({
       where: {
@@ -139,7 +148,11 @@ export async function updateVipSubscriptionSettingsAction(formData: FormData) {
     throw new Error("Assinatura ou plano VIP inválido.");
   }
 
-  const dueDate = getVipPaymentDueDate(now, dueDay);
+  const currentCyclePaid = subscription.payments[0]?.status === "PAID";
+  const dueDate = getVipPaymentDueDate(
+    currentCyclePaid ? new Date(now.getFullYear(), now.getMonth() + 1, 1) : now,
+    dueDay
+  );
 
   if (!subscription.asaasSubscriptionId || !subscription.asaasBillingType) {
     throw new Error("Esta assinatura ainda não está vinculada ao Asaas.");
@@ -168,7 +181,7 @@ export async function updateVipSubscriptionSettingsAction(formData: FormData) {
         lastAsaasSyncAt: new Date(),
       },
     }),
-    prisma.vipPayment.upsert({
+    ...(!currentCyclePaid ? [prisma.vipPayment.upsert({
       where: {
         shopId_subscriptionId_cycleMonth: {
           shopId,
@@ -190,7 +203,7 @@ export async function updateVipSubscriptionSettingsAction(formData: FormData) {
         dueDate,
         notes: `Vence todo dia ${dueDay}`,
       },
-    }),
+    })] : []),
   ]);
 
   revalidatePath("/admin/vip");

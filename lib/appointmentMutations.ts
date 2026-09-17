@@ -25,6 +25,7 @@ import {
 import { roundMoney, toMoneyNumber } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 import { mergeManualFitInNotes } from "@/lib/manualFitIn";
+import { needsVipBillingUpdate } from "@/lib/vipBillingPolicy";
 import {
   assertCanScheduleVipAppointment,
   consumeVipTokenForCompletedAppointment,
@@ -633,6 +634,12 @@ async function createCustomerAppointmentInTransaction(
       throw new AppointmentMutationError("Nenhuma assinatura VIP ativa foi encontrada.");
     }
 
+    if (needsVipBillingUpdate(vipSubscription)) {
+      throw new AppointmentMutationError(
+        "Atualize seus dados e escolha a forma de pagamento em Planos antes de agendar pelo plano."
+      );
+    }
+
     if (vipSubscription.tokensRemaining < 1) {
       throw new AppointmentMutationError("Seu plano VIP não possui tokens disponíveis.");
     }
@@ -1149,6 +1156,12 @@ async function rescheduleCustomerAppointmentInTransaction(
 
     if (!vipSubscription || vipSubscription.id !== currentAppointment.vipSubscriptionId) {
       throw new AppointmentMutationError("Nenhuma assinatura VIP ativa foi encontrada.");
+    }
+
+    if (actor === "CUSTOMER" && needsVipBillingUpdate(vipSubscription)) {
+      throw new AppointmentMutationError(
+        "Atualize seus dados e escolha a forma de pagamento em Planos antes de remarcar pelo plano."
+      );
     }
 
     const isPaid = await isCurrentVipCyclePaymentCovered(

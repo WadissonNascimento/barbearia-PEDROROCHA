@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { formatCurrency } from "@/lib/utils";
+import { getVipDueDayLabel } from "@/lib/vipDueDate";
 import {
   cancelVipSubscriptionAction,
   pauseVipSubscriptionAction,
@@ -233,7 +234,7 @@ export default function VipSubscriptionsList({
                   <div className="mb-3 flex min-w-0 items-center justify-between gap-3">
                     <div className="min-w-0">
                       <p className="text-xs font-bold uppercase tracking-[0.16em] text-zinc-500">
-                        Vence todo dia {subscription.dueDay}
+                        Vence no {getVipDueDayLabel(subscription.dueDay)}
                       </p>
                       <p className="mt-1 text-xs text-zinc-500">
                         Neste ciclo: {subscription.dueDateLabel}
@@ -326,7 +327,8 @@ export default function VipSubscriptionsList({
                             className="min-h-12 w-full rounded-xl border border-white/10 bg-[#090909] px-3 text-sm font-bold text-white outline-none focus:border-[var(--brand)]"
                           />
                           <span className="text-xs text-zinc-500">
-                            O vencimento sera aplicado todos os meses nesse dia.
+                            O dia 5 significa o 5º dia útil: segunda a sábado,
+                            exceto feriados nacionais. Os demais dias são fixos.
                           </span>
                         </label>
                         <button

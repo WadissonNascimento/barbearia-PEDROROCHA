@@ -1,8 +1,11 @@
 import "server-only";
 
 import { Prisma } from "@prisma/client";
-import { AsaasApiError, getAsaasPayment, type AsaasPayment } from "@/lib/asaas";
+import { AsaasApiError, getAsaasPayment, updateAsaasPayment, type AsaasPayment } from "@/lib/asaas";
 import { basePrisma } from "@/lib/prisma-core";
+import { getCurrentScheduleDateValue } from "@/lib/scheduleTime";
+import { resolveVipPolicyDueDate } from "@/lib/vipDueDate";
+import { isEditableAsaasPayment } from "@/lib/vipBillingPolicy";
 
 type AsaasWebhookPayment = Partial<AsaasPayment>;
 
@@ -92,17 +95,27 @@ export async function processAsaasVipWebhook(payload: AsaasWebhookPayload) {
 
         const existingProviderPayment = await tx.vipPayment.findUnique({
           where: { asaasPaymentId },
-          select: { cycleMonth: true, dueDate: true },
+          select: { cycleMonth: true, dueDate: true, status: true, externalReference: true },
         });
         const now = new Date();
+        // Asaas repeats calendar dates. Correct a generated future recurring
+        // charge at creation/update, rather than waiting for its debit day.
+        if (subscription.dueDay === 5 && payment.subscription && payment.dueDate && payment.billingType && payment.value !== undefined && isEditableAsaasPayment(payment.status || "") && existingProviderPayment?.status !== "PAID") {
+          const adjusted = resolveVipPolicyDueDate(new Date(`${payment.dueDate}T12:00:00Z`), 5, getCurrentScheduleDateValue(now)).toISOString().slice(0, 10);
+          if (adjusted !== payment.dueDate) {
+            payment = await updateAsaasPayment(asaasPaymentId, { billingType: payment.billingType, value: payment.value, dueDate: adjusted });
+          }
+        }
         const providerStatus = payment.status || event;
         const localStatus = PAID_STATUSES.has(providerStatus) ? "PAID" : "PENDING";
         // Standalone migration charges can be issued today for an older cycle,
         // because Asaas rejects creating a new charge with a past due date.
         const cycleMonth =
           existingProviderPayment?.cycleMonth || getCycleMonthFromDueDate(payment.dueDate);
-        const dueDate =
-          existingProviderPayment?.dueDate || parseAsaasDate(payment.dueDate);
+        const preserveOriginalDue = !payment.subscription || existingProviderPayment?.status === "PAID";
+        const dueDate = preserveOriginalDue
+          ? existingProviderPayment?.dueDate || parseAsaasDate(payment.dueDate)
+          : parseAsaasDate(payment.dueDate) || existingProviderPayment?.dueDate;
 
         await tx.asaasWebhookEvent.create({
           data: {
@@ -111,7 +124,8 @@ export async function processAsaasVipWebhook(payload: AsaasWebhookPayload) {
             event,
             asaasPaymentId,
             asaasSubscriptionId: deliveredSubscriptionId || subscription.asaasSubscriptionId,
-            payload: payload as Prisma.InputJsonValue,
+            // Keep audit metadata, never provider card tokens or full payloads.
+            payload: { id: eventId, event, payment: { id: asaasPaymentId, status: payment.status, dueDate: payment.dueDate, subscription: payment.subscription } } as Prisma.InputJsonValue,
           },
         });
 

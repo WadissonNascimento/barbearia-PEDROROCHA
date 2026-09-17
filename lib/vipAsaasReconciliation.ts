@@ -8,9 +8,12 @@ import {
   findAsaasPayment,
   findAsaasSubscription,
   getAsaasPayment,
+  getAsaasSubscription,
   getVipAsaasExternalReference,
   isAsaasVipBillingConfigured,
   listAsaasSubscriptionPayments,
+  updateAsaasPayment,
+  updateAsaasVipSubscription,
   type AsaasPayment,
   type AsaasCreditCardData,
   type VipAsaasBillingType,
@@ -25,9 +28,12 @@ import {
   resolveVipMigrationDueDate,
   shouldExpireLegacyRenewal,
 } from "@/lib/vipMigration";
+import { resolveVipPolicyDueDate } from "@/lib/vipDueDate";
+import { isEditableAsaasPayment } from "@/lib/vipBillingPolicy";
+import { getVipBillingErrorMessage } from "@/lib/vipBillingErrors";
 
 function reconciliationEventId(payment: AsaasPayment) {
-  const version = payment.confirmedDate || payment.paymentDate || payment.dueDate;
+  const version = [payment.confirmedDate, payment.paymentDate, payment.dueDate, payment.billingType, payment.value].join(":");
   return `reconcile:${payment.id}:${payment.status}:${version}`;
 }
 
@@ -35,9 +41,11 @@ export async function reconcileVipAsaasSubscriptions(input: {
   shopId?: string;
   customerId?: string;
   card?: AsaasCreditCardData;
+  billingUpdateLease?: Date;
+  skipStandaloneCreation?: boolean;
 } = {}) {
   if (!isAsaasVipBillingConfigured()) {
-    return { configured: false, checked: 0, linked: 0, skipped: 0, failed: 0 };
+    return { configured: false, checked: 0, linked: 0, skipped: 0, failed: 0, errors: [] as string[] };
   }
 
   const subscriptions = await basePrisma.vipSubscription.findMany({
@@ -66,18 +74,37 @@ export async function reconcileVipAsaasSubscriptions(input: {
   let linked = 0;
   let skipped = 0;
   let failed = 0;
+  const errors: string[] = [];
 
   for (const subscription of subscriptions) {
+    const lease = input.billingUpdateLease || new Date();
+    if (input.billingUpdateLease) {
+      if (!subscription.billingUpdateStartedAt || subscription.billingUpdateStartedAt.getTime() !== lease.getTime()) {
+        skipped += 1;
+        continue;
+      }
+    } else {
+      const claimed = await basePrisma.vipSubscription.updateMany({
+        where: {
+          id: subscription.id,
+          OR: [{ billingUpdateStartedAt: null }, { billingUpdateStartedAt: { lt: new Date(lease.getTime() - 10 * 60_000) } }],
+        },
+        data: { billingUpdateStartedAt: lease },
+      });
+      if (!claimed.count) { skipped += 1; continue; }
+    }
     try {
       const frozenDueDate = subscription.asaasFirstDueDate;
-      const firstDueDate =
+      const originalFirstDueDate =
         frozenDueDate || resolveVipMigrationDueDate(subscription.dueDay, subscription.payments, today);
+      const frozenCyclePaid = subscription.payments.some(payment => payment.cycleMonth === originalFirstDueDate.toISOString().slice(0, 7) && payment.status === "PAID");
+      const firstDueDate = frozenCyclePaid ? originalFirstDueDate : resolveVipPolicyDueDate(originalFirstDueDate, subscription.dueDay, today);
       const firstDueCycleMonth = firstDueDate.toISOString().slice(0, 7);
       const firstDuePayment = subscription.payments.find(
         (payment) => payment.cycleMonth === firstDueCycleMonth
       );
 
-      if (!frozenDueDate) {
+      if (!frozenDueDate || firstDueDate.getTime() !== frozenDueDate.getTime()) {
         await basePrisma.vipSubscription.update({
           where: { id: subscription.id },
           data: { asaasFirstDueDate: firstDueDate },
@@ -100,6 +127,12 @@ export async function reconcileVipAsaasSubscriptions(input: {
       const cpfCnpj = subscription.customer.customerProfile?.cpfCnpj?.trim();
       const billingType = subscription.asaasBillingType as VipAsaasBillingType | null;
       if (!cpfCnpj || !billingType) {
+        skipped += 1;
+        continue;
+      }
+      // A scheduled reconciliation must not opt a legacy client into a payment
+      // method they have not confirmed. Linked recurrences still get synced.
+      if (!subscription.asaasSubscriptionId && !input.billingUpdateLease && !subscription.billingProfileConfirmedAt) {
         skipped += 1;
         continue;
       }
@@ -163,13 +196,16 @@ export async function reconcileVipAsaasSubscriptions(input: {
         linked += 1;
       }
 
+      const recurringPayments = await listAsaasSubscriptionPayments(asaasSubscriptionId);
+
       // Asaas does not accept a new charge with a past due date. Preserve the
       // original cycle locally and issue a standalone charge due today.
       const firstDueValue = firstDueDate.toISOString().slice(0, 10);
       const firstRenewalIsSettled = isVipRenewalPaymentSettled(
         firstDuePayment
       );
-      if (firstDueValue < today && !firstRenewalIsSettled) {
+      const recurringFirstCycleExists = recurringPayments.some(payment => payment.dueDate.slice(0, 7) === firstDueCycleMonth && payment.status !== "DELETED");
+      if (!input.skipStandaloneCreation && firstDueValue < today && !firstRenewalIsSettled && !firstDuePayment?.asaasPaymentId && !recurringFirstCycleExists) {
         const cycleMonth = firstDueValue.slice(0, 7);
         const paymentReference = `vip-payment:${subscription.shopId}:${subscription.id}:${cycleMonth}`;
         let overduePayment = await findAsaasPayment(paymentReference);
@@ -224,7 +260,24 @@ export async function reconcileVipAsaasSubscriptions(input: {
         });
       }
 
-      for (const payment of await listAsaasSubscriptionPayments(asaasSubscriptionId)) {
+      if (subscription.dueDay === 5) {
+        const remote = await getAsaasSubscription(asaasSubscriptionId);
+        const adjustedNextDue = resolveVipPolicyDueDate(new Date(`${remote.nextDueDate}T12:00:00.000Z`), subscription.dueDay, today);
+        if (remote.nextDueDate !== adjustedNextDue.toISOString().slice(0, 10)) {
+          await updateAsaasVipSubscription(asaasSubscriptionId, { nextDueDate: adjustedNextDue, updatePendingPayments: false });
+        }
+      }
+
+      for (let payment of recurringPayments) {
+        // Monthly Asaas recurrences repeat a calendar day, not an nth business
+        // day. Correct each generated future invoice before its debit date.
+        const localPayment = subscription.payments.find(item => item.asaasPaymentId === payment.id || item.cycleMonth === payment.dueDate.slice(0, 7));
+        if (subscription.dueDay === 5 && isEditableAsaasPayment(payment.status) && localPayment?.status !== "PAID") {
+          const policyDue = resolveVipPolicyDueDate(new Date(`${payment.dueDate}T12:00:00.000Z`), 5, today).toISOString().slice(0, 10);
+          if (policyDue !== payment.dueDate) {
+            payment = await updateAsaasPayment(payment.id, { billingType: payment.billingType || billingType, value: payment.value, dueDate: policyDue });
+          }
+        }
         await processAsaasVipWebhook({
           id: reconciliationEventId(payment),
           event: "PAYMENT_UPDATED",
@@ -254,12 +307,17 @@ export async function reconcileVipAsaasSubscriptions(input: {
       });
     } catch (error) {
       failed += 1;
+      errors.push(getVipBillingErrorMessage(error));
       console.error(
         `[vip-asaas] Falha ao conciliar assinatura ${subscription.id}:`,
-        error instanceof Error ? error.message : error
+        error instanceof Error ? error.name : "UnknownError"
       );
+    } finally {
+      if (!input.billingUpdateLease) {
+        await basePrisma.vipSubscription.updateMany({ where: { id: subscription.id, billingUpdateStartedAt: lease }, data: { billingUpdateStartedAt: null } });
+      }
     }
   }
 
-  return { configured: true, checked: subscriptions.length, linked, skipped, failed };
+  return { configured: true, checked: subscriptions.length, linked, skipped, failed, errors };
 }

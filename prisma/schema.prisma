@@ -491,6 +491,8 @@ model VipSubscription {
   asaasBillingType String?
   asaasStatus     String?
   lastAsaasSyncAt DateTime?
+  billingProfileConfirmedAt DateTime?
+  billingUpdateStartedAt DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

@@ -239,6 +239,7 @@ export default function BookingClient({
     vipPlan?.weeklyUsedWeekStarts.includes(getWeekStartValue(selectedDate))
   );
   const canUseVipPlan =
+    !vipPlan?.billingSetupRequired &&
     Boolean(vipPlan?.paymentPaid) &&
     Boolean(vipPlan && vipPlan.tokensRemaining > 0);
   const selectedExtras = useMemo(
@@ -494,6 +495,16 @@ export default function BookingClient({
   }
 
   function openBookingConfirmation(time: string) {
+    if (
+      vipPlan?.billingSetupRequired &&
+      (useVipPlan || rescheduleAppointment?.isVipPlanUse)
+    ) {
+      setVipPlanWarning(
+        "Antes de agendar ou remarcar pelo plano, acesse Planos, confirme seus dados e escolha Pix, boleto ou cartão de crédito."
+      );
+      return;
+    }
+
     if (useVipPlan && selectedVipWeekAlreadyUsed) {
       setUseVipPlan(false);
       setVipPlanWarning(
@@ -543,6 +554,16 @@ export default function BookingClient({
   }
 
   async function bookAppointment(time: string, notes = "") {
+    if (
+      vipPlan?.billingSetupRequired &&
+      (useVipPlan || rescheduleAppointment?.isVipPlanUse)
+    ) {
+      setBookingError(
+        "Atualize os dados e a forma de pagamento em Planos antes de continuar."
+      );
+      return;
+    }
+
     setExtrasSlot(null);
     setConfirmationSlot(null);
     setBookingSlot(time);
@@ -745,16 +766,16 @@ export default function BookingClient({
                         <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-200" aria-hidden="true" />
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-200">
-                            Ação necessária no seu plano
+                            Atualização obrigatória do plano
                           </p>
                           <p className="mt-1 text-sm leading-6 text-zinc-200">
-                            Complete seu CPF/CNPJ e informe o cartão para ativar as cobranças mensais automáticas pelo Asaas.
+                            Para agendar ou remarcar pelo plano, confirme seus dados e escolha Pix, boleto ou cartão de crédito. A atualização é necessária mesmo que você já tenha um cartão cadastrado e respeita seu vencimento.
                           </p>
                           <Link
-                            href="/planos"
+                            href="/planos#dados-pagamento"
                             className="mt-3 inline-flex min-h-10 items-center justify-center rounded-xl bg-[#f1e8d8] px-4 text-sm font-black text-[#080807] transition hover:bg-white"
                           >
-                            Completar dados do plano
+                            Atualizar dados e pagamento
                           </Link>
                         </div>
                       </div>

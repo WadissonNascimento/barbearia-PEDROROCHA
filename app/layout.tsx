@@ -4,6 +4,7 @@ import AppVersionRefresh from "@/components/AppVersionRefresh";
 import ClientRuntimeGuard from "@/components/ClientRuntimeGuard";
 import PushNotificationManager from "@/components/PushNotificationManager";
 import RequiredCustomerPhoneModal from "@/components/RequiredCustomerPhoneModal";
+import VipBillingUpdateNotice from "@/components/VipBillingUpdateNotice";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import { auth } from "@/auth";
 import type { Metadata, Viewport } from "next";
@@ -12,6 +13,8 @@ import type { CSSProperties } from "react";
 import { getConfiguredAppUrl } from "@/lib/appUrl";
 import { prisma } from "@/lib/prisma";
 import { getTenantDesignTemplate } from "@/lib/tenantDesign";
+import { isLocalBillingPreviewRequest } from "@/lib/localPreview";
+import { needsVipBillingUpdate } from "@/lib/vipBillingPolicy";
 import {
   DEFAULT_SHOP_ID,
   getCurrentShop,
@@ -44,6 +47,13 @@ const PEDRO_ROCHA_SOCIAL_CARD_PATH =
 type TenantBrandStyle = CSSProperties & Record<`--${string}`, string>;
 
 export async function generateMetadata(): Promise<Metadata> {
+  if (await isLocalBillingPreviewRequest()) {
+    return {
+      title: "Prévia local · Pagamento do plano",
+      robots: { index: false, follow: false },
+    };
+  }
+
   const shop = await getCurrentShop();
   const brandName = shop.name || "Barbearia";
   const appName = PEDRO_ROCHA_APP_NAME;
@@ -138,6 +148,16 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  if (await isLocalBillingPreviewRequest()) {
+    return (
+      <html lang="pt-BR">
+        <body className={`${bodyFont.variable} ${headingFont.variable} min-h-screen bg-[#080807] text-[#f5efe3]`}>
+          {children}
+        </body>
+      </html>
+    );
+  }
+
   const session = await auth();
   const shop = await getCurrentShop();
   const role =
@@ -200,16 +220,26 @@ export default async function RootLayout({
           "--site-header-control-border": "rgba(241, 232, 216, 0.16)",
           "--site-header-control-text": "#f5efe3",
         };
-  const customerPhone =
+  const customer =
     role === "CUSTOMER" && session?.user?.id
-      ? (
-          await prisma.user.findUnique({
-            where: { id: session.user.id },
-            select: { phone: true },
-          })
-        )?.phone || null
+      ? await prisma.user.findFirst({
+          where: { id: session.user.id, shopId: shop.id },
+          select: {
+            phone: true,
+            vipSubscriptions: {
+              where: { shopId: shop.id, status: "ACTIVE" },
+              select: {
+                asaasSubscriptionId: true,
+                billingProfileConfirmedAt: true,
+              },
+            },
+          },
+        })
       : null;
-  const shouldCompleteCustomerPhone = role === "CUSTOMER" && !customerPhone;
+  const shouldCompleteCustomerPhone = role === "CUSTOMER" && !customer?.phone;
+  const shouldUpdateVipBilling = Boolean(
+    customer?.vipSubscriptions.some(needsVipBillingUpdate)
+  );
 
   return (
     <html lang="pt-BR">
@@ -233,6 +263,7 @@ export default async function RootLayout({
           locationUrl=""
           businessHours={shop.businessHours || "Horário sob consulta"}
         >
+          {shouldUpdateVipBilling ? <VipBillingUpdateNotice /> : null}
           {children}
         </AppChrome>
         {shouldCompleteCustomerPhone ? <RequiredCustomerPhoneModal /> : null}

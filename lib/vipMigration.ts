@@ -1,12 +1,19 @@
+import { getVipDueDateForCycle, resolveVipPolicyDueDate } from "./vipDueDate";
+
 // Historical PAID records remain settled regardless of when payment was entered.
 // Freeze the first renewal at cutover so later retries cannot move it forward.
 export function resolveVipMigrationDueDate(dueDay: number, payments: Array<{ cycleMonth: string; status: string }>, today: string) {
   if (!Number.isInteger(dueDay) || dueDay < 1 || dueDay > 31) throw new Error("Vencimento inválido.");
   const [year, month] = today.split("-").map(Number);
-  const due = (y: number, m: number) => new Date(Date.UTC(y, m - 1, Math.min(dueDay, new Date(Date.UTC(y, m, 0)).getUTCDate()), 12));
-  const current = due(year, month);
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const legacyDueDate = new Date(Date.UTC(year, month - 1, Math.min(dueDay, lastDay), 12));
   const paid = payments.some(payment => payment.cycleMonth === today.slice(0, 7) && payment.status === "PAID");
-  return current.toISOString().slice(0, 10) < today && paid ? due(year, month + 1) : current;
+  if (legacyDueDate.toISOString().slice(0, 10) < today) {
+    if (!paid) return legacyDueDate;
+    const nextCycle = new Date(Date.UTC(year, month, 1, 12)).toISOString().slice(0, 7);
+    return getVipDueDateForCycle(nextCycle, dueDay);
+  }
+  return getVipDueDateForCycle(today.slice(0, 7), dueDay);
 }
 
 // Only the access carried over at the actual September 16 deployment expires.
@@ -46,14 +53,13 @@ export function isVipRenewalPaymentSettled(
 
 export function resolveAsaasRecurringDueDate(firstDueDate: Date, dueDay: number, today: string) {
   const firstValue = firstDueDate.toISOString().slice(0, 10);
-  if (firstValue >= today) return firstDueDate;
+  if (firstValue >= today) return resolveVipPolicyDueDate(firstDueDate, dueDay, today);
 
   const [year, month] = today.split("-").map(Number);
-  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
-  let candidate = new Date(Date.UTC(year, month - 1, Math.min(dueDay, lastDay), 12));
+  let candidate = getVipDueDateForCycle(today.slice(0, 7), dueDay);
   if (candidate.toISOString().slice(0, 10) < today) {
-    const nextLastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-    candidate = new Date(Date.UTC(year, month, Math.min(dueDay, nextLastDay), 12));
+    const nextCycle = new Date(Date.UTC(year, month, 1, 12)).toISOString().slice(0, 7);
+    candidate = getVipDueDateForCycle(nextCycle, dueDay);
   }
   return candidate;
 }

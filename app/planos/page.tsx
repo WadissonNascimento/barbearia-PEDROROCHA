@@ -11,9 +11,11 @@ import {
   hasPaidCurrentVipCycle,
   isCurrentVipCyclePaymentCovered,
 } from "@/lib/vip";
-import VipBillingProfileForm from "./VipBillingProfileForm";
+import VipPaymentsPanel from "./VipPaymentsPanel";
 import VipSubscribeButton from "./VipSubscribeButton";
-import { safeAsaasInvoiceUrl } from "@/lib/vipMigration";
+import { needsVipBillingUpdate } from "@/lib/vipBillingPolicy";
+import { resolveVipPolicyDueDate } from "@/lib/vipDueDate";
+import { getCurrentScheduleDateValue } from "@/lib/scheduleTime";
 
 export const metadata = {
   title: "Planos",
@@ -102,14 +104,6 @@ function getPlanItems(code: string) {
   return "Combo mensal";
 }
 
-function formatLongDate(date: Date) {
-  return date.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-}
-
 function formatMonthName(date: Date) {
   return date.toLocaleDateString("pt-BR", {
     month: "long",
@@ -146,7 +140,7 @@ export default async function PlanosPage() {
       tenantSession?.session.user.name?.split(" ")[0] ||
       tenantSession?.session.user.email?.split("@")[0] ||
       "cliente";
-    const planLevel = getPlanCombo(activeSubscription.plan.code);
+    const planLevel = getPlanCombo(activeSubscription.plan.code) === "VIP" ? activeSubscription.plan.name : getPlanCombo(activeSubscription.plan.code);
     const planCombo = getPlanComboDescription(activeSubscription.plan.code);
     const planItems = getPlanItems(activeSubscription.plan.code);
     const dueDay = activeSubscription.dueDay;
@@ -168,17 +162,18 @@ export default async function PlanosPage() {
     const nextPaymentBaseDate = paymentPaid
       ? new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
       : new Date();
-    const nextPaymentDate = getVipPaymentDueDate(nextPaymentBaseDate, dueDay);
+    const today = getCurrentScheduleDateValue();
+    const firstDue = activeSubscription.asaasFirstDueDate;
+    const upcomingFrozenDue = firstDue && firstDue.toISOString().slice(0, 10) >= today && !activeSubscription.payments.some(payment => payment.cycleMonth === firstDue.toISOString().slice(0, 7) && payment.status === "PAID" && payment.asaasPaymentId);
+    const recordedDue = activeSubscription.payments.find(payment => payment.cycleMonth === today.slice(0, 7) && payment.status !== "PAID")?.dueDate;
+    const nextPaymentDate = upcomingFrozenDue
+      ? resolveVipPolicyDueDate(firstDue, dueDay, today)
+      : !paymentPaid && recordedDue ? resolveVipPolicyDueDate(recordedDue, dueDay, today) : getVipPaymentDueDate(nextPaymentBaseDate, dueDay);
     const paymentStatusLabel = paymentPaid
       ? `${currentMonthName} está pago`
       : paymentCovered
         ? `${currentMonthName} em aberto`
         : `${currentMonthName} está pendente`;
-    const paymentStatusHelper = paymentPaid
-      ? `Próximo pagamento: ${formatLongDate(nextPaymentDate)}`
-      : paymentCovered
-        ? `Vence em ${formatLongDate(nextPaymentDate)}`
-        : `Venceu em ${formatLongDate(nextPaymentDate)}`;
     const usages = await prisma.vipUsage.findMany({
       where: {
         subscriptionId: activeSubscription.id,
@@ -234,22 +229,17 @@ export default async function PlanosPage() {
                 }
                 tone={weeklyUsage ? "warning" : "success"}
               />
-              <VipInfoCard
-                label="Pagamento"
-                value={paymentStatusLabel}
-                helper={paymentStatusHelper}
-                extra={`Vencimento mensal: todo dia ${dueDay}`}
-                tone={paymentPaid ? "success" : paymentCovered ? undefined : "warning"}
-              />
             </div>
 
-            {!activeSubscription.asaasSubscriptionId ? <VipBillingProfileForm /> : null}
-            <div className="grid gap-3 p-5">
-              {activeSubscription.payments.filter(payment => payment.asaasPaymentId && payment.status !== "PAID").map(payment => {
-                const url = safeAsaasInvoiceUrl(payment.invoiceUrl);
-                return url ? <a key={payment.id} href={url} target="_blank" rel="noopener noreferrer" className="rounded-xl bg-[#f1e8d8] p-4 text-center font-bold text-black">Pagar {payment.cycleMonth} — {formatCurrency(Number(payment.amount))}</a> : null;
-              })}
-              {activeSubscription.asaasSubscriptionId && !activeSubscription.payments.some(payment => payment.invoiceUrl && payment.status !== "PAID") ? <p className="text-sm text-zinc-400">As cobranças disponíveis aparecerão aqui após a sincronização.</p> : null}
+            <div className="p-5 sm:p-7">
+              <VipPaymentsPanel
+                price={Number(activeSubscription.plan.price)} dueDay={dueDay}
+                nextDueDate={nextPaymentDate.toISOString()} paymentPaid={paymentPaid}
+                paymentStatusLabel={paymentStatusLabel} cpfCnpj={billingProfile?.cpfCnpj}
+                currentBillingType={activeSubscription.asaasBillingType}
+                requiresUpdate={needsVipBillingUpdate(activeSubscription)}
+                payments={activeSubscription.payments.map(payment => ({ ...payment, amount: Number(payment.amount), dueDate: payment.dueDate?.toISOString() || null }))}
+              />
             </div>
           </div>
 
@@ -354,7 +344,6 @@ export default async function PlanosPage() {
             </div>
           </section>
 
-          {tenantSession && !billingProfile?.cpfCnpj ? <VipBillingProfileForm /> : null}
 
           <div className="mt-8 grid gap-4 lg:grid-cols-3">
             {plans.map((plan) => (
