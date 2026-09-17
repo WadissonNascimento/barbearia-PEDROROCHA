@@ -60,7 +60,10 @@ export function parseVipCreditCard(
   return {
     creditCard: { holderName, number, expiryMonth: month, expiryYear: year, ccv },
     creditCardHolderInfo: {
-      name: customer.name || holderName,
+      // The holder information is validated by the card acquirer. The user's
+      // profile name may be a nickname or account identifier, so it must not
+      // replace the legal name entered for the card.
+      name: holderName,
       email: customer.email,
       cpfCnpj: customer.cpfCnpj,
       postalCode,
