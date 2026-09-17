@@ -1,4 +1,5 @@
 import "server-only";
+import { isVipAsaasPaymentsEnabled } from "@/lib/vipBillingPolicy";
 
 export const VIP_ASAAS_BILLING_TYPES = ["PIX", "BOLETO", "CREDIT_CARD"] as const;
 export type VipAsaasBillingType = (typeof VIP_ASAAS_BILLING_TYPES)[number];
@@ -98,6 +99,7 @@ function getAsaasApiKey() {
 
 export function isAsaasVipBillingConfigured() {
   return (
+    isVipAsaasPaymentsEnabled() &&
     Boolean(process.env.ASAAS_API_KEY?.trim()) &&
     ["sandbox", "production"].includes(
       process.env.ASAAS_ENVIRONMENT?.trim().toLowerCase() || ""

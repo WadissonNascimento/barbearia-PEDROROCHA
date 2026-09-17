@@ -18,7 +18,7 @@ import {
   isScheduleDateTimePast,
 } from "@/lib/scheduleTime";
 import BookingClient from "./BookingClient";
-import { needsVipBillingUpdate } from "@/lib/vipBillingPolicy";
+import { isVipAsaasPaymentsEnabled, needsVipBillingUpdate } from "@/lib/vipBillingPolicy";
 
 export async function generateMetadata() {
   const shop = await getCurrentShop();
@@ -310,7 +310,7 @@ export default async function AgendarPage({
               name: activeVipSubscription.plan.name,
               tokensRemaining: activeVipSubscription.tokensRemaining,
               paymentPaid: vipPaymentPaid,
-              billingSetupRequired: needsVipBillingUpdate(activeVipSubscription),
+              billingSetupRequired: isVipAsaasPaymentsEnabled() && needsVipBillingUpdate(activeVipSubscription),
               weeklyUsedWeekStarts: vipWeeklyUsedWeekStarts,
             }
           : null

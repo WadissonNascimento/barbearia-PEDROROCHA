@@ -8,10 +8,13 @@ Esta integração é exclusiva das assinaturas VIP dos clientes da barbearia. A 
 ASAAS_API_KEY=chave_da_api_do_asaas
 ASAAS_WEBHOOK_TOKEN=token_longo_e_aleatorio_do_webhook
 ASAAS_ENVIRONMENT=sandbox
+VIP_ASAAS_PAYMENTS_ENABLED=true
 CRON_SECRET=segredo_do_cron_existente
 ```
 
 Use `ASAAS_ENVIRONMENT=production` somente depois da homologação. A chave da API e o token do webhook não podem ser expostos ao navegador.
+
+Defina `VIP_ASAAS_PAYMENTS_ENABLED=false` para pausar formulários, cobranças e conciliação sem bloquear os benefícios e agendamentos dos assinantes. Volte para `true` somente depois que a conta Asaas estiver aprovada.
 
 ## Webhook
 

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { updateVipAsaasPreferences } from "../lib/vipAsaasPreferences";
 import { getVipBillingErrorMessage } from "../lib/vipBillingErrors";
-import { needsVipBillingUpdate, parseVipBillingType } from "../lib/vipBillingPolicy";
+import { isVipAsaasPaymentsEnabled, needsVipBillingUpdate, parseVipBillingType } from "../lib/vipBillingPolicy";
 import type { AsaasCreditCardData } from "../lib/asaas";
 
 const card: AsaasCreditCardData = {
@@ -85,4 +85,17 @@ test("all subscribers, including linked card users, must explicitly confirm thei
   assert.throws(() => parseVipBillingType("UNDEFINED"));
   assert.throws(() => parseVipBillingType(null));
   assert.equal(parseVipBillingType("PIX"), "PIX");
+});
+
+test("billing can be paused without changing subscriber records", () => {
+  const previous = process.env.VIP_ASAAS_PAYMENTS_ENABLED;
+  try {
+    process.env.VIP_ASAAS_PAYMENTS_ENABLED = "false";
+    assert.equal(isVipAsaasPaymentsEnabled(), false);
+    process.env.VIP_ASAAS_PAYMENTS_ENABLED = "true";
+    assert.equal(isVipAsaasPaymentsEnabled(), true);
+  } finally {
+    if (previous === undefined) delete process.env.VIP_ASAAS_PAYMENTS_ENABLED;
+    else process.env.VIP_ASAAS_PAYMENTS_ENABLED = previous;
+  }
 });

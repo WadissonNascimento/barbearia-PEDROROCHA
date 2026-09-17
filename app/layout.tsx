@@ -14,7 +14,7 @@ import { getConfiguredAppUrl } from "@/lib/appUrl";
 import { prisma } from "@/lib/prisma";
 import { getTenantDesignTemplate } from "@/lib/tenantDesign";
 import { isLocalBillingPreviewRequest } from "@/lib/localPreview";
-import { needsVipBillingUpdate } from "@/lib/vipBillingPolicy";
+import { isVipAsaasPaymentsEnabled, needsVipBillingUpdate } from "@/lib/vipBillingPolicy";
 import {
   DEFAULT_SHOP_ID,
   getCurrentShop,
@@ -238,7 +238,7 @@ export default async function RootLayout({
       : null;
   const shouldCompleteCustomerPhone = role === "CUSTOMER" && !customer?.phone;
   const shouldUpdateVipBilling = Boolean(
-    customer?.vipSubscriptions.some(needsVipBillingUpdate)
+    isVipAsaasPaymentsEnabled() && customer?.vipSubscriptions.some(needsVipBillingUpdate)
   );
 
   return (

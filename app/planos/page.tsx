@@ -13,7 +13,7 @@ import {
 } from "@/lib/vip";
 import VipPaymentsPanel from "./VipPaymentsPanel";
 import VipSubscribeButton from "./VipSubscribeButton";
-import { needsVipBillingUpdate } from "@/lib/vipBillingPolicy";
+import { isVipAsaasPaymentsEnabled, needsVipBillingUpdate } from "@/lib/vipBillingPolicy";
 import { resolveVipPolicyDueDate } from "@/lib/vipDueDate";
 import { getCurrentScheduleDateValue } from "@/lib/scheduleTime";
 
@@ -130,6 +130,7 @@ export default async function PlanosPage() {
     : null;
 
   if (activeSubscription) {
+    const paymentsEnabled = isVipAsaasPaymentsEnabled();
     const paymentPaid = await hasPaidCurrentVipCycle(prisma, activeSubscription.id);
     const paymentCovered = await isCurrentVipCyclePaymentCovered(
       prisma,
@@ -197,20 +198,20 @@ export default async function PlanosPage() {
     });
 
     return (
-      <main className="min-h-screen bg-[#050504] px-4 py-6 text-[#f5efe3] sm:px-6 lg:px-8">
+      <main className="min-h-screen bg-[#050504] px-2.5 py-3 text-[#f5efe3] sm:px-6 sm:py-6 lg:px-8">
         <div className="mx-auto max-w-5xl">
-          <div className="overflow-hidden rounded-2xl border border-[#b8945f]/25 bg-[#0b0a09] shadow-[0_18px_54px_rgba(0,0,0,0.36)]">
-            <div className="border-b border-[#b8945f]/15 bg-[linear-gradient(135deg,_rgba(184,148,95,0.18),_rgba(8,8,7,0.98))] p-5 sm:p-7">
-              <p className="inline-flex items-center gap-2 rounded-full border border-[#b8945f]/35 bg-[#b8945f]/10 px-4 py-2 text-[11px] font-black uppercase tracking-[0.22em] text-[#e8c57d]">
+          <div className="overflow-hidden rounded-xl border border-[#b8945f]/25 bg-[#0b0a09] shadow-[0_18px_54px_rgba(0,0,0,0.36)] sm:rounded-2xl">
+            <div className="border-b border-[#b8945f]/15 bg-[linear-gradient(135deg,_rgba(184,148,95,0.18),_rgba(8,8,7,0.98))] p-3.5 sm:p-7">
+              <p className="inline-flex items-center gap-1.5 rounded-full border border-[#b8945f]/35 bg-[#b8945f]/10 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-[#e8c57d] sm:gap-2 sm:px-4 sm:py-2 sm:text-[11px] sm:tracking-[0.22em]">
                 <Crown className="h-4 w-4" aria-hidden="true" />
                 Area VIP
               </p>
-              <h1 className="mt-5 text-3xl font-black leading-tight text-[#f8f3e7] sm:text-5xl">
+              <h1 className="mt-3 text-2xl font-black leading-tight text-[#f8f3e7] sm:mt-5 sm:text-5xl">
                 Olá {customerName}, você é assinante do plano {planLevel}
               </h1>
             </div>
 
-            <div className="divide-y divide-white/10 border-b border-white/10 bg-black/20 px-5 py-1">
+            <div className="grid grid-cols-2 divide-x divide-white/10 border-b border-white/10 bg-black/20 sm:block sm:divide-x-0 sm:divide-y sm:px-5 sm:py-1">
               <VipInfoCard
                 label="Itens do seu plano"
                 value={planItems}
@@ -231,19 +232,20 @@ export default async function PlanosPage() {
               />
             </div>
 
-            <div className="p-5 sm:p-7">
+            <div className="p-3 sm:p-7">
               <VipPaymentsPanel
                 price={Number(activeSubscription.plan.price)} dueDay={dueDay}
                 nextDueDate={nextPaymentDate.toISOString()} paymentPaid={paymentPaid}
                 paymentStatusLabel={paymentStatusLabel} cpfCnpj={billingProfile?.cpfCnpj}
                 currentBillingType={activeSubscription.asaasBillingType}
                 requiresUpdate={needsVipBillingUpdate(activeSubscription)}
+                paymentsEnabled={paymentsEnabled}
                 payments={activeSubscription.payments.map(payment => ({ ...payment, amount: Number(payment.amount), dueDate: payment.dueDate?.toISOString() || null }))}
               />
             </div>
           </div>
 
-          <section className="mt-5 rounded-2xl border border-white/10 bg-[#0b0a09] p-5 sm:p-7">
+          <section className="mt-3 rounded-xl border border-white/10 bg-[#0b0a09] p-3.5 sm:mt-5 sm:rounded-2xl sm:p-7">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.22em] text-[#e8c57d]">
@@ -434,15 +436,15 @@ function VipInfoCard({
       : "text-[#f8f3e7]";
 
   return (
-    <div className="min-w-0 py-4">
+    <div className="min-w-0 px-3 py-3 sm:px-0 sm:py-4">
       <p className="truncate text-[10px] font-black uppercase tracking-[0.16em] text-[#e8c57d] sm:text-xs">
         {label}
       </p>
-      <p className={`mt-2 text-base font-black leading-6 sm:text-lg ${toneClass}`}>
+      <p className={`mt-1.5 text-sm font-black leading-5 sm:mt-2 sm:text-lg sm:leading-6 ${toneClass}`}>
         {value}
       </p>
       {helper ? (
-        <p className="mt-1 truncate text-[11px] font-bold text-[#a89f91] sm:text-xs">
+        <p className="mt-1 line-clamp-2 text-[10px] font-bold leading-4 text-[#a89f91] sm:truncate sm:text-xs">
           {helper}
         </p>
       ) : null}

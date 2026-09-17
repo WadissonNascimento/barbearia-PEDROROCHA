@@ -5,14 +5,15 @@ import { Crown, Scissors } from "lucide-react";
 import VipPaymentsPanel from "@/app/planos/VipPaymentsPanel";
 
 const scenarios = [
-  { id: "update", label: "Atualização obrigatória", method: "CREDIT_CARD", required: true, paid: true, due: "2026-10-06", day: 5 },
-  { id: "card", label: "Trocar cartão", method: "CREDIT_CARD", required: false, paid: true, due: "2026-10-06", day: 5 },
-  { id: "pix", label: "Pagamento Pix", method: "PIX", required: false, paid: false, due: "2026-09-16", day: 16 },
-  { id: "boleto", label: "Pagamento boleto", method: "BOLETO", required: false, paid: false, due: "2026-09-20", day: 20 },
+  { id: "paused", label: "Pagamentos pausados", method: "CREDIT_CARD", required: true, paid: true, enabled: false, due: "2026-10-06", day: 5 },
+  { id: "update", label: "Atualização obrigatória", method: "CREDIT_CARD", required: true, paid: true, enabled: true, due: "2026-10-06", day: 5 },
+  { id: "card", label: "Trocar cartão", method: "CREDIT_CARD", required: false, paid: true, enabled: true, due: "2026-10-06", day: 5 },
+  { id: "pix", label: "Pagamento Pix", method: "PIX", required: false, paid: false, enabled: true, due: "2026-09-16", day: 16 },
+  { id: "boleto", label: "Pagamento boleto", method: "BOLETO", required: false, paid: false, enabled: true, due: "2026-09-20", day: 20 },
 ];
 
 export default function VipPlansPreview() {
-  const [selected, setSelected] = useState("update");
+  const [selected, setSelected] = useState("paused");
   const scenario = scenarios.find(item => item.id === selected)!;
   return (
     <main className="min-h-screen bg-[#050504] px-4 py-6 text-[#f5efe3] sm:px-6">
@@ -29,7 +30,7 @@ export default function VipPlansPreview() {
             <p className="mt-3 flex items-center gap-2 text-sm text-[#c9c0b2]"><Scissors className="h-4 w-4" aria-hidden="true" />Corte + Sobrancelha + Barba · 4 usos mensais</p>
           </header>
           <div className="p-5 sm:p-7">
-            <VipPaymentsPanel key={scenario.id} price={180} dueDay={scenario.day} nextDueDate={scenario.due} paymentStatusLabel={scenario.paid ? "Setembro está pago" : "Setembro em aberto"} paymentPaid={scenario.paid} cpfCnpj="" currentBillingType={scenario.method} requiresUpdate={scenario.required} payments={[
+            <VipPaymentsPanel key={scenario.id} price={180} dueDay={scenario.day} nextDueDate={scenario.due} paymentStatusLabel={scenario.paid ? "Setembro está pago" : "Setembro em aberto"} paymentPaid={scenario.paid} cpfCnpj="" currentBillingType={scenario.method} requiresUpdate={scenario.required} paymentsEnabled={scenario.enabled} payments={[
               { id: "demo-current", cycleMonth: "2026-09", amount: 180, status: scenario.paid ? "PAID" : "PENDING", dueDate: `2026-09-${String(scenario.day).padStart(2, "0")}` },
               { id: "demo-previous", cycleMonth: "2026-08", amount: 180, status: "PAID", dueDate: "2026-08-05" },
             ]} preview />
