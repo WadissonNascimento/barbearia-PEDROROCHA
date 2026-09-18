@@ -95,7 +95,13 @@ export async function processAsaasVipWebhook(payload: AsaasWebhookPayload) {
 
         const existingProviderPayment = await tx.vipPayment.findUnique({
           where: { asaasPaymentId },
-          select: { cycleMonth: true, dueDate: true, status: true, externalReference: true },
+          select: {
+            cycleMonth: true,
+            dueDate: true,
+            status: true,
+            asaasStatus: true,
+            externalReference: true,
+          },
         });
         const now = new Date();
         // Asaas repeats calendar dates. Correct a generated future recurring
@@ -107,7 +113,13 @@ export async function processAsaasVipWebhook(payload: AsaasWebhookPayload) {
           }
         }
         const providerStatus = payment.status || event;
-        const localStatus = PAID_STATUSES.has(providerStatus) ? "PAID" : "PENDING";
+        // A manual confirmation made by the shop owner is authoritative. A
+        // delayed provider event must not turn that monthly fee back to pending.
+        const manuallyConfirmed =
+          existingProviderPayment?.status === "PAID" &&
+          existingProviderPayment.asaasStatus === "PAID_MANUALLY";
+        const localStatus =
+          PAID_STATUSES.has(providerStatus) || manuallyConfirmed ? "PAID" : "PENDING";
         // Standalone migration charges can be issued today for an older cycle,
         // because Asaas rejects creating a new charge with a past due date.
         const cycleMonth =
@@ -151,7 +163,10 @@ export async function processAsaasVipWebhook(payload: AsaasWebhookPayload) {
             amount: payment.value ?? subscription.plan.price,
             dueDate,
             asaasPaymentId,
-            asaasStatus: providerStatus,
+            asaasStatus:
+              manuallyConfirmed && !PAID_STATUSES.has(providerStatus)
+                ? "PAID_MANUALLY"
+                : providerStatus,
             invoiceUrl: payment.invoiceUrl || null,
             bankSlipUrl: payment.bankSlipUrl || null,
             externalReference: payment.externalReference || null,

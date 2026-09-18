@@ -16,7 +16,9 @@ import { formatCurrency } from "@/lib/utils";
 import { getVipDueDayLabel } from "@/lib/vipDueDate";
 import {
   cancelVipSubscriptionAction,
+  markVipPaymentPaidAction,
   pauseVipSubscriptionAction,
+  reopenVipPaymentAction,
   updateVipSubscriptionSettingsAction,
 } from "./actions";
 
@@ -246,6 +248,30 @@ export default function VipSubscriptionsList({
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
+                    <form
+                      action={
+                        subscription.paymentStatus === "PAID"
+                          ? reopenVipPaymentAction
+                          : markVipPaymentPaidAction
+                      }
+                      onSubmit={(event) => {
+                        const message =
+                          subscription.paymentStatus === "PAID"
+                            ? `Reabrir a mensalidade de ${customerLabel(subscription.customer)} e marcá-la como pendente?`
+                            : `Confirmar manualmente o pagamento da mensalidade de ${customerLabel(subscription.customer)}?`;
+                        if (!window.confirm(message)) event.preventDefault();
+                      }}
+                    >
+                      <input type="hidden" name="subscriptionId" value={subscription.id} />
+                      <button
+                        type="submit"
+                        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-emerald-400/25 bg-emerald-400/[0.08] px-3 text-sm font-black text-emerald-200 transition hover:border-emerald-300/40 hover:bg-emerald-400/[0.14] active:scale-[0.98]"
+                      >
+                        <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                        {subscription.paymentStatus === "PAID" ? "Reabrir" : "Marcar pago"}
+                      </button>
+                    </form>
+
                     <button
                       type="button"
                       onClick={() =>
@@ -261,7 +287,14 @@ export default function VipSubscriptionsList({
                       Editar
                     </button>
 
-                    <form action={pauseVipSubscriptionAction}>
+                    <form
+                      action={pauseVipSubscriptionAction}
+                      onSubmit={(event) => {
+                        if (!window.confirm(`Pausar o plano de ${customerLabel(subscription.customer)}?`)) {
+                          event.preventDefault();
+                        }
+                      }}
+                    >
                       <input type="hidden" name="subscriptionId" value={subscription.id} />
                       <button
                         type="submit"
@@ -272,7 +305,14 @@ export default function VipSubscriptionsList({
                       </button>
                     </form>
 
-                    <form action={cancelVipSubscriptionAction}>
+                    <form
+                      action={cancelVipSubscriptionAction}
+                      onSubmit={(event) => {
+                        if (!window.confirm(`Cancelar definitivamente o plano de ${customerLabel(subscription.customer)}? Esta ação remove o acesso aos benefícios.`)) {
+                          event.preventDefault();
+                        }
+                      }}
+                    >
                       <input type="hidden" name="subscriptionId" value={subscription.id} />
                       <button
                         type="submit"
