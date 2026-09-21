@@ -1,13 +1,18 @@
 export const VIP_BILLING_TYPES = ["PIX", "BOLETO", "CREDIT_CARD"] as const;
 export type VipBillingType = (typeof VIP_BILLING_TYPES)[number];
+const VIP_SELECTABLE_BILLING_TYPES: readonly VipBillingType[] = ["BOLETO", "CREDIT_CARD"];
+
+function readRuntimeEnv(name: "VIP_ASAAS_PAYMENTS_ENABLED") {
+  return process.env[name]?.trim();
+}
 
 export function isVipAsaasPaymentsEnabled() {
-  return process.env.VIP_ASAAS_PAYMENTS_ENABLED?.trim().toLowerCase() !== "false";
+  return readRuntimeEnv("VIP_ASAAS_PAYMENTS_ENABLED")?.toLowerCase() !== "false";
 }
 
 export function parseVipBillingType(value: unknown): VipBillingType {
-  if (!VIP_BILLING_TYPES.includes(value as VipBillingType)) {
-    throw new Error("Escolha como deseja pagar: Pix, boleto ou cartão de crédito.");
+  if (!VIP_SELECTABLE_BILLING_TYPES.includes(value as VipBillingType)) {
+    throw new Error("Escolha como deseja pagar: boleto ou cartão de crédito.");
   }
   return value as VipBillingType;
 }

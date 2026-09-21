@@ -135,7 +135,7 @@ export async function startVipSubscriptionAction(
   const code = String(formData.get("planCode") || "").trim();
   let billingType;
   try { billingType = parseVipBillingType(formData.get("billingType")); }
-  catch { return mutationError("Escolha como deseja pagar: Pix, boleto ou cartão de crédito."); }
+  catch { return mutationError("Escolha como deseja pagar: boleto ou cartão de crédito."); }
 
   const [customer, plan, activeSubscription, shop] = await Promise.all([
     prisma.user.findFirst({

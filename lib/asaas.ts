@@ -84,15 +84,20 @@ export class AsaasApiError extends Error {
   }
 }
 
+function readRuntimeEnv(name: "ASAAS_API_KEY" | "ASAAS_ENVIRONMENT") {
+  return process.env[name]?.trim();
+}
+
 function getAsaasApiBaseUrl() {
-  if (!["sandbox", "production"].includes(process.env.ASAAS_ENVIRONMENT || "")) throw new Error("Defina explicitamente ASAAS_ENVIRONMENT.");
-  return process.env.ASAAS_ENVIRONMENT?.trim().toLowerCase() === "sandbox"
+  const environment = readRuntimeEnv("ASAAS_ENVIRONMENT")?.toLowerCase() || "";
+  if (!["sandbox", "production"].includes(environment)) throw new Error("Defina explicitamente ASAAS_ENVIRONMENT.");
+  return environment === "sandbox"
     ? "https://api-sandbox.asaas.com/v3"
     : "https://api.asaas.com/v3";
 }
 
 function getAsaasApiKey() {
-  const apiKey = process.env.ASAAS_API_KEY?.trim();
+  const apiKey = readRuntimeEnv("ASAAS_API_KEY");
 
   if (!apiKey) {
     throw new Error(
@@ -104,12 +109,11 @@ function getAsaasApiKey() {
 }
 
 export function isAsaasVipBillingConfigured() {
+  const environment = readRuntimeEnv("ASAAS_ENVIRONMENT")?.toLowerCase() || "";
   return (
     isVipAsaasPaymentsEnabled() &&
-    Boolean(process.env.ASAAS_API_KEY?.trim()) &&
-    ["sandbox", "production"].includes(
-      process.env.ASAAS_ENVIRONMENT?.trim().toLowerCase() || ""
-    )
+    Boolean(readRuntimeEnv("ASAAS_API_KEY")) &&
+    ["sandbox", "production"].includes(environment)
   );
 }
 
