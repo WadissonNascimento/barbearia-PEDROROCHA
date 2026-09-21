@@ -43,6 +43,12 @@ export type AsaasPayment = {
   creditCardToken?: string | null;
 };
 
+export type AsaasPixQrCode = {
+  encodedImage: string;
+  payload: string;
+  expirationDate?: string | null;
+};
+
 export type AsaasCreditCardData = {
   creditCard: {
     holderName: string;
@@ -307,6 +313,12 @@ export async function findAsaasSubscription(reference: string) {
 
 export async function getAsaasPayment(paymentId: string) {
   return asaasRequest<AsaasPayment>(`/payments/${paymentId}`);
+}
+
+export async function getAsaasPixQrCode(paymentId: string) {
+  return asaasRequest<AsaasPixQrCode>(
+    `/payments/${encodeURIComponent(paymentId)}/pixQrCode`
+  );
 }
 
 export function getVipAsaasExternalReference(shopId: string, subscriptionId: string) {

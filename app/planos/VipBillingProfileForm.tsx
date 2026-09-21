@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { AlertCircle, CheckCircle2, ChevronDown, CreditCard, PauseCircle, ShieldCheck } from "lucide-react";
 import FeedbackMessage from "@/components/FeedbackMessage";
 import type { MutationResult } from "@/lib/mutationResult";
@@ -30,6 +30,8 @@ export default function VipBillingProfileForm({
   const [expanded, setExpanded] = useState(requiresUpdate);
   const [billingType, setBillingType] = useState<VipBillingType | "">(requiresUpdate ? "" : currentMethod);
   const [previewSaved, setPreviewSaved] = useState(false);
+  const [hideOldFeedback, setHideOldFeedback] = useState(false);
+  useEffect(() => setHideOldFeedback(false), [state.message]);
   const saved = previewSaved || (state.ok && Boolean(state.message));
   const updateRequired = requiresUpdate && !saved;
   const isOpen = updateRequired || expanded;
@@ -79,14 +81,14 @@ export default function VipBillingProfileForm({
             CPF ou CNPJ
             <input name="cpfCnpj" inputMode="numeric" autoComplete="off" defaultValue={cpfCnpj || ""} required maxLength={18} placeholder="Documento do titular" disabled={pending} className="min-h-11 rounded-lg border border-white/15 bg-black/30 px-3 text-base text-white outline-none focus:border-[#e8c57d] sm:min-h-12 sm:rounded-xl sm:px-4 sm:text-sm" />
           </label>
-          <VipPaymentMethodFields value={billingType} onChange={setBillingType} disabled={pending} />
+          <VipPaymentMethodFields value={billingType} onChange={(method) => { setBillingType(method); setHideOldFeedback(true); }} disabled={pending} />
           {billingType === "CREDIT_CARD" ? <div className="rounded-lg border border-white/10 bg-black/20 p-3 sm:rounded-xl sm:p-4"><p className="mb-3 text-xs font-bold text-[#f5efe3] sm:mb-4 sm:text-sm">{currentMethod === "CREDIT_CARD" ? "Novo cartão" : "Dados do cartão"}</p><VipCreditCardFields /></div> : null}
           {billingType === "PIX" || billingType === "BOLETO" ? <p className="rounded-xl border border-white/10 bg-black/20 p-4 text-sm leading-6 text-[#c9c0b2]">{billingType === "PIX" ? "Todo mês, acesse a cobrança do seu plano e pague pelo Pix até o vencimento. O pagamento é confirmado automaticamente; não há débito automático na sua conta." : "Todo mês, acesse seu boleto e pague até o vencimento. A confirmação ocorre após a compensação bancária."}</p> : null}
           <div className="flex items-start gap-2 rounded-lg bg-white/[0.035] p-2.5 text-[11px] leading-4 text-[#b9b1a4] sm:bg-transparent sm:p-0 sm:text-xs sm:leading-6"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#e8c57d]" aria-hidden="true" /><p>Pagamentos já feitos são preservados.{nextPaymentDateLabel ? ` Próximo vencimento: ${nextPaymentDateLabel}.` : ""}{updateRequired && billingType === "CREDIT_CARD" ? " Se vencer hoje ou estiver atrasado, a cobrança pode ocorrer ao confirmar." : ""}</p></div>
           <button type="submit" disabled={pending || !billingType} className="sticky bottom-2 z-10 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#e8c57d] px-4 text-sm font-black text-[#17120a] shadow-[0_10px_28px_rgba(0,0,0,0.55)] transition hover:bg-[#f4d79f] disabled:cursor-not-allowed disabled:opacity-50 sm:static sm:px-5 sm:shadow-none"><CheckCircle2 className="h-4 w-4" aria-hidden="true" />{pending ? "Salvando..." : updateRequired ? "Confirmar pagamento" : "Salvar pagamento"}</button>
         </form>
       ) : null}
-      <div aria-live="polite" className={state.message || previewSaved ? "mt-4" : ""}><FeedbackMessage message={previewSaved ? "Prévia: dados confirmados apenas nesta tela. Nenhuma cobrança foi criada." : state.message} tone={previewSaved ? "success" : state.tone} /></div>
+      <div aria-live="polite" className={(!hideOldFeedback && state.message) || previewSaved ? "mt-4" : ""}><FeedbackMessage message={previewSaved ? "Prévia: dados confirmados apenas nesta tela. Nenhuma cobrança foi criada." : hideOldFeedback ? "" : state.message} tone={previewSaved ? "success" : state.tone} /></div>
     </section>
   );
 }

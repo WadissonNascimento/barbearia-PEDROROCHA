@@ -1,7 +1,13 @@
 import "server-only";
 
 import { Prisma } from "@prisma/client";
-import { AsaasApiError, getAsaasPayment, updateAsaasPayment, type AsaasPayment } from "@/lib/asaas";
+import {
+  AsaasApiError,
+  getAsaasPayment,
+  getAsaasPixQrCode,
+  updateAsaasPayment,
+  type AsaasPayment,
+} from "@/lib/asaas";
 import { basePrisma } from "@/lib/prisma-core";
 import { getCurrentScheduleDateValue } from "@/lib/scheduleTime";
 import { resolveVipPolicyDueDate } from "@/lib/vipDueDate";
@@ -173,6 +179,18 @@ export async function processAsaasVipWebhook(payload: AsaasWebhookPayload) {
             lastAsaasEventAt: now,
           };
 
+          let pixData: { pixQrCode?: string; pixCopyPaste?: string } = {};
+          if (
+            localStatus !== "PAID" &&
+            (payment.billingType === "PIX" || payment.billingType === "BOLETO")
+          ) {
+            const pix = await getAsaasPixQrCode(asaasPaymentId);
+            pixData = {
+              pixQrCode: pix.encodedImage || undefined,
+              pixCopyPaste: pix.payload || undefined,
+            };
+          }
+
           await tx.vipPayment.upsert({
             where: {
               shopId_subscriptionId_cycleMonth: {
@@ -189,9 +207,11 @@ export async function processAsaasVipWebhook(payload: AsaasWebhookPayload) {
               paidAt: localStatus === "PAID" ? getPaidAt(payment) : null,
               notes: `Cobrança sincronizada pelo Asaas (${event}).`,
               ...paymentData,
+              ...pixData,
             },
             update: {
               ...paymentData,
+              ...pixData,
               status: localStatus,
               paidAt: localStatus === "PAID" ? getPaidAt(payment) : null,
             },

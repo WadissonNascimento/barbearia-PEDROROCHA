@@ -2,6 +2,7 @@ import { CalendarDays, CheckCircle2, Clock3, ExternalLink, Wallet } from "lucide
 import { safeAsaasInvoiceUrl } from "@/lib/vipMigration";
 import { getVipDueDayLabel } from "@/lib/vipDueDate";
 import VipBillingProfileForm from "./VipBillingProfileForm";
+import VipPixPayment from "./VipPixPayment";
 
 export type VipPaymentView = {
   id: string;
@@ -11,6 +12,8 @@ export type VipPaymentView = {
   dueDate: string | null;
   invoiceUrl?: string | null;
   bankSlipUrl?: string | null;
+  pixQrCode?: string | null;
+  pixCopyPaste?: string | null;
   asaasStatus?: string | null;
 };
 
@@ -73,15 +76,17 @@ export default function VipPaymentsPanel({
         {payments.length ? <div className="divide-y divide-white/10">{payments.map(payment => {
           const paid = payment.status === "PAID";
           const unavailable = ["DELETED", "REFUNDED", "CHARGEBACK_REQUESTED", "CHARGEBACK_DISPUTE", "AWAITING_CHARGEBACK_REVERSAL"].includes(payment.asaasStatus || "");
-          const invoice = safeAsaasInvoiceUrl(payment.invoiceUrl);
           const boleto = currentBillingType === "BOLETO" ? safeAsaasInvoiceUrl(payment.bankSlipUrl) : null;
+          const invoice = safeAsaasInvoiceUrl(payment.invoiceUrl);
           const link = boleto || invoice;
           const cycleLabel = new Date(`${payment.cycleMonth}-01T12:00:00Z`).toLocaleDateString("pt-BR", { month: "long", year: "numeric", timeZone: "UTC" });
           return (
             <article key={payment.id} className="flex flex-col gap-3 p-3.5 sm:flex-row sm:items-center sm:justify-between sm:p-5">
               <div><p className="font-bold capitalize text-[#f5efe3]">{cycleLabel} <span className="ml-2 text-[#c9c0b2]">{money(payment.amount)}</span></p><p className="mt-1 text-xs text-[#b9b1a4]">{payment.dueDate ? `Vencimento: ${paymentDateLabel(payment.dueDate)}` : "Vencimento a confirmar"}</p></div>
               {paid ? <span className="inline-flex items-center gap-2 self-start rounded-full bg-emerald-400/10 px-3 py-2 text-xs font-bold text-emerald-200 sm:self-center"><CheckCircle2 className="h-4 w-4" aria-hidden="true" />Pago</span>
-                : paymentsEnabled && link && !unavailable && !preview ? <a href={link} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#e8c57d]/40 px-4 text-sm font-bold text-[#e8c57d] hover:bg-[#e8c57d]/10">{currentBillingType === "PIX" ? "Pagar com Pix" : currentBillingType === "BOLETO" ? "Abrir boleto" : "Ver cobrança"}<ExternalLink className="h-4 w-4" aria-hidden="true" /></a>
+                : paymentsEnabled && currentBillingType === "PIX" && payment.pixCopyPaste && payment.pixQrCode && !unavailable && !preview ? <VipPixPayment qrCode={payment.pixQrCode} copyPaste={payment.pixCopyPaste} amount={payment.amount} />
+                : paymentsEnabled && currentBillingType === "PIX" && !unavailable && !preview ? <span className="text-xs leading-5 text-[#c9c0b2] sm:text-sm">Gerando QR Code Pix. Atualize a página em instantes.</span>
+                : paymentsEnabled && link && !unavailable && !preview ? <a href={link} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#e8c57d]/40 px-4 text-sm font-bold text-[#e8c57d] hover:bg-[#e8c57d]/10">{currentBillingType === "BOLETO" ? "Abrir boleto" : "Ver cobrança"}<ExternalLink className="h-4 w-4" aria-hidden="true" /></a>
                   : <span className="text-xs leading-5 text-[#c9c0b2] sm:text-sm">{!paymentsEnabled ? "Pagamento temporariamente pausado" : preview ? "Cobrança ilustrativa" : unavailable ? "Fale com a barbearia" : "Aguardando disponibilização da cobrança"}</span>}
             </article>
           );
