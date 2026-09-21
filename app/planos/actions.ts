@@ -6,7 +6,7 @@ import { mutationError, mutationSuccess, type MutationResult } from "@/lib/mutat
 import { prisma } from "@/lib/prisma";
 import { CUSTOMER_ROLES, getTenantSession } from "@/lib/tenantSession";
 import { reconcileVipAsaasSubscriptions } from "@/lib/vipAsaasReconciliation";
-import { createAsaasCustomer, createAsaasPayment, createAsaasVipSubscription, findAsaasCustomer, findAsaasPayment, findAsaasSubscription, getVipAsaasExternalReference, isAsaasVipBillingConfigured, updateAsaasCustomer } from "@/lib/asaas";
+import { AsaasApiError, createAsaasCustomer, createAsaasPayment, createAsaasVipSubscription, findAsaasCustomer, findAsaasPayment, findAsaasSubscription, getVipAsaasExternalReference, isAsaasVipBillingConfigured, updateAsaasCustomer } from "@/lib/asaas";
 import { getVipCycle, getVipPaymentDueDate } from "@/lib/vip";
 import { getCurrentScheduleDateValue } from "@/lib/scheduleTime";
 import { resolveAsaasRecurringDueDate } from "@/lib/vipMigration";
@@ -123,7 +123,16 @@ export async function saveVipBillingProfileAction(
     if (!updated?.asaasSubscriptionId) return mutationError("Não foi possível concluir a vinculação do pagamento. Tente novamente.");
     await prisma.vipSubscription.update({ where: { id: subscription.id }, data: { billingProfileConfirmedAt: new Date() } });
   } catch (error) {
-    console.error("[vip-asaas] Falha ao atualizar preferências de pagamento", error instanceof Error ? error.name : "UnknownError");
+    await prisma.vipSubscription.updateMany({
+      where: { id: subscription.id, billingUpdateStartedAt: lease },
+      data: { billingProfileConfirmedAt: subscription.billingProfileConfirmedAt },
+    });
+    console.error("[vip-asaas] Falha ao atualizar preferências de pagamento", error instanceof AsaasApiError
+      ? { name: error.name, status: error.status, codes: error.details?.errors?.map(item => item.code).filter(Boolean) }
+      : error instanceof Error ? error.name : "UnknownError");
+    if (billingType === "CREDIT_CARD" && error instanceof AsaasApiError) {
+      return mutationError("O Asaas não autorizou a troca para este cartão. O boleto atual foi mantido e nenhuma mensalidade paga foi alterada. Confira os dados ou tente outro cartão.");
+    }
     return mutationError(getVipBillingErrorMessage(error));
   } finally {
     await prisma.vipSubscription.updateMany({ where: { id: subscription.id, billingUpdateStartedAt: lease }, data: { billingUpdateStartedAt: null } });
