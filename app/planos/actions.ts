@@ -60,6 +60,7 @@ export async function saveVipBillingProfileAction(
 
   let card;
   let billingType;
+  let verifiedProviderPayments: Awaited<ReturnType<typeof updateVipAsaasPreferences>>["payments"] = [];
   try {
     billingType = parseVipBillingType(formData.get("billingType"));
     if (billingType === "CREDIT_CARD") {
@@ -87,10 +88,11 @@ export async function saveVipBillingProfileAction(
       });
     }
     if (subscription.asaasSubscriptionId) {
-      await updateVipAsaasPreferences({
+      const preference = await updateVipAsaasPreferences({
         subscriptionId: subscription.asaasSubscriptionId, billingType, card,
         standalonePaymentIds: subscription.payments.filter(payment => payment.externalReference?.startsWith("vip-payment:")).map(payment => payment.asaasPaymentId!),
       });
+      verifiedProviderPayments = preference.payments;
     }
     await prisma.customerProfile.upsert({
       where: { customerId: tenantSession.user.id },
@@ -98,6 +100,17 @@ export async function saveVipBillingProfileAction(
       create: { shopId: tenantSession.shopId, customerId: tenantSession.user.id, cpfCnpj },
     });
     await prisma.vipSubscription.update({ where: { id: subscription.id }, data: { asaasBillingType: billingType } });
+    for (const providerPayment of verifiedProviderPayments) {
+      await prisma.vipPayment.updateMany({
+        where: { subscriptionId: subscription.id, asaasPaymentId: providerPayment.id },
+        data: {
+          asaasStatus: providerPayment.status,
+          invoiceUrl: providerPayment.invoiceUrl || null,
+          bankSlipUrl: providerPayment.bankSlipUrl || null,
+          lastAsaasEventAt: new Date(),
+        },
+      });
+    }
     const result = await reconcileVipAsaasSubscriptions({
       shopId: tenantSession.shopId,
       customerId: tenantSession.user.id,
@@ -105,7 +118,7 @@ export async function saveVipBillingProfileAction(
       billingUpdateLease: lease,
       skipStandaloneCreation: Boolean(subscription.asaasSubscriptionId && subscription.billingProfileConfirmedAt),
     });
-    if (result.failed || result.skipped || !result.configured) return mutationError(result.errors[0] || "A atualização ainda não foi concluída. Tente novamente; as mensalidades já pagas serão preservadas.");
+    if ((result.failed || result.skipped || !result.configured) && !subscription.asaasSubscriptionId) return mutationError(result.errors[0] || "A atualização ainda não foi concluída. Tente novamente; as mensalidades já pagas serão preservadas.");
     const updated = await prisma.vipSubscription.findUnique({ where: { id: subscription.id }, select: { asaasSubscriptionId: true } });
     if (!updated?.asaasSubscriptionId) return mutationError("Não foi possível concluir a vinculação do pagamento. Tente novamente.");
     await prisma.vipSubscription.update({ where: { id: subscription.id }, data: { billingProfileConfirmedAt: new Date() } });

@@ -12,6 +12,8 @@ import {
 } from "@/lib/asaas";
 import { isEditableAsaasPayment } from "@/lib/vipBillingPolicy";
 
+const wait = (milliseconds: number) => new Promise(resolve => setTimeout(resolve, milliseconds));
+
 /** Updates the existing recurrence. Never recreates it or captures a card payment. */
 export async function updateVipAsaasPreferences(input: {
   subscriptionId: string;
@@ -46,14 +48,23 @@ export async function updateVipAsaasPreferences(input: {
     });
   }
 
-  const confirmed = await getAsaasSubscription(input.subscriptionId);
+  let confirmed = await getAsaasSubscription(input.subscriptionId);
+  let pending = (await listAsaasSubscriptionPayments(input.subscriptionId))
+    .filter(payment => isEditableAsaasPayment(payment.status));
+  for (let attempt = 0; attempt < 3 && (
+    confirmed.billingType !== input.billingType ||
+    pending.some(payment => payment.billingType !== input.billingType)
+  ); attempt += 1) {
+    await wait(350);
+    confirmed = await getAsaasSubscription(input.subscriptionId);
+    pending = (await listAsaasSubscriptionPayments(input.subscriptionId))
+      .filter(payment => isEditableAsaasPayment(payment.status));
+  }
   if (confirmed.billingType !== input.billingType) {
     throw new Error("A forma de pagamento ainda não foi confirmada. Tente novamente.");
   }
-  const pending = (await listAsaasSubscriptionPayments(input.subscriptionId))
-    .filter(payment => isEditableAsaasPayment(payment.status));
   if (pending.some(payment => payment.billingType !== input.billingType)) {
     throw new Error("Ainda existe uma cobrança com a forma de pagamento anterior. Tente novamente.");
   }
-  return confirmed;
+  return { subscription: confirmed, payments: pending };
 }
