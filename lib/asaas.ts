@@ -84,7 +84,7 @@ export class AsaasApiError extends Error {
   }
 }
 
-function readRuntimeEnv(name: "ASAAS_API_KEY" | "ASAAS_ENVIRONMENT") {
+function readRuntimeEnv(name: "ASAAS_API_KEY" | "ASAAS_API_KEY_B64" | "ASAAS_ENVIRONMENT") {
   const value = Reflect.get(process.env, name);
   return typeof value === "string" ? value.trim() : undefined;
 }
@@ -98,7 +98,10 @@ function getAsaasApiBaseUrl() {
 }
 
 function getAsaasApiKey() {
-  const apiKey = readRuntimeEnv("ASAAS_API_KEY");
+  const encodedApiKey = readRuntimeEnv("ASAAS_API_KEY_B64");
+  const apiKey = encodedApiKey
+    ? Buffer.from(encodedApiKey, "base64").toString("utf8").trim()
+    : readRuntimeEnv("ASAAS_API_KEY");
 
   if (!apiKey) {
     throw new Error(
