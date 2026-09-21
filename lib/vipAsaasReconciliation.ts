@@ -35,7 +35,10 @@ import { isEditableAsaasPayment } from "@/lib/vipBillingPolicy";
 import { getVipBillingErrorMessage } from "@/lib/vipBillingErrors";
 
 function reconciliationEventId(payment: AsaasPayment) {
-  const version = [payment.confirmedDate, payment.paymentDate, payment.dueDate, payment.billingType, payment.value].join(":");
+  // Bump the reconciliation schema whenever existing provider payments need to
+  // be processed again. pix-v1 backfills QR Code/copy-and-paste data for Pix
+  // charges that were already synchronized before those fields were supported.
+  const version = ["pix-v1", payment.confirmedDate, payment.paymentDate, payment.dueDate, payment.billingType, payment.value].join(":");
   return `reconcile:${payment.id}:${payment.status}:${version}`;
 }
 
