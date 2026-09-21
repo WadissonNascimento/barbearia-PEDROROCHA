@@ -110,12 +110,10 @@ function getAsaasApiKey() {
 }
 
 export function isAsaasVipBillingConfigured() {
-  const environment = readRuntimeEnv("ASAAS_ENVIRONMENT")?.toLowerCase() || "";
-  return (
-    isVipAsaasPaymentsEnabled() &&
-    Boolean(readRuntimeEnv("ASAAS_API_KEY")) &&
-    ["sandbox", "production"].includes(environment)
-  );
+  // The enable flag controls product availability. Credentials are validated
+  // by the request itself, avoiding false negatives caused by Next build-time
+  // environment substitution in server actions.
+  return isVipAsaasPaymentsEnabled();
 }
 
 async function asaasRequest<T>(
