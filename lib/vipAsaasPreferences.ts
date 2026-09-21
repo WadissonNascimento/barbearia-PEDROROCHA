@@ -25,16 +25,39 @@ export async function updateVipAsaasPreferences(input: {
   if (subscription.status !== "ACTIVE") {
     throw new Error("A cobrança do plano está pausada. Fale com a barbearia para reativá-la.");
   }
+  const switchingToCard =
+    input.billingType === "CREDIT_CARD" && subscription.billingType !== "CREDIT_CARD";
   if (input.billingType === "CREDIT_CARD") {
     if (!input.card) throw new Error("Informe os dados do cartão para continuar.");
-    await updateAsaasSubscriptionCreditCard(input.subscriptionId, input.card);
+    // The card replacement endpoint expects a credit-card recurrence. Switch
+    // the recurrence first, then validate/store the card. If validation fails,
+    // restore the previous method and its pending invoices immediately.
+    if (switchingToCard) {
+      await updateAsaasVipSubscription(input.subscriptionId, {
+        billingType: "CREDIT_CARD",
+        updatePendingPayments: true,
+      });
+    }
+    try {
+      await updateAsaasSubscriptionCreditCard(input.subscriptionId, input.card);
+    } catch (error) {
+      if (switchingToCard) {
+        await updateAsaasVipSubscription(input.subscriptionId, {
+          billingType: subscription.billingType,
+          updatePendingPayments: true,
+        });
+      }
+      throw error;
+    }
   }
   // Reapply on retries too: a previous call may have changed the recurrence
   // before its pending invoices were updated.
-  await updateAsaasVipSubscription(input.subscriptionId, {
-    billingType: input.billingType,
-    updatePendingPayments: true,
-  });
+  if (!switchingToCard) {
+    await updateAsaasVipSubscription(input.subscriptionId, {
+      billingType: input.billingType,
+      updatePendingPayments: true,
+    });
+  }
 
   // Charges for historical arrears are separate from the recurrence. Change
   // their method in place too, retaining the provider due date and charge ID.

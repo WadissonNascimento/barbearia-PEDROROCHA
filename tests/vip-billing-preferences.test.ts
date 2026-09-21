@@ -59,7 +59,11 @@ test("card refusal leaves the recurrence method untouched and gives a useful saf
   globalThis.fetch = async (url, init) => {
     if (init?.method === "PUT") {
       writes.push(String(url));
-      return Response.json({ errors: [{ description: "Transação não autorizada. Verifique os dados do cartão de crédito e tente novamente." }] }, { status: 400 });
+      if (String(url).endsWith("/creditCard")) {
+        return Response.json({ errors: [{ description: "Transação não autorizada. Verifique os dados do cartão de crédito e tente novamente." }] }, { status: 400 });
+      }
+      const body = init.body ? JSON.parse(String(init.body)) : {};
+      return Response.json({ id: "sub_test", status: "ACTIVE", billingType: body.billingType });
     }
     return Response.json({ id: "sub_test", status: "ACTIVE", billingType: "PIX" });
   };
@@ -69,8 +73,10 @@ test("card refusal leaves the recurrence method untouched and gives a useful saf
       assert.match(getVipBillingErrorMessage(error), /Pix\/boleto/);
       return true;
     });
-    assert.equal(writes.length, 1);
-    assert.ok(writes[0].endsWith("/creditCard"));
+    assert.equal(writes.length, 3);
+    assert.ok(writes[0].endsWith("/subscriptions/sub_test"));
+    assert.ok(writes[1].endsWith("/creditCard"));
+    assert.ok(writes[2].endsWith("/subscriptions/sub_test"));
   } finally {
     globalThis.fetch = originalFetch;
     if (env.key === undefined) delete process.env.ASAAS_API_KEY; else process.env.ASAAS_API_KEY = env.key;
