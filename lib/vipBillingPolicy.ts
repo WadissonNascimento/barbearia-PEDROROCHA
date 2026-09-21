@@ -3,7 +3,8 @@ export type VipBillingType = (typeof VIP_BILLING_TYPES)[number];
 const VIP_SELECTABLE_BILLING_TYPES: readonly VipBillingType[] = ["BOLETO", "CREDIT_CARD"];
 
 function readRuntimeEnv(name: "VIP_ASAAS_PAYMENTS_ENABLED") {
-  return process.env[name]?.trim();
+  const value = Reflect.get(process.env, name);
+  return typeof value === "string" ? value.trim() : undefined;
 }
 
 export function isVipAsaasPaymentsEnabled() {

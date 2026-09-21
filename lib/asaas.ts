@@ -85,7 +85,8 @@ export class AsaasApiError extends Error {
 }
 
 function readRuntimeEnv(name: "ASAAS_API_KEY" | "ASAAS_ENVIRONMENT") {
-  return process.env[name]?.trim();
+  const value = Reflect.get(process.env, name);
+  return typeof value === "string" ? value.trim() : undefined;
 }
 
 function getAsaasApiBaseUrl() {
