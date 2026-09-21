@@ -182,7 +182,7 @@ export async function processAsaasVipWebhook(payload: AsaasWebhookPayload) {
           let pixData: { pixQrCode?: string; pixCopyPaste?: string } = {};
           if (
             localStatus !== "PAID" &&
-            (payment.billingType === "PIX" || payment.billingType === "BOLETO")
+            payment.billingType === "PIX"
           ) {
             const pix = await getAsaasPixQrCode(asaasPaymentId);
             pixData = {
