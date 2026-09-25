@@ -240,8 +240,7 @@ export default function BookingClient({
   );
   const canUseVipPlan =
     !vipPlan?.billingSetupRequired &&
-    Boolean(vipPlan?.paymentPaid) &&
-    Boolean(vipPlan && vipPlan.tokensRemaining > 0);
+    Boolean(vipPlan?.paymentPaid);
   const selectedExtras = useMemo(
     () =>
       extras

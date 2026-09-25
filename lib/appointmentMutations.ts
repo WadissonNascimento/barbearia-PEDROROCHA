@@ -640,10 +640,6 @@ async function createCustomerAppointmentInTransaction(
       );
     }
 
-    if (vipSubscription.tokensRemaining < 1) {
-      throw new AppointmentMutationError("Seu plano VIP não possui tokens disponíveis.");
-    }
-
     const isPaid = await isCurrentVipCyclePaymentCovered(
       db,
       vipSubscription.id,
@@ -2365,7 +2361,7 @@ async function updateAppointmentStatusWithSideEffects(
       throw new AppointmentMutationError(
         error instanceof Error
           ? error.message
-          : "Não foi possível consumir o token VIP deste atendimento."
+          : "Não foi possível registrar o uso VIP deste atendimento."
       );
     }
   }

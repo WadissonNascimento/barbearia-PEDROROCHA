@@ -279,12 +279,8 @@ export default function WalkInAppointmentCard({
       vipSubscription?.weeklyUsedWeekStarts.includes(getWeekStartValue(selectedDate))
   );
   const vipPaymentCovered = Boolean(vipSubscription?.paymentCovered);
-  const canUseVipPlan =
-    Boolean(vipSubscription && vipSubscription.tokensRemaining > 0) &&
-    vipPaymentCovered;
-  const vipUnavailableMessage = vipSubscription && vipSubscription.tokensRemaining < 1
-    ? "Este cliente não possui atendimentos disponíveis neste ciclo."
-    : vipSubscription && !vipPaymentCovered
+  const canUseVipPlan = Boolean(vipSubscription) && vipPaymentCovered;
+  const vipUnavailableMessage = vipSubscription && !vipPaymentCovered
       ? "O pagamento deste ciclo venceu e ainda está pendente."
       : null;
   const vipWeekAlreadyUsedMessage =

@@ -290,8 +290,7 @@ export default function AdminWalkInAppointmentButton({
   const selectedVipWeekAlreadyUsed = Boolean(
     date && vipSubscription?.weeklyUsedWeekStarts.includes(getWeekStartValue(date))
   );
-  const canUseVipPlan =
-    Boolean(vipSubscription && vipSubscription.tokensRemaining > 0) && vipPaymentCovered;
+  const canUseVipPlan = Boolean(vipSubscription) && vipPaymentCovered;
   const vipPlanDuration =
     useVipPlan && vipSubscription ? getVipPlanDuration(vipSubscription.plan.code) : 0;
   const selectedGrandTotal = selectedTotal + selectedExtrasTotal;
@@ -301,9 +300,7 @@ export default function AdminWalkInAppointmentButton({
     fitInMode === "quick"
       ? Number(quickDurationMinutes) || 0
       : selectedDuration + vipPlanDuration;
-  const vipUnavailableMessage = vipSubscription && vipSubscription.tokensRemaining < 1
-    ? "Este cliente não possui atendimentos disponíveis neste ciclo."
-    : vipSubscription && !vipPaymentCovered
+  const vipUnavailableMessage = vipSubscription && !vipPaymentCovered
       ? "O pagamento deste ciclo venceu e ainda está pendente."
       : null;
   const vipWeekAlreadyUsedMessage =

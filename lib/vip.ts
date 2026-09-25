@@ -334,27 +334,6 @@ export async function consumeVipTokenForCompletedAppointment(
     return existingUsage;
   }
 
-  const updatedSubscription = await db.vipSubscription.updateMany({
-    where: {
-      id: appointment.vipSubscriptionId,
-      shopId: appointment.shopId,
-      customerId: appointment.customerId,
-      status: "ACTIVE",
-      tokensRemaining: {
-        gte: 1,
-      },
-    },
-    data: {
-      tokensRemaining: {
-        decrement: 1,
-      },
-    },
-  });
-
-  if (updatedSubscription.count === 0) {
-    throw new Error("Assinatura VIP sem token disponível para concluir este atendimento.");
-  }
-
   return db.vipUsage.create({
     data: {
       shopId: appointment.shopId,

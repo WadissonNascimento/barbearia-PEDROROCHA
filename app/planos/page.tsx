@@ -28,7 +28,7 @@ const plans = [
     combo: "Corte",
     price: "R$ 120",
     description: "Para manter o corte sempre alinhado durante o mes.",
-    features: ["Corte incluso", "1 atendimento por semana", "4 tokens mensais"],
+    features: ["Corte incluso", "1 atendimento por semana", "Sem limite fixo mensal"],
   },
   {
     code: "CORTE_SOBRANCELHA",
@@ -36,7 +36,7 @@ const plans = [
     combo: "Corte + Sobrancelha",
     price: "R$ 140",
     description: "Corte em dia com acabamento de sobrancelha incluso.",
-    features: ["Corte e sobrancelha", "1 atendimento por semana", "4 tokens mensais"],
+    features: ["Corte e sobrancelha", "1 atendimento por semana", "Sem limite fixo mensal"],
     highlighted: true,
   },
   {
@@ -45,7 +45,7 @@ const plans = [
     combo: "Corte + Sobrancelha + Barba",
     price: "R$ 180",
     description: "O plano completo para cabelo, sobrancelha e barba.",
-    features: ["Corte, sobrancelha e barba", "1 atendimento por semana", "4 tokens mensais"],
+    features: ["Corte, sobrancelha e barba", "1 atendimento por semana", "Sem limite fixo mensal"],
   },
 ];
 
@@ -258,7 +258,7 @@ export default async function PlanosPage() {
 
             {usages.length === 0 ? (
               <div className="mt-5 rounded-lg border border-dashed border-white/10 p-5 text-sm text-[#c9c0b2]">
-                Nenhum token usado ainda. Quando o barbeiro concluir um atendimento VIP,
+                Nenhum uso registrado ainda. Quando o barbeiro concluir um atendimento VIP,
                 ele aparece aqui.
               </div>
             ) : (
