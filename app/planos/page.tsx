@@ -9,7 +9,6 @@ import {
   getVipPaymentDueDate,
   getWeekRange,
   hasPaidCurrentVipCycle,
-  isCurrentVipCyclePaymentCovered,
 } from "@/lib/vip";
 import VipPaymentsPanel from "./VipPaymentsPanel";
 import VipSubscribeButton from "./VipSubscribeButton";
@@ -132,11 +131,6 @@ export default async function PlanosPage() {
   if (activeSubscription) {
     const paymentsEnabled = isVipAsaasPaymentsEnabled();
     const paymentPaid = await hasPaidCurrentVipCycle(prisma, activeSubscription.id);
-    const paymentCovered = await isCurrentVipCyclePaymentCovered(
-      prisma,
-      activeSubscription.id,
-      activeSubscription.dueDay
-    );
     const customerName =
       tenantSession?.session.user.name?.split(" ")[0] ||
       tenantSession?.session.user.email?.split("@")[0] ||
@@ -170,11 +164,13 @@ export default async function PlanosPage() {
     const nextPaymentDate = upcomingFrozenDue
       ? resolveVipPolicyDueDate(firstDue, dueDay, today)
       : !paymentPaid && recordedDue ? resolveVipPolicyDueDate(recordedDue, dueDay, today) : getVipPaymentDueDate(nextPaymentBaseDate, dueDay);
-    const paymentStatusLabel = paymentPaid
+    const nextPaymentDateValue = nextPaymentDate.toISOString().slice(0, 10);
+    const paymentAppearsPaid = paymentPaid || nextPaymentDateValue > today;
+    const paymentStatusLabel = paymentAppearsPaid
       ? `${currentMonthName} está pago`
-      : paymentCovered
-        ? `${currentMonthName} em aberto`
-        : `${currentMonthName} está pendente`;
+      : nextPaymentDateValue === today
+          ? `${currentMonthName} em aberto`
+          : `${currentMonthName} está pendente`;
     const usages = await prisma.vipUsage.findMany({
       where: {
         subscriptionId: activeSubscription.id,
@@ -235,7 +231,7 @@ export default async function PlanosPage() {
             <div className="p-3 sm:p-7">
               <VipPaymentsPanel
                 price={Number(activeSubscription.plan.price)} dueDay={dueDay}
-                nextDueDate={nextPaymentDate.toISOString()} paymentPaid={paymentPaid}
+                nextDueDate={nextPaymentDate.toISOString()} paymentPaid={paymentAppearsPaid}
                 paymentStatusLabel={paymentStatusLabel} cpfCnpj={billingProfile?.cpfCnpj}
                 currentBillingType={activeSubscription.asaasBillingType}
                 requiresUpdate={needsVipBillingUpdate(activeSubscription)}

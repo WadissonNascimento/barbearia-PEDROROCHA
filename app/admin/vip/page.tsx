@@ -172,7 +172,9 @@ export default async function AdminVipPage() {
         ? ("PAID" as const)
         : effectiveDueDate.toISOString().slice(0, 10) < today
           ? ("OVERDUE" as const)
-          : ("OPEN" as const),
+          : effectiveDueDate.toISOString().slice(0, 10) === today
+            ? ("OPEN" as const)
+            : ("PAID" as const),
     usageCount: subscription._count.usages,
     usages: subscription.usages.map((usage) => ({
       id: usage.id,

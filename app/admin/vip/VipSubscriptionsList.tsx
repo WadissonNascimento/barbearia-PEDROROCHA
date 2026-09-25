@@ -250,13 +250,13 @@ export default function VipSubscriptionsList({
                   <div className="grid grid-cols-2 gap-2">
                     <form
                       action={
-                        subscription.paymentStatus === "PAID"
+                        subscription.payment?.status === "PAID"
                           ? reopenVipPaymentAction
                           : markVipPaymentPaidAction
                       }
                       onSubmit={(event) => {
                         const message =
-                          subscription.paymentStatus === "PAID"
+                          subscription.payment?.status === "PAID"
                             ? `Reabrir a mensalidade de ${customerLabel(subscription.customer)} e marcá-la como pendente?`
                             : `Confirmar manualmente o pagamento da mensalidade de ${customerLabel(subscription.customer)}?`;
                         if (!window.confirm(message)) event.preventDefault();
@@ -268,7 +268,7 @@ export default function VipSubscriptionsList({
                         className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-emerald-400/25 bg-emerald-400/[0.08] px-3 text-sm font-black text-emerald-200 transition hover:border-emerald-300/40 hover:bg-emerald-400/[0.14] active:scale-[0.98]"
                       >
                         <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                        {subscription.paymentStatus === "PAID" ? "Reabrir" : "Marcar pago"}
+                        {subscription.payment?.status === "PAID" ? "Reabrir" : "Marcar pago"}
                       </button>
                     </form>
 

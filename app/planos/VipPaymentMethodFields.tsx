@@ -1,6 +1,6 @@
 "use client";
 
-import { Barcode, CreditCard } from "lucide-react";
+import { Barcode, CreditCard, QrCode } from "lucide-react";
 
 export type VipBillingType = "PIX" | "BOLETO" | "CREDIT_CARD";
 
@@ -11,6 +11,7 @@ export const VIP_PAYMENT_METHOD_LABELS: Record<VipBillingType, string> = {
 };
 
 const methods = [
+  { value: "PIX", title: "Pix", shortTitle: "Pix", description: "QR Code para pagar até o vencimento", icon: QrCode },
   { value: "BOLETO", title: "Boleto", shortTitle: "Boleto", description: "Emita e pague até o vencimento", icon: Barcode },
   { value: "CREDIT_CARD", title: "Cartão de crédito", shortTitle: "Cartão", description: "Cobrança mensal automática", icon: CreditCard },
 ] as const;
@@ -31,7 +32,7 @@ export default function VipPaymentMethodFields({
   return (
     <fieldset disabled={disabled} className="min-w-0">
       <legend className="mb-2 text-xs font-bold text-[#f5efe3] sm:mb-3 sm:text-sm">Como você quer pagar?</legend>
-      <div className="grid grid-cols-2 gap-2 sm:gap-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {methods.map(({ value: method, title, shortTitle, description, icon: Icon }) => (
           <label key={method} title={title} className={`relative flex min-h-[78px] min-w-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border px-1.5 py-2 text-center transition focus-within:ring-2 focus-within:ring-[#e8c57d] sm:min-h-0 sm:items-start sm:justify-start sm:gap-2 sm:p-4 sm:text-left ${value === method ? "border-[#e8c57d] bg-[#e8c57d]/10" : "border-white/15 bg-black/20 hover:border-white/35"}`}>
             <input type="radio" name="billingType" value={method} checked={value === method} onChange={() => onChange(method)} required className="sr-only" />
