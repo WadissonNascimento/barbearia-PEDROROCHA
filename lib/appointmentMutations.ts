@@ -74,6 +74,24 @@ export class AppointmentMutationError extends Error {
   }
 }
 
+async function assertVipWeeklyLimitForMutation(input: {
+  shopId: string;
+  customerId: string;
+  appointmentDate: Date;
+  subscriptionId: string;
+  excludeAppointmentId?: string;
+}, db: AppointmentTransactionClient) {
+  try {
+    await assertCanScheduleVipAppointment(db, input);
+  } catch (error) {
+    if (error instanceof Error && error.message === "Você já possui um atendimento do plano VIP nesta semana.") {
+      throw new AppointmentMutationError(error.message);
+    }
+
+    throw error;
+  }
+}
+
 export type CreateCustomerAppointmentInput = {
   customerId: string;
   barberId: string;
@@ -650,12 +668,12 @@ async function createCustomerAppointmentInTransaction(
       throw new AppointmentMutationError("Seu plano VIP ainda está com pagamento pendente.");
     }
 
-    await assertCanScheduleVipAppointment(db, {
+    await assertVipWeeklyLimitForMutation({
       shopId,
       customerId,
       appointmentDate,
       subscriptionId: vipSubscription.id,
-    });
+    }, db);
   }
 
   const dayOfWeek = getScheduleDayOfWeek(date);
@@ -1170,13 +1188,13 @@ async function rescheduleCustomerAppointmentInTransaction(
       throw new AppointmentMutationError("Seu plano VIP ainda está com pagamento pendente.");
     }
 
-    await assertCanScheduleVipAppointment(db, {
+    await assertVipWeeklyLimitForMutation({
       shopId,
       customerId,
       appointmentDate,
       subscriptionId: vipSubscription.id,
       excludeAppointmentId: appointmentId,
-    });
+    }, db);
   }
 
   const isChangingSchedule =

@@ -189,6 +189,7 @@ export default function BookingClient({
   const [extrasSlot, setExtrasSlot] = useState<string | null>(null);
   const [confirmationSlot, setConfirmationSlot] = useState<string | null>(null);
   const [vipPlanWarning, setVipPlanWarning] = useState<string | null>(null);
+  const [outsidePlanConfirmationSlot, setOutsidePlanConfirmationSlot] = useState<string | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [bookingDetails, setBookingDetails] = useState<BookingDetails | null>(null);
   const [useVipPlan, setUseVipPlan] = useState(
@@ -240,7 +241,8 @@ export default function BookingClient({
   );
   const canUseVipPlan =
     !vipPlan?.billingSetupRequired &&
-    Boolean(vipPlan?.paymentPaid);
+    Boolean(vipPlan?.paymentPaid) &&
+    !selectedVipWeekAlreadyUsed;
   const selectedExtras = useMemo(
     () =>
       extras
@@ -509,6 +511,11 @@ export default function BookingClient({
       setVipPlanWarning(
         "Você já possui um atendimento do plano mensal nesta semana. Escolha outra semana para usar o plano ou marque este horário como atendimento avulso."
       );
+      return;
+    }
+
+    if (!useVipPlan && selectedVipWeekAlreadyUsed && !isRescheduling) {
+      setOutsidePlanConfirmationSlot(time);
       return;
     }
 
@@ -784,14 +791,20 @@ export default function BookingClient({
                     className={`relative overflow-hidden rounded-2xl border p-3 transition ${
                       useVipPlan
                         ? "border-emerald-300/45 bg-emerald-300/[0.09] shadow-[0_16px_36px_rgba(16,185,129,0.12)]"
-                        : "border-[#d9ae55]/45 bg-[#d9ae55]/10"
+                        : selectedVipWeekAlreadyUsed
+                          ? "border-white/10 bg-white/[0.04]"
+                          : "border-[#d9ae55]/45 bg-[#d9ae55]/10"
                     }`}
                   >
                   <div className="flex flex-col gap-3 transition sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
                       <p
                         className={`inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] ${
-                          useVipPlan ? "text-emerald-200" : "text-[#e8c57d]"
+                          useVipPlan
+                            ? "text-emerald-200"
+                            : selectedVipWeekAlreadyUsed
+                              ? "text-zinc-400"
+                              : "text-[#e8c57d]"
                         }`}
                       >
                         {useVipPlan ? (
@@ -807,8 +820,15 @@ export default function BookingClient({
                           Pagamento pendente
                         </p>
                       ) : null}
+                      {selectedVipWeekAlreadyUsed && !useVipPlan ? (
+                        <p className="mt-1 text-xs font-bold text-zinc-400">
+                          Limite semanal do plano já utilizado
+                        </p>
+                      ) : null}
                       <p className="mt-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs leading-5 text-zinc-300">
-                        Serviços fora do seu plano, escolhidos abaixo, serão cobrados à parte.
+                        {selectedVipWeekAlreadyUsed && !useVipPlan
+                          ? "Você já tem um atendimento do plano nesta semana. O próximo agendamento será fora do plano."
+                          : "Serviços fora do seu plano, escolhidos abaixo, serão cobrados à parte."}
                       </p>
                     </div>
                     <div className="grid gap-2 sm:w-[190px]">
@@ -828,7 +848,9 @@ export default function BookingClient({
                             Desmarcar plano
                           </>
                         ) : (
-                          "Usar plano mensal"
+                          selectedVipWeekAlreadyUsed
+                            ? "Plano indisponível nesta semana"
+                            : "Usar plano mensal"
                         )}
                       </button>
                     </div>
@@ -1074,6 +1096,17 @@ export default function BookingClient({
         <VipPlanWarningDialog
           message={vipPlanWarning}
           onClose={() => setVipPlanWarning(null)}
+        />
+      ) : null}
+
+      {outsidePlanConfirmationSlot ? (
+        <OutsidePlanConfirmationDialog
+          onCancel={() => setOutsidePlanConfirmationSlot(null)}
+          onConfirm={() => {
+            const time = outsidePlanConfirmationSlot;
+            setOutsidePlanConfirmationSlot(null);
+            setExtrasSlot(time);
+          }}
         />
       ) : null}
 
@@ -1582,6 +1615,69 @@ function VipPlanWarningDialog({
         >
           Entendi
         </button>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+function OutsidePlanConfirmationDialog({
+  onCancel,
+  onConfirm,
+}: {
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return null;
+  }
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 px-4 py-6 backdrop-blur-md"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="outside-plan-confirmation-title"
+    >
+      <div className="w-full max-w-md rounded-2xl border border-amber-300/35 bg-[#050b16] p-5 text-white shadow-[0_24px_80px_rgba(0,0,0,0.6)]">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-amber-300/35 bg-amber-300/10 text-amber-100">
+          <span className="text-sm font-black">!</span>
+        </div>
+
+        <div className="mt-4 text-center">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-amber-200">
+            Plano mensal
+          </p>
+          <h2 id="outside-plan-confirmation-title" className="mt-2 text-2xl font-bold">
+            Você já tem um agendamento nesta semana
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-zinc-300">
+            O limite semanal do seu plano já foi utilizado. Deseja continuar e agendar este novo horário fora do plano?
+          </p>
+        </div>
+
+        <div className="mt-5 grid gap-2 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="min-h-11 rounded-xl border border-white/15 px-4 py-3 text-sm font-black text-zinc-200 transition hover:border-white/30 hover:bg-white/5"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="min-h-11 rounded-xl bg-[#f1e8d8] px-4 py-3 text-sm font-black text-[#080807] transition hover:bg-white"
+          >
+            Agendar fora do plano
+          </button>
+        </div>
       </div>
     </div>,
     document.body
