@@ -45,7 +45,7 @@ function parseCommissionFields(formData: FormData) {
     commissionValue < 0 ||
     (commissionType === "PERCENT" && commissionValue > 100)
   ) {
-    throw new Error("Preencha a comissao do extra corretamente.");
+    throw new Error("Preencha a comissão do extra corretamente.");
   }
 
   return {
@@ -72,7 +72,7 @@ export async function createExtraProductFromForm(formData: FormData) {
     !Number.isInteger(stock) ||
     stock < 0
   ) {
-    throw new Error("Preencha nome, preco e estoque corretamente.");
+    throw new Error("Preencha nome, preço e estoque corretamente.");
   }
 
   const extra = await prisma.extraProduct.create({
@@ -144,7 +144,7 @@ export async function updateExtraProductFromForm(formData: FormData) {
     !Number.isInteger(stock) ||
     stock < 0
   ) {
-    throw new Error("Preencha nome, categoria, preco e estoque corretamente.");
+    throw new Error("Preencha nome, categoria, preço e estoque corretamente.");
   }
 
   const currentExtra = await prisma.extraProduct.findUnique({
@@ -247,8 +247,12 @@ export async function updateExtraProductImage(formData: FormData) {
   return image;
 }
 
-export async function toggleExtraProduct(id: string) {
+export async function toggleExtraProduct(id: string, isActive: boolean) {
   await ensureExtraAccess();
+
+  if (!id || typeof isActive !== "boolean") {
+    throw new Error("Informe o extra e a disponibilidade desejada.");
+  }
 
   const extra = await prisma.extraProduct.findUnique({ where: { id } });
 
@@ -259,7 +263,7 @@ export async function toggleExtraProduct(id: string) {
   const updatedExtra = await prisma.extraProduct.update({
     where: { id },
     data: {
-      isActive: !extra.isActive,
+      isActive,
     },
   });
 
@@ -320,7 +324,7 @@ export async function deleteExtraProduct(id: string) {
   revalidateExtraViews();
   return {
     deleted: true,
-    message: "Extra excluido com sucesso.",
+    message: "Extra excluído com sucesso.",
   };
 }
 

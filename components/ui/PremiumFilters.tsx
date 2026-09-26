@@ -166,7 +166,11 @@ export function PremiumDatePicker({
   required = false,
   className = "",
   onChange,
+  min,
+  max,
 }: BaseFilterProps & {
+  min?: string;
+  max?: string;
   value?: string;
   defaultValue?: string;
   onChange?: (value: string) => void;
@@ -193,7 +197,12 @@ export function PremiumDatePicker({
     }
   }, [value]);
 
+  function isOutsideRange(dateValue: string) {
+    return Boolean((min && dateValue < min) || (max && dateValue > max));
+  }
+
   function commitValue(nextValue: string) {
+    if (nextValue && isOutsideRange(nextValue)) return;
     setInternalValue(nextValue);
     onChange?.(nextValue);
 
@@ -237,7 +246,7 @@ export function PremiumDatePicker({
                     type="button"
                     onClick={() => moveMonth(-1)}
                     className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 text-zinc-300 transition hover:bg-white/[0.06] hover:text-white"
-                    aria-label="Mes anterior"
+                    aria-label="Mês anterior"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
@@ -245,7 +254,7 @@ export function PremiumDatePicker({
                     type="button"
                     onClick={() => moveMonth(1)}
                     className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 text-zinc-300 transition hover:bg-white/[0.06] hover:text-white"
-                    aria-label="Próximo mes"
+                    aria-label="Próximo mês"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
@@ -270,14 +279,15 @@ export function PremiumDatePicker({
                   return (
                     <button
                       key={dayValue}
+                      disabled={isOutsideRange(dayValue)}
                       type="button"
                       onClick={() => {
                         commitValue(dayValue);
                         setOpen(false);
                       }}
-                      className={`flex aspect-square items-center justify-center rounded-xl text-sm font-semibold transition ${
+                      className={`flex aspect-square items-center justify-center rounded-xl text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-30 ${
                         selected
-                          ? "bg-[var(--brand)] text-white shadow-[0_12px_28px_rgba(14,165,233,0.28)]"
+                          ? "bg-[var(--brand)] text-white shadow-[0_12px_28px_rgba(200,200,200,0.28)]"
                           : isToday
                           ? "border border-[var(--brand)]/45 bg-[var(--brand-muted)] text-[var(--brand-strong)]"
                           : outsideMonth
@@ -304,18 +314,19 @@ export function PremiumDatePicker({
                 </button>
                 <button
                   type="button"
+                  disabled={isOutsideRange(todayValue)}
                   onClick={() => {
                     commitValue(todayValue);
                     setOpen(false);
                   }}
-                  className="min-h-11 rounded-xl border border-[var(--brand)]/35 bg-[var(--brand-muted)] px-4 py-2 text-sm font-semibold text-[var(--brand-strong)] transition hover:brightness-110"
+                  className="min-h-11 rounded-xl border border-[var(--brand)]/35 bg-[var(--brand-muted)] px-4 py-2 text-sm font-semibold text-[var(--brand-strong)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   Hoje
                 </button>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="min-h-11 rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110"
+                  className="min-h-11 rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   Fechar
                 </button>
@@ -337,6 +348,7 @@ export function PremiumDatePicker({
       <button
         type="button"
         disabled={disabled}
+        aria-label={label ? `${label}: ${formatDateLabel(selectedValue)}` : `Selecionar data: ${formatDateLabel(selectedValue)}`}
         onClick={() => setOpen((current) => !current)}
         className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left text-sm outline-none transition ${
           disabled
@@ -426,7 +438,7 @@ export function PremiumTimePicker({
   }, [value]);
 
   function commitValue(nextHour = draftHour, nextMinute = draftMinute) {
-    const nextValue = `${nextHour}:${nextMinute}`;
+    const nextValue = `${normalizeTypedTimePart(nextHour, 23, "08")}:${normalizeTypedTimePart(nextMinute, 59, "00")}`;
     setInternalValue(nextValue);
     onChange?.(nextValue);
     setOpen(false);
@@ -443,7 +455,7 @@ export function PremiumTimePicker({
             onClick={() => setOpen(false)}
           >
             <div
-              className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#050b16] p-4 text-white shadow-[0_24px_90px_rgba(0,0,0,0.7)]"
+              className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#141414] p-4 text-white shadow-[0_24px_90px_rgba(0,0,0,0.7)]"
               onClick={(event) => event.stopPropagation()}
             >
               <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
@@ -496,7 +508,7 @@ export function PremiumTimePicker({
                 <button
                   type="button"
                   onClick={() => commitValue()}
-                  className="min-h-11 rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110"
+                  className="min-h-11 rounded-xl bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-black transition hover:brightness-110"
                 >
                   Aplicar
                 </button>
@@ -518,7 +530,12 @@ export function PremiumTimePicker({
       <button
         type="button"
         disabled={disabled}
-        onClick={() => setOpen(true)}
+        aria-label={label ? `${label}: ${formatTimeLabel(selectedValue)}` : `Selecionar horário: ${formatTimeLabel(selectedValue)}`}
+        onClick={() => {
+          setDraftHour(selectedValue ? selectedValue.slice(0, 2) : "08");
+          setDraftMinute(selectedValue ? selectedValue.slice(3, 5) : "00");
+          setOpen(true);
+        }}
         className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left text-sm font-semibold outline-none transition ${
           disabled
             ? "cursor-not-allowed border-white/10 bg-black/10 text-zinc-500"
@@ -621,7 +638,7 @@ export function PremiumDateTimePicker({
                     type="button"
                     onClick={() => moveMonth(-1)}
                     className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 text-zinc-300 transition hover:bg-white/[0.06] hover:text-white"
-                    aria-label="Mes anterior"
+                    aria-label="Mês anterior"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
@@ -629,7 +646,7 @@ export function PremiumDateTimePicker({
                     type="button"
                     onClick={() => moveMonth(1)}
                     className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 text-zinc-300 transition hover:bg-white/[0.06] hover:text-white"
-                    aria-label="Próximo mes"
+                    aria-label="Próximo mês"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
@@ -658,7 +675,7 @@ export function PremiumDateTimePicker({
                       onClick={() => setDraftDate(dayValue)}
                       className={`flex aspect-square items-center justify-center rounded-xl text-sm font-semibold transition ${
                         selected
-                          ? "bg-[var(--brand)] text-white shadow-[0_12px_28px_rgba(14,165,233,0.28)]"
+                          ? "bg-[var(--brand)] text-white shadow-[0_12px_28px_rgba(200,200,200,0.28)]"
                           : isToday
                           ? "border border-[var(--brand)]/45 bg-[var(--brand-muted)] text-[var(--brand-strong)]"
                           : outsideMonth

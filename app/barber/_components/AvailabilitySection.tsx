@@ -151,16 +151,27 @@ export function AvailabilitySection({
 
     setPendingKey(key);
 
-    startTransition(async () => {
-      const result = await action(formData);
-      setFeedback({ message: result.message, tone: result.tone });
-
-      if (result.ok) {
-        onSuccess?.();
-        router.refresh();
-      }
-
-      setPendingKey(null);
+    return new Promise<Awaited<ReturnType<AvailabilityMutationAction>>>((resolve) => {
+      startTransition(async () => {
+        try {
+          const result = await action(formData);
+          // Automatic row edits report feedback next to the edited field.
+          if (!key.startsWith("availability-day-") && !key.startsWith("recurring-block-")) {
+            setFeedback({ message: result.message, tone: result.tone });
+          }
+          if (result.ok) {
+            onSuccess?.();
+            router.refresh();
+          }
+          resolve(result);
+        } catch {
+          const result = { ok: false, message: "Não foi possível salvar. Verifique sua conexão e tente novamente.", tone: "error" as const };
+          setFeedback({ message: result.message, tone: result.tone });
+          resolve(result);
+        } finally {
+          setPendingKey((current) => current === key ? null : current);
+        }
+      });
     });
   }
 
@@ -173,22 +184,12 @@ export function AvailabilitySection({
           availabilities={availabilities}
           blocks={blocks}
           recurringBlocks={recurringBlocks}
-          savingWeekDay={
-            pendingKey?.startsWith("availability-day-")
-              ? Number(pendingKey.replace("availability-day-", ""))
-              : null
-          }
           onSaveDay={(formData) =>
             runAction(
               `availability-day-${String(formData.get("weekDay") || "")}`,
               saveAvailabilityAction,
               formData,
             )
-          }
-          savingRecurringBlockId={
-            pendingKey?.startsWith("recurring-block-")
-              ? pendingKey.replace("recurring-block-", "")
-              : null
           }
           onUpdateRecurringBlock={(formData) =>
             runAction(
@@ -294,7 +295,7 @@ export function AvailabilitySection({
               <button
                 type="submit"
                 disabled={isPending && pendingKey === "create-block"}
-                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--brand)] px-4 py-3 text-sm font-bold text-white shadow-[0_16px_34px_rgba(37,99,235,0.28)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--brand)] px-4 py-3 text-sm font-bold text-black shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <CalendarOff className="h-4 w-4" />
                 {isPending && pendingKey === "create-block"
@@ -375,7 +376,7 @@ export function AvailabilitySection({
             <button
               type="submit"
               disabled={isPending && pendingKey === "recurring-block"}
-              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--brand)] px-4 py-3 text-sm font-bold text-white shadow-[0_16px_34px_rgba(37,99,235,0.28)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--brand)] px-4 py-3 text-sm font-bold text-black shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Repeat2 className="h-4 w-4" />
               {isPending && pendingKey === "recurring-block"

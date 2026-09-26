@@ -1,322 +1,94 @@
 "use client";
 
-import Image from "next/image";
-import { useEffect, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { Plus, Search, X } from "lucide-react";
 import FeedbackMessage from "@/components/FeedbackMessage";
-import EmptyState from "@/components/ui/EmptyState";
-import SummaryStatsPanel from "@/components/ui/SummaryStatsPanel";
-import {
-  EXTRA_CATEGORY_OPTIONS,
-  getExtraCategoryLabel,
-} from "@/lib/extraCategories";
-import { prepareProductImageUpload } from "@/lib/productImageClient";
+import { getExtraCategoryLabel } from "@/lib/extraCategories";
 import { createExtraProductFromForm } from "@/app/actions/extraProductActions";
 import ExtraProductCardClient from "./ExtraProductCardClient";
+import { ExtraImageInput, ExtraProductFields, type ExtraItem } from "./ExtraProductFields";
 
-type ExtraItem = {
-  id: string;
-  name: string;
-  description: null | string;
-  category: string;
-  price: number;
-  commissionType: string;
-  commissionValue: number;
-  isActive: boolean;
-  stock: number;
-  imageUrl: null | string;
-};
+const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR");
 
-type AdminExtrasClientProps = {
-  extras: ExtraItem[];
-};
-
-export default function AdminExtrasClient({ extras }: AdminExtrasClientProps) {
-  const [feedback, setFeedback] = useState<{
-    message: null | string;
-    tone: "success" | "error" | "info";
-  }>({ message: null, tone: "success" });
+export default function AdminExtrasClient({ extras }: { extras: ExtraItem[] }) {
+  const router = useRouter();
+  const [showCreate, setShowCreate] = useState(false);
+  const [formVersion, setFormVersion] = useState(0);
+  const [feedback, setFeedback] = useState<{ message: string | null; tone: "success" | "error" }>({ message: null, tone: "success" });
   const [isPending, startTransition] = useTransition();
-  const [imageUpload, setImageUpload] = useState<{
-    file: File;
-    previewUrl: string;
-  } | null>(null);
-  const [newCommissionType, setNewCommissionType] = useState("PERCENT");
-
-  useEffect(() => {
-    return () => {
-      if (imageUpload?.previewUrl) {
-        URL.revokeObjectURL(imageUpload.previewUrl);
-      }
-    };
-  }, [imageUpload]);
-
-  const activeExtras = extras.filter((extra) => extra.isActive).length;
-  const lowStockExtras = extras.filter((extra) => extra.stock > 0 && extra.stock <= 3).length;
-  const outOfStockExtras = extras.filter((extra) => extra.stock === 0).length;
+  const lock = useRef(false);
+  const [image, setImage] = useState<File | null>(null);
+  const [imageBusy, setImageBusy] = useState(false);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
+  const activeCount = extras.filter((extra) => extra.isActive).length;
+  const stockAlerts = extras.filter((extra) => extra.stock <= 3).length;
+  const visibleExtras = extras.filter((extra) =>
+    normalize(`${extra.name} ${getExtraCategoryLabel(extra.category)}`).includes(normalize(search.trim())) &&
+    (filter === "all" || extra.isActive === (filter === "active"))
+  );
 
   return (
-    <div className="mt-5 space-y-5 border-t border-white/10 pt-5">
-      <SummaryStatsPanel
-        title="Resumo dos extras"
-        description="Situação dos itens vendidos junto ao atendimento."
-        stats={[
-          {
-            label: "Extras ativos",
-            value: activeExtras,
-            helper: "Liberados no agendamento",
-          },
-          {
-            label: "Estoque baixo",
-            value: lowStockExtras,
-            helper: "3 unidades ou menos",
-            tone: "warning",
-          },
-          {
-            label: "Sem estoque",
-            value: outOfStockExtras,
-            helper: "Indisponíveis agora",
-            tone: "danger",
-          },
-        ]}
-      />
-
-      <section className="dashboard-subpanel p-3.5 sm:p-5">
-        <form
-          className="space-y-3.5"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const form = event.currentTarget;
-            const formData = new FormData(form);
-
-            if (imageUpload) {
-              formData.set("image", imageUpload.file);
-            }
-
-            startTransition(async () => {
-              try {
-                await createExtraProductFromForm(formData);
-                setFeedback({
-                  message: "Extra cadastrado com sucesso.",
-                  tone: "success",
-                });
-                setImageUpload((current) => {
-                  if (current?.previewUrl) {
-                    URL.revokeObjectURL(current.previewUrl);
-                  }
-                  return null;
-                });
-                form.reset();
-                setNewCommissionType("PERCENT");
-              } catch (error) {
-                setFeedback({
-                  message:
-                    error instanceof Error
-                      ? error.message
-                      : "Não foi possível cadastrar o extra.",
-                  tone: "error",
-                });
-              }
-            });
-          }}
-        >
-          <FeedbackMessage message={feedback.message} tone={feedback.tone} />
-
-          <div className="grid gap-3 md:grid-cols-[1fr_13rem] md:items-end">
-            <div className="min-w-0">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--brand-strong)]">
-                Cadastro
-              </p>
-              <h2 className="mt-1 text-xl font-bold text-white">Novo extra</h2>
-            </div>
-
-            {imageUpload ? (
-              <div className="grid grid-cols-[3.5rem_1fr] items-center gap-3 rounded-2xl border border-white/10 bg-black/20 p-2">
-                <div className="relative h-14 w-14 overflow-hidden rounded-xl bg-black/20">
-                  <Image
-                    src={imageUpload.previewUrl}
-                    alt="Preview do extra"
-                    fill
-                    sizes="56px"
-                    className="object-cover"
-                    unoptimized
-                  />
-                </div>
-                <p className="truncate text-xs font-semibold text-zinc-300">
-                  Imagem pronta
-                </p>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-[1fr_13rem]">
-            <Field label="Nome">
-              <input
-                name="name"
-                required
-                maxLength={120}
-                className="service-edit-control"
-                placeholder="Ex.: Água sem gás"
-              />
-            </Field>
-
-            <Field label="Categoria">
-              <select
-                name="category"
-                defaultValue="OTHER"
-                className="service-edit-control"
-              >
-                {EXTRA_CATEGORY_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </Field>
-          </div>
-
-          <input type="hidden" name="description" value="" />
-
-          <div className="service-edit-row service-edit-row-extra">
-            <Field label="Preço">
-              <input
-                name="price"
-                type="number"
-                min="0"
-                step="0.01"
-                required
-                className="service-edit-control"
-                placeholder="0.00"
-              />
-            </Field>
-
-            <Field label="Estoque">
-              <input
-                name="stock"
-                type="number"
-                min="0"
-                step="1"
-                required
-                className="service-edit-control"
-                placeholder="0"
-              />
-            </Field>
-
-            <Field label="Tipo">
-              <select
-                name="commissionType"
-                value={newCommissionType}
-                onChange={(event) => setNewCommissionType(event.target.value)}
-                className="service-edit-control"
-              >
-                <option value="PERCENT">Percentual</option>
-                <option value="FIXED">Valor fixo</option>
-              </select>
-            </Field>
-
-            <Field label="Comissão">
-              <div className="input-with-suffix">
-                <input
-                  name="commissionValue"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  defaultValue="0"
-                  required
-                  className="service-edit-control input-with-suffix-control"
-                  placeholder="0"
-                />
-                <span className="input-suffix">
-                  {newCommissionType === "FIXED" ? "R$" : "%"}
-                </span>
-              </div>
-            </Field>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-            <Field label="Imagem opcional">
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
-                onChange={async (event) => {
-                  const file = event.currentTarget.files?.[0];
-                  if (!file) {
-                    setImageUpload(null);
-                    return;
-                  }
-
-                  try {
-                    const prepared = await prepareProductImageUpload(file);
-                    setImageUpload((current) => {
-                      if (current?.previewUrl) {
-                        URL.revokeObjectURL(current.previewUrl);
-                      }
-                      return prepared;
-                    });
-                  } catch (error) {
-                    event.currentTarget.value = "";
-                    setImageUpload(null);
-                    setFeedback({
-                      message:
-                        error instanceof Error
-                          ? error.message
-                          : "Não foi possível preparar a imagem.",
-                      tone: "error",
-                    });
-                  }
-                }}
-                className="max-w-full text-sm text-zinc-300 file:mr-3 file:rounded-xl file:border-0 file:bg-[var(--brand)] file:px-3 file:py-2 file:text-white"
-              />
-            </Field>
-
-            <button
-              type="submit"
-              disabled={isPending}
-              className="btn-primary w-full sm:w-auto"
-            >
-              {isPending ? "Salvando..." : "Cadastrar"}
-            </button>
-          </div>
-        </form>
-      </section>
-
-      <section className="border-t border-white/10 pt-5">
-        <div className="mb-3">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--brand-strong)]">
-            Itens
-          </p>
-          <h2 className="mt-1 text-xl font-bold text-white">Lista de extras</h2>
+    <div className="admin-extras mt-6 space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1 text-sm text-zinc-400">
+          <p><span className="font-semibold text-white">{activeCount} {activeCount === 1 ? "ativo" : "ativos"}</span><span className="mx-2 text-zinc-600">·</span>{extras.length - activeCount} {extras.length - activeCount === 1 ? "inativo" : "inativos"}</p>
+          {stockAlerts > 0 && <p className="text-amber-300">{stockAlerts} {stockAlerts === 1 ? "item com estoque baixo ou zerado" : "itens com estoque baixo ou zerado"}</p>}
         </div>
+        <button type="button" disabled={isPending || imageBusy} aria-expanded={showCreate} aria-controls="new-extra-form" className="btn-primary gap-2" onClick={() => { setShowCreate(!showCreate); setImage(null); setFeedback({ message: null, tone: "success" }); }}>
+          {showCreate ? <X size={18} aria-hidden="true" /> : <Plus size={18} aria-hidden="true" />}{showCreate ? "Fechar cadastro" : "Novo extra"}
+        </button>
+      </div>
 
-        {extras.length === 0 ? (
-          <EmptyState
-            title="Nenhum extra cadastrado"
-            description="Cadastre o primeiro item vendido junto ao atendimento."
-          />
-        ) : (
-          <div className="space-y-2.5">
-            {extras.map((extra) => (
-              <ExtraProductCardClient key={extra.id} extra={extra} />
-            ))}
-          </div>
+      {showCreate && <section id="new-extra-form" className="rounded-2xl border border-white/15 bg-white/[0.035] p-4 sm:p-5">
+        <h2 className="text-lg font-bold text-white">Novo extra</h2>
+        <p className="mt-2 text-sm text-zinc-400">Cadastre um produto ou bebida para retirada no atendimento.</p>
+        <form key={formVersion} className="mt-5 space-y-5" onSubmit={(event) => {
+          event.preventDefault();
+          if (lock.current || isPending || imageBusy) return;
+          lock.current = true;
+          setFeedback({ message: null, tone: "success" });
+          const formData = new FormData(event.currentTarget);
+          if (image) formData.set("image", image);
+          startTransition(async () => {
+            try {
+              await createExtraProductFromForm(formData);
+              setFeedback({ message: "Extra cadastrado com sucesso.", tone: "success" });
+              setImage(null);
+              setFormVersion((version) => version + 1);
+              router.refresh();
+            } catch (error) {
+              setFeedback({ message: error instanceof Error ? error.message : "Não foi possível cadastrar o extra.", tone: "error" });
+            } finally { lock.current = false; }
+          });
+        }}>
+          <fieldset disabled={isPending} className="space-y-5">
+            <ExtraProductFields />
+            <div className="border-t border-white/10 pt-4"><ExtraImageInput onPrepared={setImage} onBusyChange={setImageBusy} /><p className="mt-2 text-xs text-zinc-500">Opcional. Você pode adicionar uma foto depois.</p></div>
+            <button type="submit" disabled={isPending || imageBusy} className="btn-primary w-full sm:w-auto">{isPending ? "Cadastrando..." : "Cadastrar extra"}</button>
+          </fieldset>
+          <FeedbackMessage {...feedback} />
+        </form>
+      </section>}
+
+      <div className="space-y-4">
+        <label className="flex min-h-12 items-center gap-3 rounded-xl border border-white/15 bg-black/20 px-4 focus-within:border-white/40">
+          <Search size={18} className="shrink-0 text-zinc-500" aria-hidden="true" /><span className="sr-only">Buscar extra</span>
+          <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar produto ou bebida" className="min-w-0 w-full bg-transparent py-3 text-base text-white outline-none placeholder:text-zinc-500" />
+        </label>
+        <div className="grid grid-cols-3 gap-1 rounded-xl bg-white/5 p-1" aria-label="Filtrar extras">
+          {([ ["all", "Todos"], ["active", "Ativos"], ["inactive", "Inativos"] ] as const).map(([value, label]) => (
+            <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)} className={`min-h-11 rounded-lg px-2 text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${filter === value ? "bg-white/15 text-white shadow-sm" : "text-zinc-400 hover:text-white"}`}>{label}</button>
+          ))}
+        </div>
+      </div>
+      <section className="space-y-3">
+        <h2 className="text-lg font-bold text-white">Produtos e bebidas <span className="ml-2 text-sm font-normal text-zinc-500">{visibleExtras.length}</span></h2>
+        {visibleExtras.length === 0 ? <p className="rounded-2xl border border-dashed border-white/15 px-4 py-8 text-center text-sm text-zinc-400">{extras.length ? "Nenhum extra encontrado com esses filtros." : "Cadastre seu primeiro extra para começar."}</p> : (
+          <div className="grid items-start gap-3 lg:grid-cols-2">{visibleExtras.map((extra) => <ExtraProductCardClient key={extra.id} extra={extra} />)}</div>
         )}
       </section>
     </div>
-  );
-}
-
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="block min-w-0">
-      <span className="mb-1.5 block truncate text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-500">
-        {label}
-      </span>
-      {children}
-    </label>
   );
 }

@@ -1,3 +1,4 @@
+import { sortServicesForDisplay } from "@/lib/servicePresentation";
 import { prisma } from "@/lib/prisma";
 import { toMoneyNumber } from "@/lib/money";
 import { requireTenantSession, SHOP_ADMIN_ROLES } from "@/lib/tenantSession";
@@ -17,7 +18,7 @@ export default async function AdminServicosPage() {
     orderBy: [{ barberId: "asc" }, { createdAt: "desc" }],
   });
 
-  const serializedServices = services.map((service) => ({
+  const serializedServices = sortServicesForDisplay(services).map((service) => ({
     ...service,
     price: toMoneyNumber(service.price),
     commissionValue: toMoneyNumber(service.commissionValue),
@@ -39,20 +40,20 @@ export default async function AdminServicosPage() {
 
   return (
     <DashboardShell size="wide">
-      <section className="dashboard-panel p-4 sm:p-6">
+      <section className="dashboard-panel p-3 sm:p-6">
         <div className="mb-5">
           <BackLink href="/admin" area="Admin" />
         </div>
 
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.24em] text-[var(--brand-strong)]">
-            Painel admin
+            Painel administrativo
           </p>
-          <h1 className="mt-2 text-3xl font-black text-white sm:text-4xl">
+          <h1 className="mt-2 text-2xl font-black text-white sm:text-4xl">
             Serviços e comissões
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-            Controle serviços gerais, serviços exclusivos e percentuais de repasse.
+            Ative ou desative com um toque. Os agendamentos já realizados continuam no histórico.
           </p>
         </div>
 
