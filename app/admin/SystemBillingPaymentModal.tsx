@@ -55,7 +55,7 @@ export default function SystemBillingPaymentModal({
                 Plano do sistema aguardando pagamento
               </h2>
               <p className="mt-2 text-sm leading-6 text-zinc-300">
-                Vence todo dia 5. O pagamento é feito pelo link do Asaas. Se não
+                Vencimento em {alert.dueDateLabel}. O pagamento é feito pelo link do Asaas. Se não
                 for confirmado até {alert.graceDateLabel}, o site poderá ser
                 suspenso automaticamente.
               </p>
@@ -125,13 +125,13 @@ export default function SystemBillingPaymentModal({
                   id="system-billing-title"
                   className="mt-1 text-xl font-black leading-tight text-white sm:mt-2 sm:text-2xl"
                 >
-                  Hoje é dia de pagar o plano do sistema
+                  Mensalidade do sistema aguardando pagamento
                 </h2>
                 <p
                   id="system-billing-description"
                   className="mt-2 text-sm leading-5 text-zinc-300 sm:mt-3 sm:leading-6"
                 >
-                  A mensalidade vence todo dia 5. Faça o pagamento de{" "}
+                  A mensalidade vence em {alert.dueDateLabel}. Faça o pagamento de{" "}
                   <strong className="text-white">{alert.amountLabel}</strong>{" "}
                   pelo link do Asaas.
                 </p>

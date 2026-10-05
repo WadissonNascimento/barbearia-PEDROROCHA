@@ -8,10 +8,10 @@ import {
 import { formatCurrency } from "@/lib/utils";
 
 export const SYSTEM_BILLING_OWNER_EMAIL = "wadisson97.w.g@gmail.com";
-export const SYSTEM_BILLING_PAYMENT_URL = "https://www.asaas.com/c/o7lse06d3qyovho2";
+export const SYSTEM_BILLING_PAYMENT_URL = "https://www.asaas.com/i/rqfuvtkovh49teop";
 export const SYSTEM_BILLING_GRACE_DAYS = 7;
 export const DEFAULT_SYSTEM_BILLING_AMOUNT = 48.9;
-export const SYSTEM_BILLING_DUE_DAY = 5;
+export const SYSTEM_BILLING_DUE_DAY = 9;
 
 export type SystemBillingAlert = {
   paymentId: string;
@@ -72,7 +72,11 @@ export async function getSystemBillingAlert({
   const cycleMonth = getCycleMonth(todayValue);
   const dueDate = getSystemBillingDueDate(cycleMonth);
   const graceEndsAt = addCalendarDays(dueDate, SYSTEM_BILLING_GRACE_DAYS);
-  const amount = DEFAULT_SYSTEM_BILLING_AMOUNT;
+  const shop = await prisma.shop.findUniqueOrThrow({
+    where: { id: shopId },
+    select: { subscriptionMonthlyPrice: true },
+  });
+  const amount = shop.subscriptionMonthlyPrice ?? DEFAULT_SYSTEM_BILLING_AMOUNT;
 
   const payment = await prisma.systemBillingPayment.upsert({
     where: {
@@ -96,7 +100,7 @@ export async function getSystemBillingAlert({
     },
   });
 
-  if (isPaid(payment) || todayValue < getScheduleDateValue(dueDate)) {
+  if (isPaid(payment)) {
     return null;
   }
 
