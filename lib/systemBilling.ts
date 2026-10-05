@@ -9,7 +9,7 @@ import { formatCurrency } from "@/lib/utils";
 
 export const SYSTEM_BILLING_OWNER_EMAIL = "wadisson97.w.g@gmail.com";
 export const SYSTEM_BILLING_PAYMENT_URL = "https://www.asaas.com/i/rqfuvtkovh49teop";
-export const SYSTEM_BILLING_GRACE_DAYS = 7;
+export const SYSTEM_BILLING_GRACE_DAYS = 0;
 export const DEFAULT_SYSTEM_BILLING_AMOUNT = 48.9;
 export const SYSTEM_BILLING_DUE_DAY = 9;
 
