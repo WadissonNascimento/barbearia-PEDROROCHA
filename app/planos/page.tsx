@@ -76,7 +76,7 @@ function getPlanCombo(code: string) {
     return "Bronze";
   }
 
-  if (code === "CORTE_SOBRANCELHA") {
+  if (code === "CORTE_SOBRANCELHA" || code === "CORTE_SOBRANCELHA_WEEKDAYS") {
     return "Prata";
   }
 
@@ -84,7 +84,7 @@ function getPlanCombo(code: string) {
     return "Prata+";
   }
 
-  if (code === "CORTE_BARBA_SOBRANCELHA") {
+  if (code === "CORTE_BARBA_SOBRANCELHA" || code === "CORTE_BARBA_SOBRANCELHA_WEEKDAYS") {
     return "Ouro";
   }
 
@@ -100,7 +100,7 @@ function getPlanComboDescription(code: string) {
     return "Corte";
   }
 
-  if (code === "CORTE_SOBRANCELHA") {
+  if (code === "CORTE_SOBRANCELHA" || code === "CORTE_SOBRANCELHA_WEEKDAYS") {
     return "Corte + Sobrancelha";
   }
 
@@ -108,7 +108,7 @@ function getPlanComboDescription(code: string) {
     return "Corte + Sobrancelha";
   }
 
-  if (code === "CORTE_BARBA_SOBRANCELHA") {
+  if (code === "CORTE_BARBA_SOBRANCELHA" || code === "CORTE_BARBA_SOBRANCELHA_WEEKDAYS") {
     return "Corte + Sobrancelha + Barba";
   }
 
@@ -124,7 +124,7 @@ function getPlanItems(code: string) {
     return "Corte";
   }
 
-  if (code === "CORTE_SOBRANCELHA") {
+  if (code === "CORTE_SOBRANCELHA" || code === "CORTE_SOBRANCELHA_WEEKDAYS") {
     return "Corte e sobrancelha";
   }
 
@@ -132,7 +132,7 @@ function getPlanItems(code: string) {
     return "Corte e sobrancelha";
   }
 
-  if (code === "CORTE_BARBA_SOBRANCELHA") {
+  if (code === "CORTE_BARBA_SOBRANCELHA" || code === "CORTE_BARBA_SOBRANCELHA_WEEKDAYS") {
     return "Corte, sobrancelha e barba";
   }
 

@@ -481,7 +481,7 @@ export default function BookingClient({
       return "Corte";
     }
 
-    if (planCode === "CORTE_SOBRANCELHA") {
+    if (planCode === "CORTE_SOBRANCELHA" || planCode === "CORTE_SOBRANCELHA_WEEKDAYS") {
       return "Corte e sobrancelha";
     }
 
@@ -489,7 +489,7 @@ export default function BookingClient({
       return "Corte e sobrancelha";
     }
 
-    if (planCode === "CORTE_BARBA_SOBRANCELHA") {
+    if (planCode === "CORTE_BARBA_SOBRANCELHA" || planCode === "CORTE_BARBA_SOBRANCELHA_WEEKDAYS") {
       return "Corte, sobrancelha e barba";
     }
 
@@ -505,7 +505,7 @@ export default function BookingClient({
       return 45;
     }
 
-    if (planCode === "CORTE_SOBRANCELHA") {
+    if (planCode === "CORTE_SOBRANCELHA" || planCode === "CORTE_SOBRANCELHA_WEEKDAYS") {
       return 60;
     }
 
@@ -513,7 +513,7 @@ export default function BookingClient({
       return 60;
     }
 
-    if (planCode === "CORTE_BARBA_SOBRANCELHA") {
+    if (planCode === "CORTE_BARBA_SOBRANCELHA" || planCode === "CORTE_BARBA_SOBRANCELHA_WEEKDAYS") {
       return 60;
     }
 

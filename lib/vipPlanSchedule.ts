@@ -2,7 +2,9 @@ import { getScheduleDayOfWeek } from "@/lib/scheduleTime";
 
 const LIMITED_DAY_PLAN_CODES = new Set([
   "CORTE_SOBRANCELHA",
+  "CORTE_SOBRANCELHA_WEEKDAYS",
   "CORTE_BARBA_SOBRANCELHA",
+  "CORTE_BARBA_SOBRANCELHA_WEEKDAYS",
 ]);
 
 export const VIP_PLAN_AVAILABILITY_MESSAGE =
@@ -33,4 +35,3 @@ export function isVipPlanAvailableAt(code: string, date: string, time: string) {
   const dayOfWeek = getScheduleDayOfWeek(date);
   return dayOfWeek !== 5 || /^([01]\d|2[0-3]):[0-5]\d$/.test(time) && Number(time.slice(0, 2)) < 12;
 }
-

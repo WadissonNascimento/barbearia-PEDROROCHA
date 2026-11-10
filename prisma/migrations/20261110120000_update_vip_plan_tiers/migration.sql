@@ -1,6 +1,7 @@
 UPDATE public."VipPlan"
 SET
   "price" = 160,
+  "isActive" = true,
   "updatedAt" = CURRENT_TIMESTAMP
 WHERE "shopId" = 'shop_pedro_rocha_barbearia'
   AND "code" = 'CORTE_SOBRANCELHA';
@@ -8,6 +9,7 @@ WHERE "shopId" = 'shop_pedro_rocha_barbearia'
 UPDATE public."VipPlan"
 SET
   "price" = 200,
+  "isActive" = true,
   "updatedAt" = CURRENT_TIMESTAMP
 WHERE "shopId" = 'shop_pedro_rocha_barbearia'
   AND "code" = 'CORTE_BARBA_SOBRANCELHA';

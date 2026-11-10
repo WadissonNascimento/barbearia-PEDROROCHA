@@ -181,7 +181,7 @@ function getVipPlanItems(planCode: string) {
     return "Corte";
   }
 
-  if (planCode === "CORTE_SOBRANCELHA") {
+  if (planCode === "CORTE_SOBRANCELHA" || planCode === "CORTE_SOBRANCELHA_WEEKDAYS") {
     return "Corte e sobrancelha";
   }
 
@@ -189,7 +189,7 @@ function getVipPlanItems(planCode: string) {
     return "Corte e sobrancelha";
   }
 
-  if (planCode === "CORTE_BARBA_SOBRANCELHA") {
+  if (planCode === "CORTE_BARBA_SOBRANCELHA" || planCode === "CORTE_BARBA_SOBRANCELHA_WEEKDAYS") {
     return "Corte, sobrancelha e barba";
   }
 
@@ -205,7 +205,7 @@ function getVipPlanDuration(planCode: string) {
     return 45;
   }
 
-  if (planCode === "CORTE_SOBRANCELHA") {
+  if (planCode === "CORTE_SOBRANCELHA" || planCode === "CORTE_SOBRANCELHA_WEEKDAYS") {
     return 60;
   }
 
@@ -213,7 +213,7 @@ function getVipPlanDuration(planCode: string) {
     return 60;
   }
 
-  if (planCode === "CORTE_BARBA_SOBRANCELHA") {
+  if (planCode === "CORTE_BARBA_SOBRANCELHA" || planCode === "CORTE_BARBA_SOBRANCELHA_WEEKDAYS") {
     return 60;
   }
 
