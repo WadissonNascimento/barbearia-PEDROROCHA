@@ -15,13 +15,25 @@ export const VIP_PLAN_DEFINITIONS = [
   {
     code: "CORTE_SOBRANCELHA",
     name: "Prata",
-    price: 140,
+    price: 160,
+    tokensPerCycle: 4,
+  },
+  {
+    code: "CORTE_SOBRANCELHA_ANYDAY",
+    name: "Prata+",
+    price: 180,
     tokensPerCycle: 4,
   },
   {
     code: "CORTE_BARBA_SOBRANCELHA",
     name: "Ouro",
-    price: 180,
+    price: 200,
+    tokensPerCycle: 4,
+  },
+  {
+    code: "CORTE_BARBA_SOBRANCELHA_ANYDAY",
+    name: "Ouro+",
+    price: 230,
     tokensPerCycle: 4,
   },
 ] as const;
@@ -88,7 +100,15 @@ export function getVipPlanItemsLabel(code: string) {
     return "Corte e sobrancelha";
   }
 
+  if (code === "CORTE_SOBRANCELHA_ANYDAY") {
+    return "Corte e sobrancelha";
+  }
+
   if (code === "CORTE_BARBA_SOBRANCELHA") {
+    return "Corte, sobrancelha e barba";
+  }
+
+  if (code === "CORTE_BARBA_SOBRANCELHA_ANYDAY") {
     return "Corte, sobrancelha e barba";
   }
 
@@ -104,7 +124,15 @@ export function getVipPlanDurationMinutes(code: string) {
     return 60;
   }
 
+  if (code === "CORTE_SOBRANCELHA_ANYDAY") {
+    return 60;
+  }
+
   if (code === "CORTE_BARBA_SOBRANCELHA") {
+    return 60;
+  }
+
+  if (code === "CORTE_BARBA_SOBRANCELHA_ANYDAY") {
     return 60;
   }
 

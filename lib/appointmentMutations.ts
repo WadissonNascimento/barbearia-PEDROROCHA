@@ -43,6 +43,10 @@ import {
   getScheduleMinutes,
   isScheduleDateTimePast,
 } from "@/lib/scheduleTime";
+import {
+  isVipPlanAvailableAt,
+  VIP_PLAN_AVAILABILITY_MESSAGE,
+} from "@/lib/vipPlanSchedule";
 
 type AppointmentPrismaClient = Pick<
   PrismaClient,
@@ -668,6 +672,10 @@ async function createCustomerAppointmentInTransaction(
       throw new AppointmentMutationError("Seu plano VIP ainda está com pagamento pendente.");
     }
 
+    if (!isVipPlanAvailableAt(vipSubscription.plan.code, date, time)) {
+      throw new AppointmentMutationError(VIP_PLAN_AVAILABILITY_MESSAGE);
+    }
+
     await assertVipWeeklyLimitForMutation({
       shopId,
       customerId,
@@ -1186,6 +1194,10 @@ async function rescheduleCustomerAppointmentInTransaction(
 
     if (!isPaid) {
       throw new AppointmentMutationError("Seu plano VIP ainda está com pagamento pendente.");
+    }
+
+    if (!isVipPlanAvailableAt(vipSubscription.plan.code, date, time)) {
+      throw new AppointmentMutationError(VIP_PLAN_AVAILABILITY_MESSAGE);
     }
 
     await assertVipWeeklyLimitForMutation({

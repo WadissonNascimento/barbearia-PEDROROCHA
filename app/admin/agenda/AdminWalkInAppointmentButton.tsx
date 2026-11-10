@@ -153,7 +153,15 @@ function getVipPlanItems(planCode: string) {
     return "Corte e sobrancelha";
   }
 
+  if (planCode === "CORTE_SOBRANCELHA_ANYDAY") {
+    return "Corte e sobrancelha";
+  }
+
   if (planCode === "CORTE_BARBA_SOBRANCELHA") {
+    return "Corte, sobrancelha e barba";
+  }
+
+  if (planCode === "CORTE_BARBA_SOBRANCELHA_ANYDAY") {
     return "Corte, sobrancelha e barba";
   }
 
@@ -169,7 +177,15 @@ function getVipPlanDuration(planCode: string) {
     return 60;
   }
 
+  if (planCode === "CORTE_SOBRANCELHA_ANYDAY") {
+    return 60;
+  }
+
   if (planCode === "CORTE_BARBA_SOBRANCELHA") {
+    return 60;
+  }
+
+  if (planCode === "CORTE_BARBA_SOBRANCELHA_ANYDAY") {
     return 60;
   }
 

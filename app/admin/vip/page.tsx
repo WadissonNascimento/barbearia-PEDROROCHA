@@ -38,8 +38,16 @@ function getPlanCombo(code: string) {
     return "Corte + Sobrancelha";
   }
 
+  if (code === "CORTE_SOBRANCELHA_ANYDAY") {
+    return "Corte + Sobrancelha (qualquer dia)";
+  }
+
   if (code === "CORTE_BARBA_SOBRANCELHA") {
     return "Corte + Sobrancelha + Barba";
+  }
+
+  if (code === "CORTE_BARBA_SOBRANCELHA_ANYDAY") {
+    return "Corte + Sobrancelha + Barba (qualquer dia)";
   }
 
   return "Combo mensal";
@@ -54,8 +62,16 @@ function getPlanSummary(code: string) {
     return "Inclui 1 corte com sobrancelha por semana.";
   }
 
+  if (code === "CORTE_SOBRANCELHA_ANYDAY") {
+    return "Inclui 1 corte com sobrancelha por semana em qualquer dia.";
+  }
+
   if (code === "CORTE_BARBA_SOBRANCELHA") {
     return "Inclui 1 atendimento completo por semana.";
+  }
+
+  if (code === "CORTE_BARBA_SOBRANCELHA_ANYDAY") {
+    return "Inclui 1 atendimento completo por semana em qualquer dia.";
   }
 
   return "Inclui 1 atendimento semanal.";

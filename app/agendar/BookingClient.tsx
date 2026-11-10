@@ -13,6 +13,11 @@ import {
 import { sanitizeTextareaInput } from "@/lib/inputSanitization";
 import { formatCurrency } from "@/lib/utils";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import {
+  isVipPlanAvailableAt,
+  isVipPlanAvailableOnDate,
+  VIP_PLAN_AVAILABILITY_MESSAGE,
+} from "@/lib/vipPlanSchedule";
 
 type BarberOption = {
   id: string;
@@ -239,10 +244,31 @@ export default function BookingClient({
   const selectedVipWeekAlreadyUsed = Boolean(
     vipPlan?.weeklyUsedWeekStarts.includes(getWeekStartValue(selectedDate))
   );
+  const vipPlanDateAvailable = Boolean(
+    vipPlan && isVipPlanAvailableOnDate(vipPlan.code, selectedDate)
+  );
   const canUseVipPlan =
     !vipPlan?.billingSetupRequired &&
     Boolean(vipPlan?.paymentPaid) &&
+    vipPlanDateAvailable &&
     !selectedVipWeekAlreadyUsed;
+  const visiblePeriodSlots = useMemo(() => {
+    if (!useVipPlan || !vipPlan) {
+      return periodSlots;
+    }
+
+    return {
+      morning: periodSlots.morning.filter((slot) =>
+        isVipPlanAvailableAt(vipPlan.code, selectedDate, slot)
+      ),
+      afternoon: periodSlots.afternoon.filter((slot) =>
+        isVipPlanAvailableAt(vipPlan.code, selectedDate, slot)
+      ),
+      night: periodSlots.night.filter((slot) =>
+        isVipPlanAvailableAt(vipPlan.code, selectedDate, slot)
+      ),
+    };
+  }, [periodSlots, selectedDate, useVipPlan, vipPlan]);
   const selectedExtras = useMemo(
     () =>
       extras
@@ -323,6 +349,13 @@ export default function BookingClient({
     setBookingSuccess(null);
     setBookingDetails(null);
   }, [visibleServices]);
+
+  useEffect(() => {
+    if (useVipPlan && vipPlan && !vipPlanDateAvailable) {
+      setUseVipPlan(false);
+      setVipPlanWarning(VIP_PLAN_AVAILABILITY_MESSAGE);
+    }
+  }, [useVipPlan, vipPlan, vipPlanDateAvailable]);
 
   const loadAvailability = useCallback(
     async (signal?: AbortSignal, options: { force?: boolean } = {}) => {
@@ -452,7 +485,15 @@ export default function BookingClient({
       return "Corte e sobrancelha";
     }
 
+    if (planCode === "CORTE_SOBRANCELHA_ANYDAY") {
+      return "Corte e sobrancelha";
+    }
+
     if (planCode === "CORTE_BARBA_SOBRANCELHA") {
+      return "Corte, sobrancelha e barba";
+    }
+
+    if (planCode === "CORTE_BARBA_SOBRANCELHA_ANYDAY") {
       return "Corte, sobrancelha e barba";
     }
 
@@ -468,7 +509,15 @@ export default function BookingClient({
       return 60;
     }
 
+    if (planCode === "CORTE_SOBRANCELHA_ANYDAY") {
+      return 60;
+    }
+
     if (planCode === "CORTE_BARBA_SOBRANCELHA") {
+      return 60;
+    }
+
+    if (planCode === "CORTE_BARBA_SOBRANCELHA_ANYDAY") {
       return 60;
     }
 
@@ -511,6 +560,12 @@ export default function BookingClient({
       setVipPlanWarning(
         "Você já possui um atendimento do plano mensal nesta semana. Escolha outra semana para usar o plano ou marque este horário como atendimento avulso."
       );
+      return;
+    }
+
+    if (useVipPlan && vipPlan && !isVipPlanAvailableAt(vipPlan.code, selectedDate, time)) {
+      setUseVipPlan(false);
+      setVipPlanWarning(VIP_PLAN_AVAILABILITY_MESSAGE);
       return;
     }
 
@@ -791,7 +846,7 @@ export default function BookingClient({
                     className={`relative overflow-hidden rounded-2xl border p-3 transition ${
                       useVipPlan
                         ? "border-emerald-300/45 bg-emerald-300/[0.09] shadow-[0_16px_36px_rgba(16,185,129,0.12)]"
-                        : selectedVipWeekAlreadyUsed
+                        : selectedVipWeekAlreadyUsed || !vipPlanDateAvailable
                           ? "border-white/10 bg-white/[0.04]"
                           : "border-[#d9ae55]/45 bg-[#d9ae55]/10"
                     }`}
@@ -820,13 +875,19 @@ export default function BookingClient({
                           Pagamento pendente
                         </p>
                       ) : null}
-                      {selectedVipWeekAlreadyUsed && !useVipPlan ? (
+                      {!vipPlanDateAvailable && !useVipPlan ? (
+                        <p className="mt-1 text-xs font-bold text-zinc-400">
+                          Plano indisponível neste dia
+                        </p>
+                      ) : selectedVipWeekAlreadyUsed && !useVipPlan ? (
                         <p className="mt-1 text-xs font-bold text-zinc-400">
                           Limite semanal do plano já utilizado
                         </p>
                       ) : null}
                       <p className="mt-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs leading-5 text-zinc-300">
-                        {selectedVipWeekAlreadyUsed && !useVipPlan
+                        {!vipPlanDateAvailable && !useVipPlan
+                          ? VIP_PLAN_AVAILABILITY_MESSAGE
+                          : selectedVipWeekAlreadyUsed && !useVipPlan
                           ? "Você já tem um atendimento do plano nesta semana. O próximo agendamento será fora do plano."
                           : "Serviços fora do seu plano, escolhidos abaixo, serão cobrados à parte."}
                       </p>
@@ -848,8 +909,10 @@ export default function BookingClient({
                             Desmarcar plano
                           </>
                         ) : (
-                          selectedVipWeekAlreadyUsed
+                            selectedVipWeekAlreadyUsed
                             ? "Plano indisponível nesta semana"
+                            : !vipPlanDateAvailable
+                              ? "Plano indisponível neste dia"
                             : "Usar plano mensal"
                         )}
                       </button>
@@ -978,21 +1041,21 @@ export default function BookingClient({
             <div className="mt-4 grid min-w-0 gap-4 lg:grid-cols-3">
               <TimeSection
                 title="Manhã"
-                slots={periodSlots.morning}
+                slots={visiblePeriodSlots.morning}
                 bookingSlot={bookingSlot}
                 onBook={openBookingConfirmation}
               />
 
               <TimeSection
                 title="Tarde"
-                slots={periodSlots.afternoon}
+                slots={visiblePeriodSlots.afternoon}
                 bookingSlot={bookingSlot}
                 onBook={openBookingConfirmation}
               />
 
               <TimeSection
                 title="Noite"
-                slots={periodSlots.night}
+                slots={visiblePeriodSlots.night}
                 bookingSlot={bookingSlot}
                 onBook={openBookingConfirmation}
               />
@@ -1012,7 +1075,7 @@ export default function BookingClient({
           bookingError={hasBookingConflict ? null : bookingError}
           availabilityLoading={availabilityLoading}
           isDayAvailable={isDayAvailable}
-          periodSlots={periodSlots}
+          periodSlots={visiblePeriodSlots}
           bookingSlot={bookingSlot}
           onSelectDate={setSelectedDate}
           onBook={selectMobileScheduleSlot}

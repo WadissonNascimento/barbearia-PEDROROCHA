@@ -34,18 +34,34 @@ const plans = [
     code: "CORTE_SOBRANCELHA",
     name: "Prata",
     combo: "Corte + Sobrancelha",
-    price: "R$ 140",
-    description: "Corte em dia com acabamento de sobrancelha incluso.",
-    features: ["Corte e sobrancelha", "1 atendimento por semana", "Sem limite fixo mensal"],
+    price: "R$ 160",
+    description: "Corte com sobrancelha de terça a quinta e na primeira parte da sexta.",
+    features: ["Corte e sobrancelha", "Terça a quinta + sexta de manhã", "1 atendimento por semana"],
     highlighted: true,
+  },
+  {
+    code: "CORTE_SOBRANCELHA_ANYDAY",
+    name: "Prata+",
+    combo: "Corte + Sobrancelha",
+    price: "R$ 180",
+    description: "Corte com sobrancelha para agendar em qualquer dia, inclusive fins de semana.",
+    features: ["Corte e sobrancelha", "Qualquer dia da semana", "1 atendimento por semana"],
   },
   {
     code: "CORTE_BARBA_SOBRANCELHA",
     name: "Ouro",
     combo: "Corte + Sobrancelha + Barba",
-    price: "R$ 180",
-    description: "O plano completo para cabelo, sobrancelha e barba.",
-    features: ["Corte, sobrancelha e barba", "1 atendimento por semana", "Sem limite fixo mensal"],
+    price: "R$ 200",
+    description: "O plano completo de terça a quinta e na primeira parte da sexta.",
+    features: ["Corte, sobrancelha e barba", "Terça a quinta + sexta de manhã", "1 atendimento por semana"],
+  },
+  {
+    code: "CORTE_BARBA_SOBRANCELHA_ANYDAY",
+    name: "Ouro+",
+    combo: "Corte + Sobrancelha + Barba",
+    price: "R$ 230",
+    description: "O plano completo para agendar em qualquer dia, inclusive fins de semana.",
+    features: ["Corte, sobrancelha e barba", "Qualquer dia da semana", "1 atendimento por semana"],
   },
 ];
 
@@ -64,8 +80,16 @@ function getPlanCombo(code: string) {
     return "Prata";
   }
 
+  if (code === "CORTE_SOBRANCELHA_ANYDAY") {
+    return "Prata+";
+  }
+
   if (code === "CORTE_BARBA_SOBRANCELHA") {
     return "Ouro";
+  }
+
+  if (code === "CORTE_BARBA_SOBRANCELHA_ANYDAY") {
+    return "Ouro+";
   }
 
   return "VIP";
@@ -80,7 +104,15 @@ function getPlanComboDescription(code: string) {
     return "Corte + Sobrancelha";
   }
 
+  if (code === "CORTE_SOBRANCELHA_ANYDAY") {
+    return "Corte + Sobrancelha";
+  }
+
   if (code === "CORTE_BARBA_SOBRANCELHA") {
+    return "Corte + Sobrancelha + Barba";
+  }
+
+  if (code === "CORTE_BARBA_SOBRANCELHA_ANYDAY") {
     return "Corte + Sobrancelha + Barba";
   }
 
@@ -96,7 +128,15 @@ function getPlanItems(code: string) {
     return "Corte e sobrancelha";
   }
 
+  if (code === "CORTE_SOBRANCELHA_ANYDAY") {
+    return "Corte e sobrancelha";
+  }
+
   if (code === "CORTE_BARBA_SOBRANCELHA") {
+    return "Corte, sobrancelha e barba";
+  }
+
+  if (code === "CORTE_BARBA_SOBRANCELHA_ANYDAY") {
     return "Corte, sobrancelha e barba";
   }
 
@@ -313,7 +353,7 @@ export default async function PlanosPage() {
               Combos de corte mensais
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-[#c9c0b2] sm:text-base">
-              Planos Bronze, Prata e Ouro para manter o corte, a barba e o acabamento sempre em dia,
+              Planos Bronze, Prata, Prata+, Ouro e Ouro+ para manter o corte, a barba e o acabamento sempre em dia,
               com atendimento semanal e pagamento mensal.
             </p>
           </div>
@@ -343,7 +383,7 @@ export default async function PlanosPage() {
           </section>
 
 
-          <div className="mt-8 grid gap-4 lg:grid-cols-3">
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {plans.map((plan) => (
               <article
                 key={plan.name}
