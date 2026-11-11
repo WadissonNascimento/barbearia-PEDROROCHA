@@ -45,6 +45,7 @@ import {
   type AppointmentPaymentMethod,
 } from "@/lib/paymentMethods";
 import {
+  cancelAdminRecurringAppointmentSeriesAction,
   editAdminAppointmentAction,
   updateAdminAppointmentStatusAction,
 } from "./actions";
@@ -1244,6 +1245,54 @@ export function AdminAppointmentActions({
     });
   }
 
+  function cancelSeries() {
+    if (
+      actionPending ||
+      !appointment.recurringSeries ||
+      appointment.recurringSeries.status !== "ACTIVE"
+    ) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Cancelar todas as ocorrências futuras desta série? Esta ação não cancela outros agendamentos do cliente."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    startTransition(async () => {
+      try {
+        const formData = new FormData();
+        formData.set("seriesId", appointment.recurringSeries?.id || "");
+        formData.set("fromDate", new Date().toISOString());
+        formData.set("cancellationReason", "Série cancelada pelo admin.");
+        const result = await cancelAdminRecurringAppointmentSeriesAction(formData);
+
+        if (result.ok) {
+          setActionFeedback(null);
+          router.refresh();
+        } else {
+          setActionFeedback({
+            title: "Não foi possível cancelar a série",
+            message: result.message,
+            tone: "error",
+          });
+        }
+      } catch {
+        setActionFeedback({
+          title: "Erro ao cancelar",
+          message: "Não foi possível cancelar a série agora. Tente novamente.",
+          tone: "error",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    });
+  }
+
   return (
     <>
     <div className="grid min-w-[220px] grid-cols-2 gap-2 sm:grid-cols-4">
@@ -1298,6 +1347,16 @@ export function AdminAppointmentActions({
               type="button"
               disabled={actionPending}
               onClick={() => runStatus("CANCELLED")}
+            />
+          ) : null}
+          {appointment.recurringSeries?.status === "ACTIVE" ? (
+            <AdminActionButton
+              icon={<CalendarX2 className="h-4 w-4" />}
+              label="Cancelar série"
+              tone="rose"
+              type="button"
+              disabled={actionPending}
+              onClick={cancelSeries}
             />
           ) : null}
         </>
