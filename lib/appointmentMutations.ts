@@ -733,6 +733,178 @@ export async function createRecurringAppointmentSeries(
   }
 }
 
+function getRecurringSeriesExtras(value: Prisma.JsonValue | null) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      return [];
+    }
+
+    const extraProductId = "extraProductId" in item && typeof item.extraProductId === "string"
+      ? item.extraProductId
+      : "";
+    const quantity = "quantity" in item && typeof item.quantity === "number"
+      ? item.quantity
+      : 0;
+
+    if (!extraProductId || !Number.isInteger(quantity) || quantity <= 0) {
+      return [];
+    }
+
+    return [{ extraProductId, quantity }];
+  });
+}
+
+export async function extendActiveRecurringAppointmentSeries(
+  {
+    now = new Date(),
+    horizonMonths = RECURRING_UNLIMITED_HORIZON_MONTHS,
+  }: {
+    now?: Date;
+    horizonMonths?: number;
+  } = {},
+  db: AppointmentPrismaClient = prisma
+) {
+  const horizon = new Date(now);
+  horizon.setMonth(horizon.getMonth() + Math.max(1, horizonMonths));
+  const horizonDate = createScheduleDate(getScheduleDateValue(horizon), "23:59");
+
+  if (!horizonDate) {
+    return {
+      checked: 0,
+      created: 0,
+      failed: 0,
+      appointmentIds: [] as string[],
+    };
+  }
+
+  const seriesList = await db.recurringAppointmentSeries.findMany({
+    where: {
+      status: "ACTIVE",
+      unlimited: true,
+    },
+    include: {
+      appointments: {
+        orderBy: { date: "desc" },
+        take: 1,
+      },
+    },
+  });
+
+  const appointmentIds: string[] = [];
+  let failed = 0;
+
+  for (const series of seriesList) {
+    if (!isRecurringFrequency(series.frequency) || series.appointments.length === 0) {
+      continue;
+    }
+
+    const lastAppointment = series.appointments[0];
+    const nextOccurrence = addRecurringDate(
+      new Date(lastAppointment.date),
+      series.frequency,
+      new Date(series.startDate).getDate()
+    );
+
+    if (nextOccurrence > horizonDate) {
+      continue;
+    }
+
+    const occurrenceDates = getRecurringDates({
+      startDate: nextOccurrence,
+      frequency: series.frequency,
+      endDate: horizonDate,
+      unlimited: false,
+    });
+
+    try {
+      const result = await db.$transaction(
+        async (tx) => {
+          const sourceAppointment = await tx.appointment.findFirst({
+            where: {
+              recurringSeriesId: series.id,
+            },
+            orderBy: {
+              date: "asc",
+            },
+            select: {
+              customerId: true,
+            },
+          });
+
+          if (!sourceAppointment) {
+            return [];
+          }
+
+          const createdIds: string[] = [];
+          const extras = getRecurringSeriesExtras(series.extras);
+
+          for (const occurrenceDate of occurrenceDates) {
+            try {
+              const appointment = await createCustomerAppointmentInTransaction(
+                {
+                  customerId: sourceAppointment.customerId,
+                  barberId: series.barberId,
+                  serviceIds: series.serviceIds,
+                  extras,
+                  date: getScheduleDateValue(occurrenceDate),
+                  time: series.time,
+                  notes: series.notes,
+                  now,
+                  conflictMode: "OVERLAP",
+                  useVipPlan: false,
+                  recurringSeriesId: series.id,
+                  recurringBatchKey: series.recurringBatchKey,
+                  recurringOccurrenceDate: occurrenceDate,
+                },
+                tx,
+                {
+                  manualFitIn: !series.customerId,
+                  validateAvailability: true,
+                }
+              );
+
+              createdIds.push(appointment.id);
+            } catch (error) {
+              if (!(error instanceof AppointmentMutationError)) {
+                throw error;
+              }
+
+              failed += 1;
+            }
+          }
+
+          return createdIds;
+        },
+        {
+          isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+          maxWait: 10000,
+          timeout: 60000,
+        }
+      );
+
+      appointmentIds.push(...result);
+    } catch (error) {
+      if (error instanceof AppointmentMutationError) {
+        failed += occurrenceDates.length;
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
+  return {
+    checked: seriesList.length,
+    created: appointmentIds.length,
+    failed,
+    appointmentIds,
+  };
+}
+
 async function createCustomerAppointmentInTransaction(
   input: CreateCustomerAppointmentInput,
   db: AppointmentTransactionClient,

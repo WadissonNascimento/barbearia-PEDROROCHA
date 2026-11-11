@@ -3,6 +3,9 @@ import {
   sendCustomerAppointmentDayReminderNotifications,
   sendDueAppointmentReminderEmails,
 } from "@/lib/appointmentEmails";
+import { notifyCustomerAppointmentConfirmed } from "@/lib/appointmentEmails";
+import { notifyBarberNewAppointment } from "@/lib/barberEmails";
+import { extendActiveRecurringAppointmentSeries } from "@/lib/appointmentMutations";
 import { logSecurityEvent } from "@/lib/security";
 import { sendVipPaymentDueNotifications } from "@/lib/vipBillingNotifications";
 
@@ -41,11 +44,19 @@ async function handleAppointmentRemindersCron(request: Request) {
     return NextResponse.json({ message: "Não autorizado." }, { status: 401 });
   }
 
-  const [dayResult, result, vipPaymentResult] = await Promise.all([
+  const [dayResult, result, vipPaymentResult, recurringResult] = await Promise.all([
     sendCustomerAppointmentDayReminderNotifications(),
     sendDueAppointmentReminderEmails(),
     sendVipPaymentDueNotifications(),
+    extendActiveRecurringAppointmentSeries(),
   ]);
+
+  await Promise.allSettled(
+    recurringResult.appointmentIds.flatMap((appointmentId) => [
+      notifyCustomerAppointmentConfirmed(appointmentId),
+      notifyBarberNewAppointment(appointmentId),
+    ])
+  );
 
   return NextResponse.json({
     message: "Lembretes processados.",
@@ -60,6 +71,7 @@ async function handleAppointmentRemindersCron(request: Request) {
     failed: result.failed,
     skipped: result.skipped,
     vipPayment: vipPaymentResult,
+    recurring: recurringResult,
     windowStart: result.windowStart.toISOString(),
     windowEnd: result.windowEnd.toISOString(),
   });
