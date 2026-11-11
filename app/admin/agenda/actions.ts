@@ -255,6 +255,7 @@ async function requireAdmin() {
 
 function revalidateAgendaViews(barberId?: string | null) {
   revalidatePath("/admin/agenda");
+  revalidatePath("/admin/clientes-recorrentes");
   revalidatePath("/admin");
   revalidatePath("/admin/financeiro");
   revalidatePath("/barber");

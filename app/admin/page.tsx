@@ -6,6 +6,7 @@ import {
   MessageSquareText,
   PackagePlus,
   PiggyBank,
+  Repeat2,
   Scissors,
   Settings,
   UserRound,
@@ -236,6 +237,12 @@ export default async function AdminPage() {
       description: "Assinaturas, tokens e pagamentos mensais.",
     },
     {
+      href: "/admin/clientes-recorrentes",
+      icon: Repeat2,
+      title: "Clientes recorrentes",
+      description: "Séries de horários, próximas ocorrências e cancelamentos.",
+    },
+    {
       href: "/admin/servicos",
       icon: Scissors,
       title: "Serviços",
@@ -279,6 +286,7 @@ export default async function AdminPage() {
     "/admin/barbeiros",
     "/admin/financeiro",
     "/admin/vip",
+    "/admin/clientes-recorrentes",
     "/admin/servicos",
     "/admin/extras",
     "/admin/caixinhas",

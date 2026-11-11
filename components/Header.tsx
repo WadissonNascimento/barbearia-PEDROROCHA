@@ -13,6 +13,7 @@ import {
   LogIn,
   Menu,
   MessageSquareText,
+  Repeat2,
   Scissors,
   Settings,
   ShoppingBag,
@@ -50,6 +51,7 @@ function getHeaderLinks(role: HeaderRole): {
       ],
       secondary: [
         { href: "/admin/vip", label: "Clientes VIP" },
+        { href: "/admin/clientes-recorrentes", label: "Clientes recorrentes" },
         { href: "/admin/servicos", label: "Serviços" },
         { href: "/admin/extras", label: "Extras" },
       ],
@@ -111,6 +113,7 @@ const navIcons: Record<string, LucideIcon> = {
   "/": Home,
   "/admin": Home,
   "/admin/agenda": CalendarDays,
+  "/admin/clientes-recorrentes": Repeat2,
   "/admin/avaliacoes": MessageSquareText,
   "/admin/barbeiros": Users,
   "/admin/configurações": Settings,
