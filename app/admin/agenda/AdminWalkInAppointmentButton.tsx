@@ -201,6 +201,8 @@ export default function AdminWalkInAppointmentButton({
   customers,
   selectedBarberId,
   selectedDate,
+  buttonLabel,
+  modalTitle,
 }: {
   barbers: AdminAgendaBarber[];
   services: AdminAgendaService[];
@@ -208,6 +210,8 @@ export default function AdminWalkInAppointmentButton({
   customers: AdminAgendaCustomer[];
   selectedBarberId: string;
   selectedDate: string;
+  buttonLabel?: string;
+  modalTitle?: string;
 }) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -902,9 +906,9 @@ export default function AdminWalkInAppointmentButton({
         className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-[var(--brand)]/30 bg-[var(--brand)] px-4 py-3 text-sm font-black text-white shadow-[0_18px_40px_rgba(14,165,233,0.18)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.04] disabled:text-zinc-500 disabled:shadow-none sm:w-auto"
       >
         <CalendarPlus className="h-4 w-4" />
-        {selectedBarber
+        {buttonLabel || (selectedBarber
           ? `Agendar para ${selectedBarber.name || selectedBarber.email || "barbeiro"}`
-          : "Selecione um barbeiro"}
+          : "Selecione um barbeiro")}
       </button>
 
       {mounted && isOpen
@@ -918,7 +922,7 @@ export default function AdminWalkInAppointmentButton({
                         Encaixe admin
                       </p>
                       <h2 className="mt-2 text-2xl font-black tracking-tight text-white">
-                        Criar encaixe manual
+                        {modalTitle || "Criar encaixe manual"}
                       </h2>
                       <p className="mt-1 truncate text-sm text-zinc-400">
                         {selectedBarber?.name || selectedBarber?.email || "Barbeiro selecionado"}

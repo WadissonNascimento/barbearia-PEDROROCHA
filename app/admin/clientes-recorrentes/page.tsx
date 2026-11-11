@@ -2,6 +2,7 @@ import { Repeat2 } from "lucide-react";
 import BackLink from "@/components/ui/BackLink";
 import DashboardShell from "@/components/ui/DashboardShell";
 import { prisma } from "@/lib/prisma";
+import { toMoneyNumber } from "@/lib/money";
 import {
   formatScheduleDate,
   formatScheduleTime,
@@ -10,6 +11,13 @@ import {
   getScheduleDayRange,
 } from "@/lib/scheduleTime";
 import { requireTenantSession, SHOP_ADMIN_ROLES } from "@/lib/tenantSession";
+import type {
+  AdminAgendaBarber,
+  AdminAgendaCustomer,
+  AdminAgendaExtra,
+  AdminAgendaService,
+} from "@/app/admin/agenda/AdminAgendaClient";
+import RecurringAppointmentCreator from "./RecurringAppointmentCreator";
 import RecurringClientsClient from "./RecurringClientsClient";
 
 export const metadata = {
@@ -43,7 +51,7 @@ export default async function AdminRecurringClientsPage() {
   const today = getCurrentScheduleDateValue();
   const todayRange = getScheduleDayRange(today);
 
-  const [seriesList, services] = await Promise.all([
+  const [seriesList, services, barbers, extras, customers] = await Promise.all([
     prisma.recurringAppointmentSeries.findMany({
       where: { shopId },
       include: {
@@ -75,8 +83,55 @@ export default async function AdminRecurringClientsPage() {
     }),
     prisma.service.findMany({
       where: { shopId },
-      select: { id: true, name: true },
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        duration: true,
+        barberId: true,
+      },
       orderBy: { name: "asc" },
+    }),
+    prisma.user.findMany({
+      where: {
+        shopId,
+        role: "BARBER",
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+      },
+      orderBy: { name: "asc" },
+    }),
+    prisma.extraProduct.findMany({
+      where: {
+        shopId,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        stock: true,
+      },
+      orderBy: { name: "asc" },
+    }),
+    prisma.user.findMany({
+      where: {
+        shopId,
+        role: "CUSTOMER",
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+      },
+      orderBy: [{ name: "asc" }, { createdAt: "desc" }],
     }),
   ]);
 
@@ -151,6 +206,23 @@ export default async function AdminRecurringClientsPage() {
             </p>
           </div>
         </div>
+
+        <RecurringAppointmentCreator
+          barbers={barbers as AdminAgendaBarber[]}
+          services={services.map((service) => ({
+            ...service,
+            price: toMoneyNumber(service.price),
+          })) as AdminAgendaService[]}
+          extras={extras.map((extra) => ({
+            ...extra,
+            price: toMoneyNumber(extra.price),
+          })) as AdminAgendaExtra[]}
+          customers={customers.map((customer) => ({
+            ...customer,
+            name: customer.name || "Cliente",
+          })) as AdminAgendaCustomer[]}
+          selectedDate={today}
+        />
 
         <RecurringClientsClient items={items} />
       </section>
