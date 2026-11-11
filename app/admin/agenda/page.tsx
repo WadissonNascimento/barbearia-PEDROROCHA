@@ -267,8 +267,6 @@ export default async function AdminAgendaPage({
           status: appointment.status,
           paymentMethod: appointment.paymentMethod,
           isVipPlanUse: appointment.isVipPlanUse,
-          recurringSeries: appointment.recurringSeries,
-          recurringOccurrenceDate: appointment.recurringOccurrenceDate,
           vipSubscription: appointment.vipSubscription,
           notes: appointment.isManualFitIn
             ? getManualFitInVisibleNotes(appointment.notes) || null

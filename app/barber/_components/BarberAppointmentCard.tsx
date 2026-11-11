@@ -28,9 +28,6 @@ export type BarberAppointmentCardData = {
   status: string;
   paymentMethod?: string | null;
   isVipPlanUse?: boolean;
-  recurringSeries?: {
-    frequency: string;
-  } | null;
   isManualFitIn: boolean;
   notes: string | null;
   vipSubscription?: {
@@ -131,15 +128,7 @@ export default function BarberAppointmentCard({
         ? "text-zinc-200"
         : vipPlanName === "Bronze"
           ? "text-orange-200"
-        : "text-[var(--brand-strong)]";
-  const recurringLabel =
-    appointment.recurringSeries?.frequency === "BIWEEKLY"
-      ? "Quinzenal"
-      : appointment.recurringSeries?.frequency === "MONTHLY"
-        ? "Mensal"
-        : appointment.recurringSeries
-          ? "Semanal"
-          : null;
+          : "text-[var(--brand-strong)]";
 
   useEffect(() => {
     setItems(appointment.items);
@@ -203,11 +192,6 @@ export default function BarberAppointmentCard({
           {appointment.isManualFitIn ? (
             <span className="mt-2 inline-flex w-fit rounded-full border border-sky-300/25 bg-sky-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-sky-200">
               Encaixe manual
-            </span>
-          ) : null}
-          {recurringLabel ? (
-            <span className="mt-2 inline-flex w-fit rounded-full border border-violet-300/30 bg-violet-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-violet-100">
-              Série {recurringLabel}
             </span>
           ) : null}
           {showDate ? (

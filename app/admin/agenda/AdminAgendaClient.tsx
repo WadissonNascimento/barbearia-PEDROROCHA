@@ -45,7 +45,6 @@ import {
   type AppointmentPaymentMethod,
 } from "@/lib/paymentMethods";
 import {
-  cancelAdminRecurringAppointmentSeriesAction,
   editAdminAppointmentAction,
   updateAdminAppointmentStatusAction,
 } from "./actions";
@@ -72,13 +71,6 @@ export type AdminAgendaAppointment = {
   status: string;
   paymentMethod: string | null;
   isVipPlanUse?: boolean;
-  recurringSeries?: {
-    id: string;
-    frequency: string;
-    status: string;
-    unlimited: boolean;
-  } | null;
-  recurringOccurrenceDate?: Date | null;
   notes: string | null;
   vipSubscription?: {
     plan: {
@@ -527,11 +519,6 @@ export default function AdminAgendaClient({
                         <td>{appointment.barber.name}</td>
                         <td>
                           <span>{appointment.customer.name}</span>
-                          {appointment.recurringSeries ? (
-                            <span className="mt-1 block w-fit rounded-full border border-violet-300/30 bg-violet-400/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-violet-100">
-                              Série {formatRecurringFrequency(appointment.recurringSeries.frequency)}
-                            </span>
-                          ) : null}
                           {appointment.isVipPlanUse ? (
                             <span className="mt-1 block w-fit rounded-full border border-amber-300/35 bg-amber-300/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-amber-100">
                               Assinante do plano{" "}
@@ -1077,11 +1064,6 @@ function AppointmentMobileCard({
             </p>
           </div>
         ) : null}
-        {appointment.recurringSeries ? (
-          <span className="mt-2 inline-flex w-fit rounded-full border border-violet-300/30 bg-violet-400/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-violet-100">
-            Série {formatRecurringFrequency(appointment.recurringSeries.frequency)}
-          </span>
-        ) : null}
         <p className="mt-1 min-w-0 truncate text-sm text-zinc-400">{serviceName}</p>
       </div>
 
@@ -1245,54 +1227,6 @@ export function AdminAppointmentActions({
     });
   }
 
-  function cancelSeries() {
-    if (
-      actionPending ||
-      !appointment.recurringSeries ||
-      appointment.recurringSeries.status !== "ACTIVE"
-    ) {
-      return;
-    }
-
-    const confirmed = window.confirm(
-      "Cancelar todas as ocorrências futuras desta série? Esta ação não cancela outros agendamentos do cliente."
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    startTransition(async () => {
-      try {
-        const formData = new FormData();
-        formData.set("seriesId", appointment.recurringSeries?.id || "");
-        formData.set("fromDate", new Date().toISOString());
-        formData.set("cancellationReason", "Série cancelada pelo admin.");
-        const result = await cancelAdminRecurringAppointmentSeriesAction(formData);
-
-        if (result.ok) {
-          setActionFeedback(null);
-          router.refresh();
-        } else {
-          setActionFeedback({
-            title: "Não foi possível cancelar a série",
-            message: result.message,
-            tone: "error",
-          });
-        }
-      } catch {
-        setActionFeedback({
-          title: "Erro ao cancelar",
-          message: "Não foi possível cancelar a série agora. Tente novamente.",
-          tone: "error",
-        });
-      } finally {
-        setIsSubmitting(false);
-      }
-    });
-  }
-
   return (
     <>
     <div className="grid min-w-[220px] grid-cols-2 gap-2 sm:grid-cols-4">
@@ -1347,16 +1281,6 @@ export function AdminAppointmentActions({
               type="button"
               disabled={actionPending}
               onClick={() => runStatus("CANCELLED")}
-            />
-          ) : null}
-          {appointment.recurringSeries?.status === "ACTIVE" ? (
-            <AdminActionButton
-              icon={<CalendarX2 className="h-4 w-4" />}
-              label="Cancelar série"
-              tone="rose"
-              type="button"
-              disabled={actionPending}
-              onClick={cancelSeries}
             />
           ) : null}
         </>
@@ -1818,18 +1742,6 @@ function normalizeSearchValue(value: string | number | null | undefined) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
-}
-
-function formatRecurringFrequency(value: string) {
-  if (value === "BIWEEKLY") {
-    return "quinzenal";
-  }
-
-  if (value === "MONTHLY") {
-    return "mensal";
-  }
-
-  return "semanal";
 }
 
 function formatCurrency(value: number) {

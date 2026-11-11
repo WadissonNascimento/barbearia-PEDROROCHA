@@ -8,9 +8,7 @@ import {
 } from "@/lib/appointmentStatus";
 import {
   AppointmentMutationError,
-  cancelRecurringAppointmentSeries,
   createManualFitInAppointment,
-  createRecurringAppointmentSeries,
   editAppointmentForAdmin,
   editCompletedAppointmentFinancialItems,
   updateAppointmentStatusForAdmin,
@@ -18,13 +16,8 @@ import {
 import {
   notifyCustomerAppointmentCancelled,
   notifyCustomerAppointmentCompleted,
-  notifyCustomerAppointmentConfirmed,
 } from "@/lib/appointmentEmails";
-import {
-  notifyBarberAppointmentCancelled,
-  notifyBarberNewAppointment,
-  notifyBarberNoShow,
-} from "@/lib/barberEmails";
+import { notifyBarberNoShow } from "@/lib/barberEmails";
 import {
   notifyAdminsAppointmentCancelled,
   notifyAdminsAppointmentNoShow,
@@ -98,13 +91,6 @@ type AdminQuickFitInPreviewPayload = {
     startTime: string;
     endTime: string;
   } | null;
-};
-
-type AdminWalkInAppointmentMutationData = {
-  seriesId?: string;
-  createdCount?: number;
-  failedOccurrences?: Array<{ date: string; reason: string }>;
-  duplicate?: boolean;
 };
 
 export async function updateAdminAgendaBlockAction(formData: FormData) {
@@ -255,7 +241,6 @@ async function requireAdmin() {
 
 function revalidateAgendaViews(barberId?: string | null) {
   revalidatePath("/admin/agenda");
-  revalidatePath("/admin/clientes-recorrentes");
   revalidatePath("/admin");
   revalidatePath("/admin/financeiro");
   revalidatePath("/barber");
@@ -461,7 +446,7 @@ export async function getAdminQuickFitInPreviewAction({
 
 export async function createAdminWalkInAppointmentAction(
   formData: FormData
-): Promise<MutationResult<AdminWalkInAppointmentMutationData | void>> {
+): Promise<MutationResult> {
   const admin = await requireAdmin();
   const barberId = String(formData.get("barberId") || "").trim();
   const customerId = String(formData.get("customerId") || "").trim();
@@ -486,30 +471,6 @@ export async function createAdminWalkInAppointmentAction(
   let date = String(formData.get("date") || "").trim();
   let startTime = String(formData.get("startTime") || "").trim();
   const notes = String(formData.get("notes") || "").trim();
-  const rawRecurrenceFrequency = String(
-    formData.get("recurrenceFrequency") || "NONE"
-  ).trim();
-  const recurrenceFrequency = ["WEEKLY", "BIWEEKLY", "MONTHLY"].includes(
-    rawRecurrenceFrequency
-  )
-    ? (rawRecurrenceFrequency as "WEEKLY" | "BIWEEKLY" | "MONTHLY")
-    : null;
-  const recurrenceEndDate = String(formData.get("recurrenceEndDate") || "").trim() || null;
-  const recurringBatchKey = String(formData.get("recurringBatchKey") || "").trim() || null;
-
-  if (rawRecurrenceFrequency !== "NONE" && !recurrenceFrequency) {
-    return mutationError("Frequência de recorrência inválida.");
-  }
-
-  if (recurrenceFrequency && fitInMode === "quick") {
-    return mutationError("A recorrência precisa usar um horário padrão da agenda.");
-  }
-
-  if (recurrenceFrequency && useVipPlan) {
-    return mutationError(
-      "A série recorrente não pode consumir o plano mensal. Escolha os serviços avulsos."
-    );
-  }
 
   if (fitInMode === "quick") {
     if (!manualDurationMinutes) {
@@ -654,7 +615,7 @@ export async function createAdminWalkInAppointmentAction(
   }
 
   try {
-    if (fitInMode === "standard" && !recurrenceFrequency) {
+    if (fitInMode === "standard") {
       const availability = await getBookingAvailability({
         barberId,
         serviceIds,
@@ -690,74 +651,8 @@ export async function createAdminWalkInAppointmentAction(
   const displayCustomerName =
     customerName || linkedCustomer?.name || "Cliente sem cadastro";
   const displayCustomerPhone = customerPhone || linkedCustomer?.phone || "";
-  const formattedNotes = formatManualFitInNotes({
-    customerName: displayCustomerName,
-    customerPhone: displayCustomerPhone,
-    notes,
-  });
 
   try {
-    if (recurrenceFrequency) {
-      const recurringResult = await createRecurringAppointmentSeries({
-        customerId: appointmentCustomerId,
-        seriesCustomerId: linkedCustomer?.id || null,
-        customerName: displayCustomerName,
-        customerPhone: displayCustomerPhone,
-        barberId,
-        serviceIds,
-        extras,
-        date,
-        time: startTime,
-        frequency: recurrenceFrequency,
-        endDate: recurrenceEndDate,
-        unlimited: !recurrenceEndDate,
-        recurringBatchKey,
-        notes: linkedCustomer ? notes : formattedNotes,
-        manualFitIn: !linkedCustomer,
-      });
-
-      if (!recurringResult.duplicate) {
-        const notificationAppointmentIds = Array.from(
-          new Set(recurringResult.appointments.map((appointment) => appointment.id))
-        );
-
-        after(async () => {
-          await Promise.allSettled(
-            notificationAppointmentIds.flatMap((appointmentId) => [
-              notifyCustomerAppointmentConfirmed(appointmentId),
-              notifyBarberNewAppointment(appointmentId),
-            ])
-          );
-        });
-      }
-
-      logSecurityEvent("admin_recurring_appointment_series_created", {
-        adminId: admin.id,
-        barberId,
-        serviceCount: serviceIds.length,
-        extraCount: extras.length,
-        date,
-        time: startTime,
-        frequency: recurrenceFrequency,
-        createdCount: recurringResult.appointments.length,
-        failedCount: recurringResult.failedOccurrences.length,
-        duplicate: recurringResult.duplicate,
-      });
-
-      revalidateAgendaViews(barberId);
-      return mutationSuccess(
-        recurringResult.duplicate
-          ? "Essa série já havia sido confirmada; nenhum agendamento foi duplicado."
-          : `Série criada com ${recurringResult.appointments.length} agendamento(s).`,
-        {
-          seriesId: recurringResult.series.id,
-          createdCount: recurringResult.appointments.length,
-          failedOccurrences: recurringResult.failedOccurrences,
-          duplicate: recurringResult.duplicate,
-        }
-      );
-    }
-
     await createManualFitInAppointment({
       customerId: appointmentCustomerId,
       barberId,
@@ -801,62 +696,6 @@ export async function createAdminWalkInAppointmentAction(
       ? "Encaixe rápido criado na agenda do barbeiro."
       : "Encaixe criado na agenda do barbeiro."
   );
-}
-
-export async function cancelAdminRecurringAppointmentSeriesAction(
-  formData: FormData
-): Promise<MutationResult> {
-  const admin = await requireAdmin();
-  const seriesId = String(formData.get("seriesId") || "").trim();
-  const fromDateValue = String(formData.get("fromDate") || "").trim();
-  const cancellationReason = String(
-    formData.get("cancellationReason") || "Série recorrente cancelada pelo admin."
-  ).trim();
-
-  if (!seriesId) {
-    return mutationError("Série recorrente inválida.");
-  }
-
-  if (!admin.shopId) {
-    return mutationError("Admin sem barbearia vinculada.");
-  }
-
-  const fromDate = fromDateValue ? new Date(fromDateValue) : undefined;
-
-  if (fromDateValue && Number.isNaN(fromDate?.getTime())) {
-    return mutationError("A data inicial do cancelamento é inválida.");
-  }
-
-  try {
-    const result = await cancelRecurringAppointmentSeries({
-      seriesId,
-      shopId: admin.shopId,
-      fromDate,
-      cancellationReason,
-    });
-
-    after(async () => {
-      await Promise.allSettled(
-        result.appointmentIds.flatMap((appointmentId) => [
-          notifyCustomerAppointmentCancelled(appointmentId, cancellationReason),
-          notifyBarberAppointmentCancelled(appointmentId, cancellationReason),
-        ])
-      );
-    });
-
-    revalidateAgendaViews();
-    return mutationSuccess(
-      result.appointmentIds.length
-        ? `${result.appointmentIds.length} ocorrência(s) cancelada(s).`
-        : "A série foi cancelada; não havia ocorrências futuras ativas."
-    );
-  } catch (error) {
-    if (error instanceof AppointmentMutationError) {
-      return mutationError(error.message);
-    }
-
-    throw error;
-  }
 }
 
 export async function updateAdminAppointmentStatusAction(

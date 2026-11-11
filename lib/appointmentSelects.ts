@@ -54,9 +54,6 @@ const appointmentBaseSelect = {
   notes: true,
   isManualFitIn: true,
   manualDurationMinutes: true,
-  recurringSeriesId: true,
-  recurringBatchKey: true,
-  recurringOccurrenceDate: true,
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.AppointmentSelect;
@@ -71,14 +68,6 @@ export const appointmentForBarberSelect = {
           name: true,
         },
       },
-    },
-  },
-  recurringSeries: {
-    select: {
-      id: true,
-      frequency: true,
-      status: true,
-      unlimited: true,
     },
   },
   customer: {
@@ -102,14 +91,6 @@ export const appointmentForAdminSelect = {
           name: true,
         },
       },
-    },
-  },
-  recurringSeries: {
-    select: {
-      id: true,
-      frequency: true,
-      status: true,
-      unlimited: true,
     },
   },
   barber: {
@@ -138,14 +119,6 @@ export const appointmentForFinanceSelect = {
       },
     },
   },
-  recurringSeries: {
-    select: {
-      id: true,
-      frequency: true,
-      status: true,
-      unlimited: true,
-    },
-  },
   barber: {
     select: appointmentBarberSelect,
   },
@@ -159,14 +132,6 @@ export const appointmentForFinanceSelect = {
 
 export const appointmentForTotalsSelect = {
   ...appointmentBaseSelect,
-  recurringSeries: {
-    select: {
-      id: true,
-      frequency: true,
-      status: true,
-      unlimited: true,
-    },
-  },
   items: {
     select: appointmentItemSelect,
   },
@@ -177,14 +142,6 @@ export const appointmentForTotalsSelect = {
 
 export const appointmentCustomerHistorySelect = {
   ...appointmentBaseSelect,
-  recurringSeries: {
-    select: {
-      id: true,
-      frequency: true,
-      status: true,
-      unlimited: true,
-    },
-  },
   customer: {
     select: appointmentCustomerSelect,
   },
