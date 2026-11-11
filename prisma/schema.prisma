@@ -61,41 +61,42 @@ model Shop {
   createdAt                DateTime  @default(now())
   updatedAt                DateTime  @updatedAt
 
-  users                    User[]
-  pendingRegistrations     PendingRegistration[]
-  passwordResetRequests    PasswordResetRequest[]
-  emailChangeRequests      EmailChangeRequest[]
-  services                 Service[]
-  appointments             Appointment[]
-  appointmentServices      AppointmentService[]
-  reviews                  Review[]
-  barberAvailabilities     BarberAvailability[]
-  barberBlocks             BarberBlock[]
-  recurringBarberBlocks    RecurringBarberBlock[]
-  clientNotes              ClientNote[]
-  customerProfiles         CustomerProfile[]
-  products                 Product[]
-  productImages            ProductImage[]
-  barberServiceCommissions BarberServiceCommission[]
-  extraProducts            ExtraProduct[]
-  appointmentItems         AppointmentItem[]
-  stockMovements           StockMovement[]
-  extraStockMovements      ExtraStockMovement[]
-  barberPayouts            BarberPayout[]
-  barberTips               BarberTip[]
-  homeImages               HomeImage[]
-  homeContent              ShopHomeContent?
-  emailDeliveryLogs        EmailDeliveryLog[]
-  appNotifications         AppNotification[]
-  pushSubscriptions        PushSubscription[]
-  emailSettings            ShopEmailSettings?
-  accounts                 Account[]
-  vipPlans                 VipPlan[]
-  vipSubscriptions         VipSubscription[]
-  vipPayments              VipPayment[]
-  vipUsages                VipUsage[]
-  asaasWebhookEvents       AsaasWebhookEvent[]
-  systemBillingPayments    SystemBillingPayment[]
+  users                      User[]
+  pendingRegistrations       PendingRegistration[]
+  passwordResetRequests      PasswordResetRequest[]
+  emailChangeRequests        EmailChangeRequest[]
+  services                   Service[]
+  appointments               Appointment[]
+  appointmentServices        AppointmentService[]
+  reviews                    Review[]
+  recurringAppointmentSeries RecurringAppointmentSeries[]
+  barberAvailabilities       BarberAvailability[]
+  barberBlocks               BarberBlock[]
+  recurringBarberBlocks      RecurringBarberBlock[]
+  clientNotes                ClientNote[]
+  customerProfiles           CustomerProfile[]
+  products                   Product[]
+  productImages              ProductImage[]
+  barberServiceCommissions   BarberServiceCommission[]
+  extraProducts              ExtraProduct[]
+  appointmentItems           AppointmentItem[]
+  stockMovements             StockMovement[]
+  extraStockMovements        ExtraStockMovement[]
+  barberPayouts              BarberPayout[]
+  barberTips                 BarberTip[]
+  homeImages                 HomeImage[]
+  homeContent                ShopHomeContent?
+  emailDeliveryLogs          EmailDeliveryLog[]
+  appNotifications           AppNotification[]
+  pushSubscriptions          PushSubscription[]
+  emailSettings              ShopEmailSettings?
+  accounts                   Account[]
+  vipPlans                   VipPlan[]
+  vipSubscriptions           VipSubscription[]
+  vipPayments                VipPayment[]
+  vipUsages                  VipUsage[]
+  asaasWebhookEvents         AsaasWebhookEvent[]
+  systemBillingPayments      SystemBillingPayment[]
 
   @@index([isActive, isDefault])
 }
@@ -178,28 +179,30 @@ model User {
   accounts Account[]
   sessions Session[]
 
-  customerAppointments     Appointment[]             @relation("CustomerAppointments")
-  barberAppointments       Appointment[]             @relation("BarberAppointments")
-  customerReviews          Review[]                  @relation("CustomerReviews")
-  barberReviews            Review[]                  @relation("BarberReviews")
-  barberServices           Service[]                 @relation("BarberServices")
-  barberServiceCommissions BarberServiceCommission[]
-  barberAvailabilities     BarberAvailability[]
-  barberBlocks             BarberBlock[]
-  recurringBarberBlocks    RecurringBarberBlock[]
-  barberPayouts            BarberPayout[]
-  barberTips               BarberTip[]               @relation("BarberTips")
-  barberClientNotes        ClientNote[]              @relation("BarberClientNotes")
-  customerClientNotes      ClientNote[]              @relation("CustomerClientNotes")
-  customerProfile          CustomerProfile?          @relation("CustomerProfileOwner")
-  preferredByProfiles      CustomerProfile[]         @relation("PreferredBarber")
-  emailDeliveryLogs        EmailDeliveryLog[]        @relation("EmailDeliveryRecipient")
-  appNotifications         AppNotification[]         @relation("AppNotificationRecipient")
-  pushSubscriptions        PushSubscription[]        @relation("PushSubscriptionUser")
-  emailChangeRequests      EmailChangeRequest[]
-  vipSubscriptions         VipSubscription[]         @relation("VipSubscriptionCustomer")
-  vipUsagesCreated         VipUsage[]                @relation("VipUsageCreatedBy")
-  systemBillingPaymentsPaid SystemBillingPayment[]   @relation("SystemBillingPaymentPaidBy")
+  customerAppointments                 Appointment[]                @relation("CustomerAppointments")
+  barberAppointments                   Appointment[]                @relation("BarberAppointments")
+  customerReviews                      Review[]                     @relation("CustomerReviews")
+  barberReviews                        Review[]                     @relation("BarberReviews")
+  barberServices                       Service[]                    @relation("BarberServices")
+  barberServiceCommissions             BarberServiceCommission[]
+  barberAvailabilities                 BarberAvailability[]
+  barberBlocks                         BarberBlock[]
+  recurringBarberBlocks                RecurringBarberBlock[]
+  recurringAppointmentSeriesAsCustomer RecurringAppointmentSeries[] @relation("RecurringSeriesCustomer")
+  recurringAppointmentSeriesAsBarber   RecurringAppointmentSeries[] @relation("RecurringSeriesBarber")
+  barberPayouts                        BarberPayout[]
+  barberTips                           BarberTip[]                  @relation("BarberTips")
+  barberClientNotes                    ClientNote[]                 @relation("BarberClientNotes")
+  customerClientNotes                  ClientNote[]                 @relation("CustomerClientNotes")
+  customerProfile                      CustomerProfile?             @relation("CustomerProfileOwner")
+  preferredByProfiles                  CustomerProfile[]            @relation("PreferredBarber")
+  emailDeliveryLogs                    EmailDeliveryLog[]           @relation("EmailDeliveryRecipient")
+  appNotifications                     AppNotification[]            @relation("AppNotificationRecipient")
+  pushSubscriptions                    PushSubscription[]           @relation("PushSubscriptionUser")
+  emailChangeRequests                  EmailChangeRequest[]
+  vipSubscriptions                     VipSubscription[]            @relation("VipSubscriptionCustomer")
+  vipUsagesCreated                     VipUsage[]                   @relation("VipUsageCreatedBy")
+  systemBillingPaymentsPaid            SystemBillingPayment[]       @relation("SystemBillingPaymentPaidBy")
 
   @@unique([id, shopId])
   @@unique([shopId, email])
@@ -436,14 +439,19 @@ model Appointment {
   customer User @relation("CustomerAppointments", fields: [customerId], references: [id], onDelete: Cascade)
   barber   User @relation("BarberAppointments", fields: [barberId], references: [id], onDelete: Cascade)
 
-  services        AppointmentService[]
-  items           AppointmentItem[]
-  review          Review?
-  vipSubscription VipSubscription?     @relation(fields: [vipSubscriptionId], references: [id], onDelete: SetNull)
-  vipUsage        VipUsage?
+  services                AppointmentService[]
+  items                   AppointmentItem[]
+  review                  Review?
+  recurringSeriesId       String?
+  recurringBatchKey       String?
+  recurringOccurrenceDate DateTime?
+  recurringSeries         RecurringAppointmentSeries? @relation(fields: [recurringSeriesId], references: [id], onDelete: SetNull)
+  vipSubscription         VipSubscription?            @relation(fields: [vipSubscriptionId], references: [id], onDelete: SetNull)
+  vipUsage                VipUsage?
 
   @@unique([id, shopId])
   @@unique([shopId, publicId])
+  @@unique([recurringSeriesId, recurringOccurrenceDate])
   @@index([shopId, customerId])
   @@index([shopId, customerId, date])
   @@index([shopId, barberId, status])
@@ -452,6 +460,39 @@ model Appointment {
   @@index([shopId, status, reminderSentAt, date])
   @@index([shopId, isVipPlanUse, date])
   @@index([shopId, vipSubscriptionId])
+  @@index([shopId, recurringSeriesId, date])
+  @@index([shopId, recurringBatchKey])
+}
+
+model RecurringAppointmentSeries {
+  id                String    @id @default(cuid())
+  shopId            String    @default("shop_pedro_rocha_barbearia")
+  customerId        String?
+  customerName      String
+  customerPhone     String?
+  barberId          String
+  serviceIds        String[]
+  extras            Json?
+  time              String
+  frequency         String
+  startDate         DateTime
+  endDate           DateTime?
+  unlimited         Boolean   @default(true)
+  status            String    @default("ACTIVE")
+  notes             String?
+  recurringBatchKey String?   @unique
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  shop         Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer     User?         @relation("RecurringSeriesCustomer", fields: [customerId], references: [id], onDelete: SetNull)
+  barber       User          @relation("RecurringSeriesBarber", fields: [barberId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+
+  @@unique([id, shopId])
+  @@index([shopId, status])
+  @@index([shopId, customerId, status])
+  @@index([shopId, barberId, status])
 }
 
 model VipPlan {
@@ -473,28 +514,28 @@ model VipPlan {
 }
 
 model VipSubscription {
-  id              String    @id @default(cuid())
-  shopId          String    @default("shop_pedro_rocha_barbearia")
-  customerId      String
-  planId          String
-  status          String    @default("ACTIVE")
-  tokensRemaining Int       @default(4)
-  dueDay          Int       @default(5)
-  cycleStart      DateTime
-  cycleEnd        DateTime
-  startedAt       DateTime  @default(now())
-  cancelledAt     DateTime?
-  notes           String?
-  asaasCustomerId String?
-  asaasFirstDueDate DateTime?
-  asaasSubscriptionId String? @unique
-  asaasBillingType String?
-  asaasStatus     String?
-  lastAsaasSyncAt DateTime?
+  id                        String    @id @default(cuid())
+  shopId                    String    @default("shop_pedro_rocha_barbearia")
+  customerId                String
+  planId                    String
+  status                    String    @default("ACTIVE")
+  tokensRemaining           Int       @default(4)
+  dueDay                    Int       @default(5)
+  cycleStart                DateTime
+  cycleEnd                  DateTime
+  startedAt                 DateTime  @default(now())
+  cancelledAt               DateTime?
+  notes                     String?
+  asaasCustomerId           String?
+  asaasFirstDueDate         DateTime?
+  asaasSubscriptionId       String?   @unique
+  asaasBillingType          String?
+  asaasStatus               String?
+  lastAsaasSyncAt           DateTime?
   billingProfileConfirmedAt DateTime?
-  billingUpdateStartedAt DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  billingUpdateStartedAt    DateTime?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
 
   shop         Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
   customer     User          @relation("VipSubscriptionCustomer", fields: [customerId], references: [id], onDelete: Cascade)
@@ -513,25 +554,25 @@ model VipSubscription {
 }
 
 model VipPayment {
-  id             String    @id @default(cuid())
-  shopId         String    @default("shop_pedro_rocha_barbearia")
-  subscriptionId String
-  cycleMonth     String
-  amount         Decimal   @db.Decimal(12, 2)
-  status         String    @default("PENDING")
-  dueDate        DateTime?
-  paidAt         DateTime?
-  notes          String?
-  asaasPaymentId String?   @unique
-  asaasStatus    String?
-  invoiceUrl     String?
-  bankSlipUrl    String?
-  pixQrCode      String?
-  pixCopyPaste   String?
+  id                String    @id @default(cuid())
+  shopId            String    @default("shop_pedro_rocha_barbearia")
+  subscriptionId    String
+  cycleMonth        String
+  amount            Decimal   @db.Decimal(12, 2)
+  status            String    @default("PENDING")
+  dueDate           DateTime?
+  paidAt            DateTime?
+  notes             String?
+  asaasPaymentId    String?   @unique
+  asaasStatus       String?
+  invoiceUrl        String?
+  bankSlipUrl       String?
+  pixQrCode         String?
+  pixCopyPaste      String?
   externalReference String?
-  lastAsaasEventAt DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  lastAsaasEventAt  DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   shop         Shop            @relation(fields: [shopId], references: [id], onDelete: Cascade)
   subscription VipSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
@@ -543,17 +584,17 @@ model VipPayment {
 }
 
 model AsaasWebhookEvent {
-  id               String   @id @default(cuid())
-  shopId           String
-  asaasEventId     String   @unique
-  event            String
-  asaasPaymentId   String?
+  id                  String    @id @default(cuid())
+  shopId              String
+  asaasEventId        String    @unique
+  event               String
+  asaasPaymentId      String?
   asaasSubscriptionId String?
-  payload          Json
-  processedAt      DateTime?
-  processingError  String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  payload             Json
+  processedAt         DateTime?
+  processingError     String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
 

@@ -52,6 +52,7 @@ type WalkInStep =
   | "summary";
 
 type FitInMode = "standard" | "quick";
+type RecurrenceFrequency = "NONE" | "WEEKLY" | "BIWEEKLY" | "MONTHLY";
 
 type QuickFitInPreview = {
   date: string;
@@ -81,6 +82,7 @@ type PendingSummary = {
   date: string;
   startTime: string;
   notes: string;
+  recurrenceLabel: string;
 };
 
 const emptyPeriodSlots = (): PeriodSlots => ({
@@ -219,6 +221,9 @@ export default function AdminWalkInAppointmentButton({
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [useVipPlan, setUseVipPlan] = useState(false);
+  const [recurrenceFrequency, setRecurrenceFrequency] =
+    useState<RecurrenceFrequency>("NONE");
+  const [recurringBatchKey, setRecurringBatchKey] = useState("");
   const [date, setDate] = useState("");
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [fitInMode, setFitInMode] = useState<FitInMode>("standard");
@@ -483,6 +488,8 @@ export default function AdminWalkInAppointmentButton({
     setCustomerName("");
     setCustomerPhone("");
     setUseVipPlan(false);
+    setRecurrenceFrequency("NONE");
+    setRecurringBatchKey("");
     setSelectedServiceIds([]);
     setFitInMode("standard");
     setQuickDurationMinutes("20");
@@ -505,6 +512,7 @@ export default function AdminWalkInAppointmentButton({
     }
 
     resetForm();
+    setRecurringBatchKey(crypto.randomUUID());
     setDate("");
     setIsOpen(true);
   }
@@ -742,6 +750,14 @@ export default function AdminWalkInAppointmentButton({
       hasExtras && selectedExtras.length > 0
         ? selectedExtras.map((extra) => extra.name).join(" + ")
         : "";
+    const recurrenceLabel =
+      recurrenceFrequency === "WEEKLY"
+        ? "Toda semana"
+        : recurrenceFrequency === "BIWEEKLY"
+          ? "A cada 2 semanas"
+          : recurrenceFrequency === "MONTHLY"
+            ? "Todo mês"
+            : "Sem recorrência";
 
     if (!isValidCustomerFullName(submittedCustomerName) && !selectedCustomer) {
       showWalkInError(
@@ -768,6 +784,30 @@ export default function AdminWalkInAppointmentButton({
       return;
     }
 
+    if (recurrenceFrequency !== "NONE" && fitInMode === "quick") {
+      showWalkInError(
+        "Recorrência indisponível",
+        "Use um agendamento padrão para criar a série recorrente."
+      );
+      return;
+    }
+
+    if (recurrenceFrequency !== "NONE" && useVipPlan) {
+      showWalkInError(
+        "Plano mensal indisponível",
+        "A série recorrente usa os serviços avulsos e não consome o plano mensal."
+      );
+      return;
+    }
+
+    if (recurrenceFrequency !== "NONE" && !recurringBatchKey) {
+      showWalkInError(
+        "Não foi possível confirmar",
+        "Feche e abra novamente o formulário para gerar a chave da série."
+      );
+      return;
+    }
+
     if (fitInMode === "standard" && !availableSlots.includes(startTime)) {
       showWalkInError(
         "Escolha o horário",
@@ -786,6 +826,9 @@ export default function AdminWalkInAppointmentButton({
     formData.set("fitInMode", fitInMode);
     formData.set("useVipPlan", String(useVipPlan));
     formData.set("manualDurationMinutes", quickDurationMinutes);
+    formData.set("recurrenceFrequency", recurrenceFrequency);
+    formData.set("recurrenceEndDate", "");
+    formData.set("recurringBatchKey", recurringBatchKey);
     selectedServiceIds.forEach((serviceId) => formData.append("serviceIds", serviceId));
     if (hasExtras) {
       selectedExtraIds.forEach((extraId) => formData.append("extraProductIds", extraId));
@@ -799,6 +842,7 @@ export default function AdminWalkInAppointmentButton({
       date,
       startTime,
       notes,
+      recurrenceLabel,
     });
   }
 
@@ -1432,6 +1476,18 @@ export default function AdminWalkInAppointmentButton({
                                   : "Agendamento padrão"
                               }
                             />
+                            <SummaryRow
+                              label="Recorrência"
+                              value={
+                                recurrenceFrequency === "WEEKLY"
+                                  ? "Toda semana"
+                                  : recurrenceFrequency === "BIWEEKLY"
+                                    ? "A cada 2 semanas"
+                                    : recurrenceFrequency === "MONTHLY"
+                                      ? "Todo mês"
+                                      : "Sem recorrência"
+                              }
+                            />
                             <SummaryRow label="Data" value={formatDateValue(date)} />
                             <SummaryRow label="Horário" value={startTime || "Não informado"} />
                             <SummaryRow label="Duração" value={`${activeDuration || 0} min`} />
@@ -1445,6 +1501,41 @@ export default function AdminWalkInAppointmentButton({
                             />
                             <SummaryRow label="Total" value={formatCurrency(selectedGrandTotal)} />
                           </div>
+
+                          {fitInMode === "standard" ? (
+                            <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-4">
+                              <div className="flex items-start gap-3">
+                                <CalendarPlus className="mt-0.5 h-5 w-5 shrink-0 text-[var(--brand-strong)]" />
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm font-black text-white">
+                                    Agendamento recorrente
+                                  </p>
+                                  <p className="mt-1 text-xs leading-5 text-zinc-400">
+                                    Cria os próximos horários automaticamente e mantém a série ativa até o cancelamento.
+                                  </p>
+                                  <select
+                                    value={recurrenceFrequency}
+                                    onChange={(event) =>
+                                      setRecurrenceFrequency(
+                                        event.target.value as RecurrenceFrequency
+                                      )
+                                    }
+                                    className="mt-3 min-h-11 w-full rounded-2xl border border-white/10 bg-black/30 px-3 py-2 text-sm font-bold text-white outline-none focus:border-[var(--brand)]/40"
+                                  >
+                                    <option value="NONE">Não repetir</option>
+                                    <option value="WEEKLY">Toda semana</option>
+                                    <option value="BIWEEKLY">A cada 2 semanas</option>
+                                    <option value="MONTHLY">Todo mês</option>
+                                  </select>
+                                  {recurrenceFrequency !== "NONE" ? (
+                                    <p className="mt-2 text-xs text-amber-200/80">
+                                      A opção de usar o plano mensal fica indisponível em séries recorrentes.
+                                    </p>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                          ) : null}
 
                           <label className="block">
                             <span className="mb-2 block text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-500">
@@ -1561,6 +1652,7 @@ export default function AdminWalkInAppointmentButton({
                 <div className="mt-5 space-y-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm">
                   <SummaryRow label="Cliente" value={successDetails.customerName} />
                   <SummaryRow label="Serviços" value={successDetails.serviceName} />
+                  <SummaryRow label="Recorrência" value={successDetails.recurrenceLabel} />
                   <SummaryRow label="Data" value={formatDateValue(successDetails.date)} />
                   <SummaryRow label="Horário" value={successDetails.startTime} />
                 </div>

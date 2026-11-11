@@ -48,6 +48,13 @@ export default async function CustomerAppointmentsPage() {
         paymentMethod: true,
         isVipPlanUse: true,
         notes: true,
+        recurringSeries: {
+          select: {
+            id: true,
+            frequency: true,
+            status: true,
+          },
+        },
         vipSubscription: {
           select: {
             plan: {
@@ -188,6 +195,11 @@ export default async function CustomerAppointmentsPage() {
                     <p className="mt-1 line-clamp-2 text-sm leading-5 text-zinc-400">
                       {serviceLabel}
                     </p>
+                    {appointment.recurringSeries ? (
+                      <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-violet-200">
+                        Série {formatRecurringFrequency(appointment.recurringSeries.frequency)}
+                      </p>
+                    ) : null}
                     <p className="mt-1 text-xs text-zinc-500">
                       {serviceMetaLine}
                     </p>
@@ -282,6 +294,18 @@ export default async function CustomerAppointmentsPage() {
       )}
     </DashboardShell>
   );
+}
+
+function formatRecurringFrequency(value: string) {
+  if (value === "BIWEEKLY") {
+    return "quinzenal";
+  }
+
+  if (value === "MONTHLY") {
+    return "mensal";
+  }
+
+  return "semanal";
 }
 
 function WhatsAppIcon() {

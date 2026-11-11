@@ -71,6 +71,13 @@ export type AdminAgendaAppointment = {
   status: string;
   paymentMethod: string | null;
   isVipPlanUse?: boolean;
+  recurringSeries?: {
+    id: string;
+    frequency: string;
+    status: string;
+    unlimited: boolean;
+  } | null;
+  recurringOccurrenceDate?: Date | null;
   notes: string | null;
   vipSubscription?: {
     plan: {
@@ -519,6 +526,11 @@ export default function AdminAgendaClient({
                         <td>{appointment.barber.name}</td>
                         <td>
                           <span>{appointment.customer.name}</span>
+                          {appointment.recurringSeries ? (
+                            <span className="mt-1 block w-fit rounded-full border border-violet-300/30 bg-violet-400/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-violet-100">
+                              Série {formatRecurringFrequency(appointment.recurringSeries.frequency)}
+                            </span>
+                          ) : null}
                           {appointment.isVipPlanUse ? (
                             <span className="mt-1 block w-fit rounded-full border border-amber-300/35 bg-amber-300/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-amber-100">
                               Assinante do plano{" "}
@@ -1063,6 +1075,11 @@ function AppointmentMobileCard({
               Agendamento pelo plano mensal
             </p>
           </div>
+        ) : null}
+        {appointment.recurringSeries ? (
+          <span className="mt-2 inline-flex w-fit rounded-full border border-violet-300/30 bg-violet-400/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-violet-100">
+            Série {formatRecurringFrequency(appointment.recurringSeries.frequency)}
+          </span>
         ) : null}
         <p className="mt-1 min-w-0 truncate text-sm text-zinc-400">{serviceName}</p>
       </div>
@@ -1742,6 +1759,18 @@ function normalizeSearchValue(value: string | number | null | undefined) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
+}
+
+function formatRecurringFrequency(value: string) {
+  if (value === "BIWEEKLY") {
+    return "quinzenal";
+  }
+
+  if (value === "MONTHLY") {
+    return "mensal";
+  }
+
+  return "semanal";
 }
 
 function formatCurrency(value: number) {

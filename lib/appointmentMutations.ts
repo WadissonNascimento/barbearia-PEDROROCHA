@@ -61,6 +61,7 @@ type AppointmentPrismaClient = Pick<
   | "barberServiceCommission"
   | "extraProduct"
   | "extraStockMovement"
+  | "recurringAppointmentSeries"
   | "recurringBarberBlock"
   | "service"
   | "user"
@@ -111,6 +112,9 @@ export type CreateCustomerAppointmentInput = {
   conflictMode?: "OVERLAP" | "SAME_START_ONLY";
   manualDurationMinutes?: number | null;
   useVipPlan?: boolean;
+  recurringSeriesId?: string | null;
+  recurringBatchKey?: string | null;
+  recurringOccurrenceDate?: Date | null;
 };
 
 export type RescheduleCustomerAppointmentInput = CreateCustomerAppointmentInput & {
@@ -118,6 +122,38 @@ export type RescheduleCustomerAppointmentInput = CreateCustomerAppointmentInput 
 };
 
 export type CreateManualFitInAppointmentInput = CreateCustomerAppointmentInput;
+
+export type RecurringAppointmentFrequency = "WEEKLY" | "BIWEEKLY" | "MONTHLY";
+
+export type CreateRecurringAppointmentSeriesInput = {
+  customerId: string;
+  seriesCustomerId?: string | null;
+  customerName: string;
+  customerPhone?: string | null;
+  barberId: string;
+  serviceIds: string[];
+  extras?: Array<{
+    extraProductId: string;
+    quantity: number;
+  }>;
+  date: string;
+  time: string;
+  frequency: RecurringAppointmentFrequency;
+  endDate?: string | null;
+  unlimited?: boolean;
+  notes?: string | null;
+  recurringBatchKey?: string | null;
+  now?: Date;
+  manualFitIn?: boolean;
+};
+
+export type RecurringAppointmentOccurrenceFailure = {
+  date: string;
+  reason: string;
+};
+
+const RECURRING_UNLIMITED_HORIZON_MONTHS = 12;
+const MAX_RECURRING_OCCURRENCES = 366;
 
 export type AdminEditAppointmentInput = {
   appointmentId: string;
@@ -465,12 +501,248 @@ export async function createManualFitInAppointment(
   }
 }
 
+function addRecurringDate(
+  current: Date,
+  frequency: RecurringAppointmentFrequency,
+  monthlyAnchorDay: number
+) {
+  const next = new Date(current);
+
+  if (frequency === "WEEKLY" || frequency === "BIWEEKLY") {
+    next.setDate(next.getDate() + (frequency === "WEEKLY" ? 7 : 14));
+    return next;
+  }
+
+  next.setDate(1);
+  next.setMonth(next.getMonth() + 1);
+  const lastDayOfMonth = new Date(
+    next.getFullYear(),
+    next.getMonth() + 1,
+    0
+  ).getDate();
+  next.setDate(Math.min(monthlyAnchorDay, lastDayOfMonth));
+  return next;
+}
+
+function isRecurringFrequency(value: string): value is RecurringAppointmentFrequency {
+  return value === "WEEKLY" || value === "BIWEEKLY" || value === "MONTHLY";
+}
+
+function getRecurringDates(input: {
+  startDate: Date;
+  frequency: RecurringAppointmentFrequency;
+  endDate: Date | null;
+  unlimited: boolean;
+}) {
+  const horizon = input.unlimited
+    ? new Date(input.startDate)
+    : input.endDate || input.startDate;
+
+  if (input.unlimited) {
+    horizon.setMonth(horizon.getMonth() + RECURRING_UNLIMITED_HORIZON_MONTHS);
+  }
+
+  const dates: Date[] = [];
+  let current = new Date(input.startDate);
+  const monthlyAnchorDay = input.startDate.getDate();
+
+  while (current <= horizon && dates.length < MAX_RECURRING_OCCURRENCES) {
+    dates.push(new Date(current));
+    current = addRecurringDate(current, input.frequency, monthlyAnchorDay);
+  }
+
+  return dates;
+}
+
+export async function createRecurringAppointmentSeries(
+  input: CreateRecurringAppointmentSeriesInput,
+  db: AppointmentPrismaClient = prisma
+) {
+  const customerId = input.customerId.trim();
+  const seriesCustomerId = input.seriesCustomerId?.trim() || customerId;
+  const customerName = input.customerName.trim();
+  const customerPhone = input.customerPhone?.trim() || null;
+  const barberId = input.barberId.trim();
+  const serviceIds = input.serviceIds.map((serviceId) => serviceId.trim()).filter(Boolean);
+  const date = input.date.trim();
+  const time = input.time.trim();
+  const notes = input.notes?.trim() || null;
+  const recurringBatchKey = input.recurringBatchKey?.trim() || null;
+  const unlimited = input.unlimited !== false && !input.endDate;
+
+  if (!customerId || !customerName || !barberId || !date || !time || !isRecurringFrequency(input.frequency)) {
+    throw new AppointmentMutationError(
+      "Informe cliente, barbeiro, serviços, data, horário e uma frequência válida."
+    );
+  }
+
+  if (serviceIds.length === 0 || serviceIds.length > 8) {
+    throw new AppointmentMutationError("Selecione entre 1 e 8 serviços para a série.");
+  }
+
+  const startDate = createScheduleDate(date, time);
+  if (!startDate) {
+    throw new AppointmentMutationError("Data ou horário inicial inválido.");
+  }
+
+  const endDate = input.endDate
+    ? createScheduleDate(input.endDate.trim(), "23:59")
+    : null;
+
+  if (input.endDate && !endDate) {
+    throw new AppointmentMutationError("A data final da série é inválida.");
+  }
+
+  if (endDate && endDate < startDate) {
+    throw new AppointmentMutationError("A data final deve ser igual ou posterior à data inicial.");
+  }
+
+  if (recurringBatchKey) {
+    const existingSeries = await db.recurringAppointmentSeries.findUnique({
+      where: { recurringBatchKey },
+      include: {
+        appointments: {
+          orderBy: { date: "asc" },
+        },
+      },
+    });
+
+    if (existingSeries) {
+      return {
+        series: existingSeries,
+        appointments: existingSeries.appointments,
+        failedOccurrences: [] as RecurringAppointmentOccurrenceFailure[],
+        duplicate: true,
+      };
+    }
+  }
+
+  const occurrenceDates = getRecurringDates({
+    startDate,
+    frequency: input.frequency,
+    endDate,
+    unlimited,
+  });
+
+  if (occurrenceDates.length === 0) {
+    throw new AppointmentMutationError("Não foi possível gerar as datas da série.");
+  }
+
+  try {
+    return await db.$transaction(
+      async (tx) => {
+        const series = await tx.recurringAppointmentSeries.create({
+          data: {
+            shopId: (await tx.user.findFirstOrThrow({
+              where: {
+                id: barberId,
+                role: "BARBER",
+                isActive: true,
+              },
+              select: { shopId: true },
+            })).shopId,
+            customerId: seriesCustomerId || null,
+            customerName,
+            customerPhone,
+            barberId,
+            serviceIds,
+            extras: input.extras?.length ? input.extras : undefined,
+            time,
+            frequency: input.frequency,
+            startDate,
+            endDate,
+            unlimited,
+            notes,
+            recurringBatchKey,
+          },
+        });
+
+        const appointments: Awaited<ReturnType<typeof createCustomerAppointmentInTransaction>>[] = [];
+        const failedOccurrences: RecurringAppointmentOccurrenceFailure[] = [];
+
+        for (const occurrenceDate of occurrenceDates) {
+          const occurrenceDateValue = getScheduleDateValue(occurrenceDate);
+
+          try {
+            const appointment = await createCustomerAppointmentInTransaction(
+              {
+                customerId,
+                barberId,
+                serviceIds,
+                extras: input.extras,
+                date: occurrenceDateValue,
+                time,
+                notes,
+                now: input.now,
+                conflictMode: "OVERLAP",
+                useVipPlan: false,
+                recurringSeriesId: series.id,
+                recurringBatchKey,
+                recurringOccurrenceDate: occurrenceDate,
+              },
+              tx,
+              {
+                manualFitIn: input.manualFitIn,
+                validateAvailability: true,
+              }
+            );
+
+            appointments.push(appointment);
+          } catch (error) {
+            if (!(error instanceof AppointmentMutationError)) {
+              throw error;
+            }
+
+            failedOccurrences.push({
+              date: occurrenceDateValue,
+              reason: error.message,
+            });
+          }
+        }
+
+        if (appointments.length === 0) {
+          throw new AppointmentMutationError(
+            failedOccurrences[0]?.reason || "Nenhuma ocorrência da série pôde ser criada."
+          );
+        }
+
+        return {
+          series,
+          appointments,
+          failedOccurrences,
+          duplicate: false,
+        };
+      },
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        maxWait: 10000,
+        timeout: 60000,
+      }
+    );
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      (error.code === "P2034" || error.code === "P2028")
+    ) {
+      throw new AppointmentMutationError(
+        "A série foi alterada por outra confirmação. Atualize a agenda e tente novamente."
+      );
+    }
+
+    throw error;
+  }
+}
+
 async function createCustomerAppointmentInTransaction(
   input: CreateCustomerAppointmentInput,
   db: AppointmentTransactionClient,
-  options: { manualFitIn?: boolean } = {}
+  options: {
+    manualFitIn?: boolean;
+    validateAvailability?: boolean;
+  } = {}
 ) {
   const manualFitIn = Boolean(options.manualFitIn);
+  const validateAvailability = Boolean(options.validateAvailability);
   const customerId = input.customerId.trim();
   const barberId = input.barberId.trim();
   const serviceIds = input.serviceIds.map((serviceId) => serviceId.trim()).filter(Boolean);
@@ -638,7 +910,7 @@ async function createCustomerAppointmentInTransaction(
       ? input.manualDurationMinutes
       : null;
 
-  if (!manualFitIn && isScheduleDateTimePast(appointmentDate, now)) {
+  if ((!manualFitIn || validateAvailability) && isScheduleDateTimePast(appointmentDate, now)) {
     throw new AppointmentMutationError("Não é possível agendar em um horário que já passou.");
   }
 
@@ -709,7 +981,7 @@ async function createCustomerAppointmentInTransaction(
     },
   });
 
-  if (!manualFitIn) {
+  if (!manualFitIn || validateAvailability) {
     const [availability, blocks, recurringBlocks] = await Promise.all([
       db.barberAvailability.findFirst({
         where: {
@@ -818,6 +1090,9 @@ async function createCustomerAppointmentInTransaction(
       date: appointmentDate,
       notes,
       isManualFitIn: manualFitIn,
+      recurringSeriesId: input.recurringSeriesId?.trim() || null,
+      recurringBatchKey: input.recurringBatchKey?.trim() || null,
+      recurringOccurrenceDate: input.recurringOccurrenceDate || null,
       manualDurationMinutes:
         normalizedManualDurationMinutes || (vipSubscription ? occupiedDuration : null),
       isVipPlanUse: Boolean(vipSubscription),
@@ -2064,6 +2339,95 @@ export async function cancelAppointmentByCustomer(
       isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
       maxWait: 10000,
       timeout: 20000,
+    }
+  );
+}
+
+export async function cancelRecurringAppointmentSeries(
+  {
+    seriesId,
+    shopId,
+    fromDate,
+    cancellationReason = "Série recorrente cancelada pelo admin.",
+  }: {
+    seriesId: string;
+    shopId: string;
+    fromDate?: Date;
+    cancellationReason?: string;
+  },
+  db: AppointmentPrismaClient = prisma
+) {
+  const normalizedSeriesId = seriesId.trim();
+
+  if (!normalizedSeriesId || !shopId) {
+    throw new AppointmentMutationError("Série recorrente inválida.");
+  }
+
+  const normalizedReason = cancellationReason.trim() || "Série recorrente cancelada pelo admin.";
+
+  return db.$transaction(
+    async (tx) => {
+      const series = await tx.recurringAppointmentSeries.findFirst({
+        where: {
+          id: normalizedSeriesId,
+          shopId,
+        },
+        select: {
+          id: true,
+          status: true,
+        },
+      });
+
+      if (!series) {
+        throw new AppointmentMutationError("Série recorrente não encontrada.");
+      }
+
+      const appointments = await tx.appointment.findMany({
+        where: {
+          shopId,
+          recurringSeriesId: series.id,
+          ...(fromDate ? { date: { gte: fromDate } } : {}),
+          status: {
+            notIn: FINAL_APPOINTMENT_STATUSES,
+          },
+        },
+        select: {
+          id: true,
+        },
+        orderBy: {
+          date: "asc",
+        },
+      });
+
+      for (const appointment of appointments) {
+        await updateAppointmentStatusWithSideEffects(
+          {
+            appointmentId: appointment.id,
+            nextStatus: "CANCELLED",
+            cancellationReason: normalizedReason,
+          },
+          tx
+        );
+      }
+
+      await tx.recurringAppointmentSeries.update({
+        where: {
+          id: series.id,
+        },
+        data: {
+          status: "CANCELLED",
+        },
+      });
+
+      return {
+        seriesId: series.id,
+        appointmentIds: appointments.map((appointment) => appointment.id),
+      };
+    },
+    {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      maxWait: 10000,
+      timeout: 60000,
     }
   );
 }
