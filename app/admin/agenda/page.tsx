@@ -267,6 +267,8 @@ export default async function AdminAgendaPage({
           status: appointment.status,
           paymentMethod: appointment.paymentMethod,
           isVipPlanUse: appointment.isVipPlanUse,
+          recurringSeriesId: appointment.recurringSeriesId,
+          recurringBatchKey: appointment.recurringBatchKey,
           vipSubscription: appointment.vipSubscription,
           notes: appointment.isManualFitIn
             ? getManualFitInVisibleNotes(appointment.notes) || null
@@ -325,6 +327,10 @@ export default async function AdminAgendaPage({
                 customer.vipSubscriptions[0].payments,
                 customer.vipSubscriptions[0].dueDay
               ),
+              vipPlan: {
+                code: customer.vipSubscriptions[0].plan.code,
+                name: customer.vipSubscriptions[0].plan.name,
+              },
               weeklyUsedWeekStarts: customer.vipSubscriptions[0].appointments.map((appointment) =>
                 getWeekStartValue(getScheduleDateValue(appointment.date))
               ),

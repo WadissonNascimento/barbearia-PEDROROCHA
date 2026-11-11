@@ -533,6 +533,8 @@ export async function getBarberDashboardData(
         status: appointment.status,
         paymentMethod: appointment.paymentMethod,
         isVipPlanUse: appointment.isVipPlanUse,
+        recurringSeriesId: appointment.recurringSeriesId,
+        recurringBatchKey: appointment.recurringBatchKey,
         vipSubscription: appointment.vipSubscription,
         isManualFitIn: appointment.isManualFitIn,
         notes: appointment.isManualFitIn
@@ -560,6 +562,8 @@ export async function getBarberDashboardData(
         status: normalizeAppointmentStatus(appointment.status),
         paymentMethod: appointment.paymentMethod,
         isVipPlanUse: appointment.isVipPlanUse,
+        recurringSeriesId: appointment.recurringSeriesId,
+        recurringBatchKey: appointment.recurringBatchKey,
         vipSubscription: appointment.vipSubscription,
         isManualFitIn: appointment.isManualFitIn,
         notes: appointment.isManualFitIn
@@ -1066,6 +1070,8 @@ export async function getBarberTodayDashboardData(barberId: string) {
         status: appointment.status,
         paymentMethod: appointment.paymentMethod,
         isVipPlanUse: appointment.isVipPlanUse,
+        recurringSeriesId: appointment.recurringSeriesId,
+        recurringBatchKey: appointment.recurringBatchKey,
         vipSubscription: appointment.vipSubscription,
         isManualFitIn: appointment.isManualFitIn,
         notes: appointment.isManualFitIn

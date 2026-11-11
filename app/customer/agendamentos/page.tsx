@@ -47,6 +47,8 @@ export default async function CustomerAppointmentsPage() {
         status: true,
         paymentMethod: true,
         isVipPlanUse: true,
+        recurringSeriesId: true,
+        recurringBatchKey: true,
         notes: true,
         vipSubscription: {
           select: {
@@ -188,6 +190,11 @@ export default async function CustomerAppointmentsPage() {
                     <p className="mt-1 line-clamp-2 text-sm leading-5 text-zinc-400">
                       {serviceLabel}
                     </p>
+                    {appointment.recurringSeriesId || appointment.recurringBatchKey ? (
+                      <span className="mt-2 inline-flex rounded-full border border-violet-300/25 bg-violet-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-violet-200">
+                        Agendamento recorrente
+                      </span>
+                    ) : null}
                     <p className="mt-1 text-xs text-zinc-500">
                       {serviceMetaLine}
                     </p>

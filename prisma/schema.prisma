@@ -481,6 +481,15 @@ model RecurringAppointmentSeries {
   status            String    @default("ACTIVE")
   notes             String?
   recurringBatchKey String?   @unique
+  requestFingerprint String?
+  repeatForever     Boolean   @default(false)
+  intervalDays      Int?
+  nextDate          DateTime?
+  conflicts         Json      @default("[]")
+  cancelledAt       DateTime?
+  useVipPlan        Boolean   @default(false)
+  vipSubscriptionId String?
+  vipPlanName       String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
@@ -493,6 +502,8 @@ model RecurringAppointmentSeries {
   @@index([shopId, status])
   @@index([shopId, customerId, status])
   @@index([shopId, barberId, status])
+  @@index([shopId, nextDate, status])
+  @@index([shopId, vipSubscriptionId])
 }
 
 model VipPlan {

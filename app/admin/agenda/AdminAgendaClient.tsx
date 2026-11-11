@@ -30,6 +30,7 @@ import OperationalFeedbackDialog, {
 import { getAppointmentItemsLabel } from "@/lib/appointmentItems";
 import StatusBadge from "@/components/ui/StatusBadge";
 import AdminWalkInAppointmentButton from "./AdminWalkInAppointmentButton";
+import AdminRecurringAppointmentButton from "./AdminRecurringAppointmentButton";
 import {
   getAppointmentDisplayNameWithVipPlan,
   getAppointmentGrandTotal,
@@ -71,12 +72,18 @@ export type AdminAgendaAppointment = {
   status: string;
   paymentMethod: string | null;
   isVipPlanUse?: boolean;
+  recurringSeriesId?: string | null;
+  recurringBatchKey?: string | null;
   notes: string | null;
   vipSubscription?: {
     plan: {
       code?: string;
       name: string;
     };
+  } | null;
+  vipPlan?: {
+    code: string;
+    name: string;
   } | null;
   barber: {
     id: string;
@@ -141,6 +148,10 @@ export type AdminAgendaCustomer = {
       status: string;
     }>;
     weeklyUsedWeekStarts: string[];
+  } | null;
+  vipPlan?: {
+    code: string;
+    name: string;
   } | null;
 };
 
@@ -416,6 +427,14 @@ export default function AdminAgendaClient({
               selectedBarberId={selectedBarberId}
               selectedDate={draftFilters.dateFrom || appliedFilters.dateFrom}
             />
+            <div className="mt-3">
+              <AdminRecurringAppointmentButton
+                barbers={barbers}
+                services={services}
+                customers={customers}
+                selectedBarberId={selectedBarberId}
+              />
+            </div>
           </div>
         </div>
 
@@ -523,6 +542,11 @@ export default function AdminAgendaClient({
                             <span className="mt-1 block w-fit rounded-full border border-amber-300/35 bg-amber-300/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-amber-100">
                               Assinante do plano{" "}
                               {appointment.vipSubscription?.plan.name || "VIP"}
+                            </span>
+                          ) : null}
+                          {appointment.recurringSeriesId ? (
+                            <span className="mt-1 block w-fit rounded-full border border-sky-300/35 bg-sky-300/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-sky-100">
+                              Recorrente
                             </span>
                           ) : null}
                         </td>
@@ -1051,6 +1075,11 @@ function AppointmentMobileCard({
         <h3 className="mt-3 min-w-0 truncate text-base font-semibold text-white">
           {appointment.customer.name || "Cliente"}
         </h3>
+        {appointment.recurringSeriesId ? (
+          <span className="mt-1 inline-flex w-fit rounded-full border border-sky-300/35 bg-sky-300/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-sky-100">
+            Recorrente
+          </span>
+        ) : null}
         {vipPlanName ? (
           <div className="mt-2">
             <p className="text-sm font-bold text-zinc-300">

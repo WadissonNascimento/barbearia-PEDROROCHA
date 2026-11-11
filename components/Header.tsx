@@ -19,6 +19,7 @@ import {
   UserPlus,
   Users,
   UserRound,
+  Repeat2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -45,6 +46,7 @@ function getHeaderLinks(role: HeaderRole): {
       primary: [
         { href: "/admin", label: "Início" },
         { href: "/admin/agenda", label: "Agenda geral" },
+        { href: "/admin/recorrentes", label: "Recorrentes" },
         { href: "/admin/barbeiros", label: "Equipe" },
         { href: "/admin/financeiro", label: "Financeiro" },
       ],
@@ -111,6 +113,7 @@ const navIcons: Record<string, LucideIcon> = {
   "/": Home,
   "/admin": Home,
   "/admin/agenda": CalendarDays,
+  "/admin/recorrentes": Repeat2,
   "/admin/avaliacoes": MessageSquareText,
   "/admin/barbeiros": Users,
   "/admin/configurações": Settings,

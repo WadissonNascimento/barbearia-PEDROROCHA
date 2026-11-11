@@ -24,7 +24,7 @@ import {
 } from "@/lib/financials";
 import { roundMoney, toMoneyNumber } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
-import { mergeManualFitInNotes } from "@/lib/manualFitIn";
+import { formatManualFitInNotes, mergeManualFitInNotes } from "@/lib/manualFitIn";
 import { isVipAsaasPaymentsEnabled, needsVipBillingUpdate } from "@/lib/vipBillingPolicy";
 import {
   assertCanScheduleVipAppointment,
@@ -41,12 +41,19 @@ import {
   getScheduleDateValue,
   getScheduleDayRange,
   getScheduleMinutes,
+  getCurrentScheduleDateValue,
   isScheduleDateTimePast,
 } from "@/lib/scheduleTime";
 import {
   isVipPlanAvailableAt,
   VIP_PLAN_AVAILABILITY_MESSAGE,
 } from "@/lib/vipPlanSchedule";
+import {
+  addRecurringDays,
+  recurringBookingSchema,
+  recurringDatesInRange,
+  type RecurringBookingInput,
+} from "@/lib/recurringBooking";
 
 type AppointmentPrismaClient = Pick<
   PrismaClient,
@@ -62,6 +69,7 @@ type AppointmentPrismaClient = Pick<
   | "extraProduct"
   | "extraStockMovement"
   | "recurringBarberBlock"
+  | "recurringAppointmentSeries"
   | "service"
   | "user"
   | "vipPayment"
@@ -111,6 +119,9 @@ export type CreateCustomerAppointmentInput = {
   conflictMode?: "OVERLAP" | "SAME_START_ONLY";
   manualDurationMinutes?: number | null;
   useVipPlan?: boolean;
+  recurringSeriesId?: string | null;
+  recurringBatchKey?: string | null;
+  recurringOccurrenceDate?: Date | null;
 };
 
 export type RescheduleCustomerAppointmentInput = CreateCustomerAppointmentInput & {
@@ -465,12 +476,13 @@ export async function createManualFitInAppointment(
   }
 }
 
-async function createCustomerAppointmentInTransaction(
+export async function createCustomerAppointmentInTransaction(
   input: CreateCustomerAppointmentInput,
   db: AppointmentTransactionClient,
-  options: { manualFitIn?: boolean } = {}
+  options: { manualFitIn?: boolean; validateAvailability?: boolean } = {}
 ) {
   const manualFitIn = Boolean(options.manualFitIn);
+  const validateAvailability = Boolean(options.validateAvailability);
   const customerId = input.customerId.trim();
   const barberId = input.barberId.trim();
   const serviceIds = input.serviceIds.map((serviceId) => serviceId.trim()).filter(Boolean);
@@ -638,7 +650,7 @@ async function createCustomerAppointmentInTransaction(
       ? input.manualDurationMinutes
       : null;
 
-  if (!manualFitIn && isScheduleDateTimePast(appointmentDate, now)) {
+  if ((!manualFitIn || validateAvailability) && isScheduleDateTimePast(appointmentDate, now)) {
     throw new AppointmentMutationError("Não é possível agendar em um horário que já passou.");
   }
 
@@ -709,7 +721,7 @@ async function createCustomerAppointmentInTransaction(
     },
   });
 
-  if (!manualFitIn) {
+  if (!manualFitIn || validateAvailability) {
     const [availability, blocks, recurringBlocks] = await Promise.all([
       db.barberAvailability.findFirst({
         where: {
@@ -822,6 +834,9 @@ async function createCustomerAppointmentInTransaction(
         normalizedManualDurationMinutes || (vipSubscription ? occupiedDuration : null),
       isVipPlanUse: Boolean(vipSubscription),
       vipSubscriptionId: vipSubscription?.id || null,
+      recurringSeriesId: input.recurringSeriesId || null,
+      recurringBatchKey: input.recurringBatchKey || null,
+      recurringOccurrenceDate: input.recurringOccurrenceDate || null,
       status: "CONFIRMED",
       services: {
         create: orderedServices.map((service, index) => {
@@ -938,7 +953,7 @@ async function createCustomerAppointmentInTransaction(
   });
 }
 
-async function rescheduleCustomerAppointmentInTransaction(
+export async function rescheduleCustomerAppointmentInTransaction(
   input: RescheduleCustomerAppointmentInput,
   db: AppointmentTransactionClient,
   options: { actor?: "CUSTOMER" | "ADMIN" | "BARBER" } = {}
@@ -2129,7 +2144,7 @@ export async function setAppointmentItemDeliveryStatus(
   });
 }
 
-async function updateAppointmentStatusWithSideEffects(
+export async function updateAppointmentStatusWithSideEffects(
   {
     appointmentId,
     nextStatus,
@@ -2410,4 +2425,173 @@ async function updateAppointmentStatusWithSideEffects(
           : appointment.notes,
     },
   });
+}
+
+export async function createRecurringAppointments(
+  input: RecurringBookingInput & { shopId: string; adminId: string },
+  db: AppointmentPrismaClient = prisma
+) {
+  const parsed = recurringBookingSchema.safeParse(input);
+  if (!parsed.success || !input.shopId || !input.adminId) {
+    throw new AppointmentMutationError("Dados da sequência inválidos.");
+  }
+
+  const data = parsed.data;
+  const occurrences = [...data.occurrences].sort((left, right) => left.date.localeCompare(right.date));
+  if (!recurringDatesInRange(occurrences.map((item) => item.date), getCurrentScheduleDateValue())) {
+    throw new AppointmentMutationError("Escolha datas de hoje até os próximos 180 dias.");
+  }
+
+  const batchKey = `${input.adminId}:${data.requestId}`;
+  const requestFingerprint = JSON.stringify({
+    customerId: data.customerId || null,
+    customerName: data.customerName || null,
+    customerPhone: data.customerPhone || null,
+    barberId: data.barberId,
+    serviceIds: data.serviceIds,
+    useVipPlan: Boolean(data.useVipPlan),
+    notes: data.notes,
+    repeatForever: Boolean(data.repeatForever),
+    intervalDays: data.intervalDays || null,
+    occurrences,
+  });
+
+  try {
+    return await db.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${input.shopId}), hashtext(${batchKey}))`;
+
+      const existing = await tx.recurringAppointmentSeries.findUnique({
+        where: { recurringBatchKey: batchKey },
+        select: { id: true, shopId: true, requestFingerprint: true },
+      });
+      if (existing && existing.shopId !== input.shopId) {
+        throw new AppointmentMutationError("Esta sequência pertence a outra barbearia.");
+      }
+      if (existing && existing.requestFingerprint && existing.requestFingerprint !== requestFingerprint) {
+        throw new AppointmentMutationError("Esta solicitação já foi usada. Atualize a agenda antes de criar outra sequência.");
+      }
+
+      if (existing) {
+        const previous = await tx.appointment.findMany({
+          where: { shopId: input.shopId, recurringBatchKey: batchKey },
+          orderBy: { date: "asc" },
+          select: { id: true },
+        });
+        return { ids: previous.map((item) => item.id), batchKey, created: false };
+      }
+
+      if (data.useVipPlan && !data.customerId) {
+        throw new AppointmentMutationError("O plano mensal só pode ser usado por cliente cadastrado.");
+      }
+
+      const [barber, customer, vipSubscription] = await Promise.all([
+        tx.user.findFirst({
+          where: { id: data.barberId, shopId: input.shopId, role: "BARBER", isActive: true },
+          select: { id: true },
+        }),
+        data.customerId
+          ? tx.user.findFirst({
+              where: { id: data.customerId, shopId: input.shopId, role: "CUSTOMER", isActive: true },
+              select: { id: true, name: true },
+            })
+          : null,
+        data.useVipPlan && data.customerId
+          ? tx.vipSubscription.findFirst({
+              where: { shopId: input.shopId, customerId: data.customerId, status: "ACTIVE" },
+              include: { plan: true },
+            })
+          : null,
+      ]);
+
+      if (!barber) throw new AppointmentMutationError("Barbeiro indisponível para esta barbearia.");
+      if (data.customerId && !customer) throw new AppointmentMutationError("Cliente não autorizado para esta barbearia.");
+      if (data.useVipPlan && !vipSubscription) throw new AppointmentMutationError("Nenhuma assinatura VIP ativa foi encontrada.");
+
+      let appointmentCustomerId = data.customerId;
+      if (!appointmentCustomerId) {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${input.shopId}), hashtext('manual_customer'))`;
+        const placeholder = await tx.user.findFirst({
+          where: { shopId: input.shopId, role: "CUSTOMER", name: "Encaixe manual", email: null, phone: null },
+          select: { id: true },
+        });
+        appointmentCustomerId = placeholder?.id || (await tx.user.create({
+          data: { shopId: input.shopId, name: "Encaixe manual", role: "CUSTOMER", isActive: true },
+          select: { id: true },
+        })).id;
+      }
+
+      const first = occurrences[0];
+      const last = occurrences[occurrences.length - 1];
+      const firstDate = createScheduleDate(first.date, first.time);
+      const lastDate = createScheduleDate(last.date, last.time);
+      const frequency = data.intervalDays === 7 ? "WEEKLY" : data.intervalDays === 14 ? "BIWEEKLY" : "EVERY_15_DAYS";
+      const nextOccurrence = data.repeatForever && data.intervalDays
+        ? createScheduleDate(addRecurringDays(last.date, data.intervalDays), last.time)
+        : null;
+      if (!firstDate || !lastDate) throw new AppointmentMutationError("Data ou horário da sequência inválido.");
+
+      const series = await tx.recurringAppointmentSeries.create({
+        data: {
+          shopId: input.shopId,
+          customerId: data.customerId || null,
+          customerName: customer?.name || data.customerName || "Cliente sem cadastro",
+          customerPhone: data.customerPhone || null,
+          barberId: data.barberId,
+          serviceIds: data.serviceIds,
+          time: first.time,
+          frequency,
+          startDate: firstDate,
+          endDate: data.repeatForever ? null : lastDate,
+          unlimited: Boolean(data.repeatForever),
+          status: "ACTIVE",
+          notes: data.notes || null,
+          recurringBatchKey: batchKey,
+          requestFingerprint,
+          repeatForever: Boolean(data.repeatForever),
+          intervalDays: data.intervalDays || null,
+          nextDate: nextOccurrence,
+          useVipPlan: Boolean(data.useVipPlan),
+          vipSubscriptionId: vipSubscription?.id || null,
+          vipPlanName: vipSubscription?.plan.name || null,
+        },
+        select: { id: true },
+      });
+
+      const ids: string[] = [];
+      for (const occurrence of occurrences) {
+        const occurrenceDate = createScheduleDate(occurrence.date, occurrence.time);
+        if (!occurrenceDate) throw new AppointmentMutationError("Data ou horário da sequência inválido.");
+        let appointment: Awaited<ReturnType<typeof createCustomerAppointmentInTransaction>>;
+        try {
+          appointment = await createCustomerAppointmentInTransaction({
+            customerId: appointmentCustomerId!,
+            barberId: data.barberId,
+            serviceIds: data.serviceIds,
+            date: occurrence.date,
+            time: occurrence.time,
+            notes: data.customerId
+              ? data.notes
+              : formatManualFitInNotes({ customerName: data.customerName!, customerPhone: data.customerPhone, notes: data.notes }),
+            useVipPlan: Boolean(data.useVipPlan),
+            recurringSeriesId: series.id,
+            recurringBatchKey: batchKey,
+            recurringOccurrenceDate: occurrenceDate,
+          }, tx, { manualFitIn: !data.customerId, validateAvailability: true });
+        } catch (error) {
+          if (error instanceof AppointmentMutationError) {
+            throw new AppointmentMutationError(`A visita de ${occurrence.date} às ${occurrence.time} não pôde ser criada: ${error.message}`);
+          }
+          throw error;
+        }
+        ids.push(appointment.id);
+      }
+
+      return { ids, batchKey, created: true };
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable, maxWait: 10000, timeout: 60000 });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && ["P2034", "P2028"].includes(error.code)) {
+      throw new AppointmentMutationError("A agenda mudou durante a confirmação. Confira os horários e tente novamente.");
+    }
+    throw error;
+  }
 }

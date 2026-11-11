@@ -28,6 +28,8 @@ export type BarberAppointmentCardData = {
   status: string;
   paymentMethod?: string | null;
   isVipPlanUse?: boolean;
+  recurringSeriesId?: string | null;
+  recurringBatchKey?: string | null;
   isManualFitIn: boolean;
   notes: string | null;
   vipSubscription?: {
@@ -192,6 +194,11 @@ export default function BarberAppointmentCard({
           {appointment.isManualFitIn ? (
             <span className="mt-2 inline-flex w-fit rounded-full border border-sky-300/25 bg-sky-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-sky-200">
               Encaixe manual
+            </span>
+          ) : null}
+          {appointment.recurringSeriesId || appointment.recurringBatchKey ? (
+            <span className="mt-2 ml-2 inline-flex w-fit rounded-full border border-violet-300/25 bg-violet-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-violet-200">
+              Recorrente
             </span>
           ) : null}
           {showDate ? (

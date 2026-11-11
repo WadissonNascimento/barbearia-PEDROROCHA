@@ -10,6 +10,7 @@ import {
   Settings,
   UserRound,
   UsersRound,
+  Repeat2,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import DashboardEntryCard from "@/components/ui/DashboardEntryCard";
@@ -214,6 +215,12 @@ export default async function AdminPage() {
       icon: CalendarRange,
       title: "Agenda geral",
       description: "Horários de todos os barbeiros em um lugar.",
+    },
+    {
+      href: "/admin/recorrentes",
+      icon: Repeat2,
+      title: "Clientes recorrentes",
+      description: "Próximas visitas, ajustes e cancelamentos dos clientes fixos.",
     },
     {
       href: "/admin/barbeiros",

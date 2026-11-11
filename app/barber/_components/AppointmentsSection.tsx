@@ -359,6 +359,8 @@ export function AppointmentsSection({
               status: appointment.status,
               paymentMethod: appointment.paymentMethod,
               isVipPlanUse: appointment.isVipPlanUse,
+              recurringSeriesId: appointment.recurringSeriesId,
+              recurringBatchKey: appointment.recurringBatchKey,
               vipSubscription: appointment.vipSubscription,
               isManualFitIn: appointment.isManualFitIn,
               notes: appointment.notes,
